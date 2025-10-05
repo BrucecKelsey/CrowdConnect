@@ -1,22 +1,46 @@
+<!DOCTYPE html>
 <html>
 <head>
-	<title>COP 4331 LAMP Stack Demo</title>
-	<script type="text/javascript" src="js/md5.js"></script>
-	<script type="text/javascript" src="js/code.js"></script>
-    <link href="css/styles.css" rel="stylesheet">	
-    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
+    <title>Crowd Connect - Login</title>
+    <script type="text/javascript" src="js/md5.js"></script>
+    <script type="text/javascript" src="js/code.js"></script>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
 </head>
 <body>
-
-<h1 id="title">COP 4331 LAMP Stack Demo</h1>
-
-<div id="loginDiv">
-	<span id="inner-title">PLEASE LOG IN</span>
-	<input type="text" id="loginName" placeholder="Username" /><br />
-	<input type="password" id="loginPassword" placeholder="Password"/><br />
-	<button type="button" id="loginButton" class="buttons" onclick="doLogin();"> Do It </button>
-	<span id="loginResult"></span>
-</div>
-
+    <div class="disco-bg"></div>
+    <h1 id="title">Crowd Connect</h1>
+    <div id="loginDiv">
+        <span id="inner-title">Welcome to the Party!<br>Login to join Crowd Connect</span>
+        <input type="text" id="loginName" placeholder="Username" /><br />
+        <input type="password" id="loginPassword" placeholder="Password"/><br />
+        <button type="button" id="loginButton" class="buttons" onclick="doLogin();">Login</button>
+        <span id="loginResult"></span>
+        <hr>
+        <button type="button" id="registerButton" class="buttons disco-btn" onclick="showRegister();">Create Account</button>
+    </div>
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeRegister();">&times;</span>
+            <h2>Register for Crowd Connect</h2>
+            <input type="text" id="registerName" placeholder="Username" /><br />
+            <input type="password" id="registerPassword" placeholder="Password"/><br />
+            <input type="email" id="registerEmail" placeholder="Email"/><br />
+            <button type="button" id="createAccountButton" class="buttons disco-btn" onclick="doRegister();">Create Account</button>
+            <span id="registerResult"></span>
+        </div>
+    </div>
+    <script>
+        function showRegister() {
+            document.getElementById('registerModal').style.display = 'block';
+        }
+        function closeRegister() {
+            document.getElementById('registerModal').style.display = 'none';
+        }
+        // Placeholder for registration logic
+        function doRegister() {
+            document.getElementById('registerResult').innerText = 'Registration feature coming soon!';
+        }
+    </script>
 </body>
 </html>
