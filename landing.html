@@ -4,37 +4,48 @@
     <title>Crowd Connect - DJ Dashboard</title>
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
-    <script type="text/javascript" src="js/code.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
 </head>
 <body>
     <div class="disco-bg"></div>
     <h1 id="title">DJ Dashboard</h1>
-    <div id="createPartySection" class="dashboard-section">
-        <h2>Create a New Party</h2>
-        <input type="text" id="partyName" placeholder="Party Name" />
-        <button type="button" class="buttons disco-btn" onclick="createParty();">Create Party</button>
+    <div id="partiesSection" class="dashboard-section">
+        <h2>Your Parties</h2>
+        <ul id="partiesList"></ul>
+        <button type="button" class="buttons disco-btn" onclick="showCreateParty();">Create New Party</button>
         <span id="partyResult"></span>
-        <div id="qrSection" style="display:none;">
-            <h3>Shareable QR Code</h3>
-            <div id="qrPlaceholder" class="qr-placeholder">QR code will appear here</div>
-            <p>Share this QR code with the crowd so they can submit song requests!</p>
+    </div>
+    <div id="createPartyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateParty();">&times;</span>
+            <h2>Create a New Party</h2>
+            <input type="text" id="partyName" placeholder="Party Name" />
+            <button type="button" class="buttons disco-btn" onclick="createParty();">Create Party</button>
         </div>
     </div>
-    <div id="requestsSection" class="dashboard-section">
-        <h2>Song Requests</h2>
-        <ul id="requestsList">
-            <!-- Song requests will be dynamically loaded here -->
-        </ul>
+    <div id="selectedPartySection" class="dashboard-section" style="display:none;">
+        <h2 id="selectedPartyName"></h2>
+        <div id="qrSection">
+            <h3>Shareable QR Code</h3>
+            <canvas id="qrPlaceholder"></canvas>
+            <p>Share this QR code with the crowd so they can submit song requests!</p>
+        </div>
+        <div id="requestsSection">
+            <h3>Song Requests</h3>
+            <ul id="requestsList"></ul>
+        </div>
     </div>
-    <div id="submitSection" class="dashboard-section">
-        <h2>Submit a Song Request</h2>
-        <a href="submit.html" class="buttons disco-btn">Submit Request</a>
-    </div>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <script>
+        let djId = 1; // Replace with actual logged-in DJ ID
+        let selectedPartyId = null;
+        function showCreateParty() {
+            document.getElementById('createPartyModal').style.display = 'block';
+        }
+        function closeCreateParty() {
+            document.getElementById('createPartyModal').style.display = 'none';
+        }
         function createParty() {
             let partyName = document.getElementById("partyName").value;
-            let djId = 1; // Replace with actual logged-in DJ ID
             let tmp = { partyName: partyName, djId: djId };
             let jsonPayload = JSON.stringify(tmp);
             let url = 'http://178.128.4.96/LAMPAPI/CreateParty.php';
@@ -44,24 +55,66 @@
             xhr.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let jsonObject = JSON.parse(xhr.responseText);
-                    if (jsonObject.error) {
-                        document.getElementById("partyResult").innerHTML = jsonObject.error;
+                    if (!jsonObject.error) {
+                        closeCreateParty();
+                        loadParties();
                     } else {
-                        document.getElementById("partyResult").innerHTML = "Party created!";
-                        showQR(jsonObject.partyId);
+                        document.getElementById("partyResult").innerHTML = jsonObject.error;
                     }
                 }
             };
             xhr.send(jsonPayload);
         }
-        function showQR(partyId) {
-            document.getElementById("qrSection").style.display = "block";
+        function loadParties() {
+            let url = 'http://178.128.4.96/LAMPAPI/GetParties.php?djId=' + djId;
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    let partiesList = document.getElementById("partiesList");
+                    partiesList.innerHTML = "";
+                    jsonObject.parties.forEach(function(party) {
+                        let li = document.createElement("li");
+                        li.textContent = party.PartyName;
+                        li.style.cursor = "pointer";
+                        li.onclick = function() { selectParty(party.PartyId, party.PartyName); };
+                        partiesList.appendChild(li);
+                    });
+                }
+            };
+            xhr.send();
+        }
+        function selectParty(partyId, partyName) {
+            selectedPartyId = partyId;
+            document.getElementById("selectedPartySection").style.display = "block";
+            document.getElementById("selectedPartyName").textContent = partyName;
             let qr = new QRious({
                 element: document.getElementById("qrPlaceholder"),
                 value: window.location.origin + "/submit.html?partyId=" + partyId,
                 size: 200
             });
+            loadRequests(partyId);
         }
+        function loadRequests(partyId) {
+            let url = 'http://178.128.4.96/LAMPAPI/GetRequests.php?partyId=' + partyId;
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    let requestsList = document.getElementById("requestsList");
+                    requestsList.innerHTML = "";
+                    jsonObject.requests.forEach(function(req) {
+                        let li = document.createElement("li");
+                        li.textContent = req.SongName + (req.RequestedBy ? " (by " + req.RequestedBy + ")" : "");
+                        requestsList.appendChild(li);
+                    });
+                }
+            };
+            xhr.send();
+        }
+        window.onload = loadParties;
     </script>
 </body>
 </html>

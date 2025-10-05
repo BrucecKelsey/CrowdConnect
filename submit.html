@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crowd Connect - Submit Song Request</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
+</head>
+<body>
+    <div class="disco-bg"></div>
+    <h1 id="title">Submit a Song Request</h1>
+    <div id="submitSection" class="dashboard-section">
+        <h2>Party: <span id="partyName"></span></h2>
+        <input type="text" id="songName" placeholder="Song Name" />
+        <input type="text" id="requestedBy" placeholder="Your Name (optional)" />
+        <button type="button" class="buttons disco-btn" onclick="submitRequest();">Submit Request</button>
+        <span id="submitResult"></span>
+    </div>
+    <script>
+        function getPartyId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('partyId');
+        }
+        function getPartyName(partyId) {
+            let url = 'http://178.128.4.96/LAMPAPI/GetPartyName.php?partyId=' + partyId;
+            let xhr = new XMLHttpRequest();
+            xhr.open("GET", url, true);
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    document.getElementById("partyName").textContent = jsonObject.partyName;
+                }
+            };
+            xhr.send();
+        }
+        function submitRequest() {
+            let partyId = getPartyId();
+            let songName = document.getElementById("songName").value;
+            let requestedBy = document.getElementById("requestedBy").value;
+            let tmp = { partyId: partyId, songName: songName, requestedBy: requestedBy };
+            let jsonPayload = JSON.stringify(tmp);
+            let url = 'http://178.128.4.96/LAMPAPI/SubmitRequest.php';
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    if (jsonObject.error) {
+                        document.getElementById("submitResult").innerHTML = jsonObject.error;
+                    } else {
+                        document.getElementById("submitResult").innerHTML = "Request submitted!";
+                        document.getElementById("songName").value = "";
+                        document.getElementById("requestedBy").value = "";
+                    }
+                }
+            };
+            xhr.send(jsonPayload);
+        }
+        window.onload = function() {
+            let partyId = getPartyId();
+            if (partyId) getPartyName(partyId);
+        };
+    </script>
+</body>
+</html>
