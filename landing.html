@@ -9,10 +9,16 @@
 <body>
     <div class="disco-bg"></div>
     <h1 id="title">DJ Dashboard</h1>
-    <div id="qrSection" class="dashboard-section">
-        <h2>Shareable QR Code</h2>
-        <div id="qrPlaceholder" class="qr-placeholder">QR code will appear here</div>
-        <p>Share this QR code with the crowd so they can submit song requests!</p>
+    <div id="createPartySection" class="dashboard-section">
+        <h2>Create a New Party</h2>
+        <input type="text" id="partyName" placeholder="Party Name" />
+        <button type="button" class="buttons disco-btn" onclick="createParty();">Create Party</button>
+        <span id="partyResult"></span>
+        <div id="qrSection" style="display:none;">
+            <h3>Shareable QR Code</h3>
+            <div id="qrPlaceholder" class="qr-placeholder">QR code will appear here</div>
+            <p>Share this QR code with the crowd so they can submit song requests!</p>
+        </div>
     </div>
     <div id="requestsSection" class="dashboard-section">
         <h2>Song Requests</h2>
@@ -24,5 +30,38 @@
         <h2>Submit a Song Request</h2>
         <a href="submit.html" class="buttons disco-btn">Submit Request</a>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <script>
+        function createParty() {
+            let partyName = document.getElementById("partyName").value;
+            let djId = 1; // Replace with actual logged-in DJ ID
+            let tmp = { partyName: partyName, djId: djId };
+            let jsonPayload = JSON.stringify(tmp);
+            let url = 'http://178.128.4.96/LAMPAPI/CreateParty.php';
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    if (jsonObject.error) {
+                        document.getElementById("partyResult").innerHTML = jsonObject.error;
+                    } else {
+                        document.getElementById("partyResult").innerHTML = "Party created!";
+                        showQR(jsonObject.partyId);
+                    }
+                }
+            };
+            xhr.send(jsonPayload);
+        }
+        function showQR(partyId) {
+            document.getElementById("qrSection").style.display = "block";
+            let qr = new QRious({
+                element: document.getElementById("qrPlaceholder"),
+                value: window.location.origin + "/submit.html?partyId=" + partyId,
+                size: 200
+            });
+        }
+    </script>
 </body>
 </html>
