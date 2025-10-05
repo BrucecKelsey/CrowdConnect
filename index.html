@@ -40,7 +40,43 @@
         }
         // Placeholder for registration logic
         function doRegister() {
-            document.getElementById('registerResult').innerText = 'Registration feature coming soon!';
+            let login = document.getElementById("registerName").value;
+            let password = document.getElementById("registerPassword").value;
+            let firstName = document.getElementById("registerFirstName").value;
+            let lastName = document.getElementById("registerLastName").value;
+
+            document.getElementById("registerResult").innerHTML = "";
+
+            let tmp = {
+                login: login,
+                password: password,
+                firstName: firstName,
+                lastName: lastName
+            };
+            let jsonPayload = JSON.stringify(tmp);
+            let url = 'http://178.128.4.96/LAMPAPI/Register.php';
+
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            try {
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        let jsonObject = JSON.parse(xhr.responseText);
+                        if (jsonObject.error) {
+                            document.getElementById("registerResult").innerHTML = jsonObject.error;
+                        } else {
+                            document.getElementById("registerResult").innerHTML = "Registration complete! Returning to login...";
+                            setTimeout(function() {
+                                closeRegister();
+                            }, 1500);
+                        }
+                    }
+                };
+                xhr.send(jsonPayload);
+            } catch (err) {
+                document.getElementById("registerResult").innerHTML = err.message;
+            }
         }
     </script>
 </body>
