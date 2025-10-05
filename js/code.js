@@ -188,7 +188,6 @@ function doRegister()
 {
     let login = document.getElementById("registerName").value;
     let password = document.getElementById("registerPassword").value;
-    let email = document.getElementById("registerEmail").value;
     let firstName = document.getElementById("registerFirstName").value;
     let lastName = document.getElementById("registerLastName").value;
 
@@ -197,7 +196,6 @@ function doRegister()
     let tmp = {
         login: login,
         password: password,
-        email: email,
         firstName: firstName,
         lastName: lastName
     };
@@ -214,8 +212,10 @@ function doRegister()
                 if (jsonObject.error) {
                     document.getElementById("registerResult").innerHTML = jsonObject.error;
                 } else {
-                    document.getElementById("registerResult").innerHTML = "Registration successful! You can now log in.";
-                    setTimeout(closeRegister, 1500);
+                    document.getElementById("registerResult").innerHTML = "Registration complete! Returning to login...";
+                    setTimeout(function() {
+                        closeRegister();
+                    }, 1500);
                 }
             }
         };
