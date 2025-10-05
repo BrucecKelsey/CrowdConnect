@@ -5,6 +5,78 @@
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
+            min-height: 100vh;
+            font-family: 'Ubuntu', sans-serif;
+        }
+        .dashboard-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            box-shadow: 0 0 20px #ff00cc99;
+            margin: 30px auto;
+            padding: 30px 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+        #partiesList li {
+            background: linear-gradient(90deg, #fff700 0%, #ff00cc 100%);
+            color: #333399;
+            margin: 10px 0;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        #partiesList li.selected {
+            background: linear-gradient(90deg, #ff00cc 0%, #fff700 100%);
+            color: #fff;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0; top: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(51, 51, 153, 0.8);
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: #fff;
+            margin: 10vh auto;
+            padding: 30px 40px;
+            border-radius: 30px;
+            width: 350px;
+            box-shadow: 0 0 30px #ff00cc99;
+            text-align: center;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            top: 10px; right: 20px;
+            font-size: 2em;
+            color: #ff00cc;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #qrSection {
+            margin: 20px 0;
+        }
+        #qrPlaceholder {
+            margin: 10px auto;
+            display: block;
+        }
+        #requestsList li {
+            background: #fff700;
+            color: #333399;
+            margin: 8px 0;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="disco-bg"></div>
@@ -74,21 +146,29 @@
                     let jsonObject = JSON.parse(xhr.responseText);
                     let partiesList = document.getElementById("partiesList");
                     partiesList.innerHTML = "";
+                    if(jsonObject.parties.length === 0) {
+                        partiesList.innerHTML = '<li>No parties found. Create one!</li>';
+                    }
                     jsonObject.parties.forEach(function(party) {
                         let li = document.createElement("li");
                         li.textContent = party.PartyName;
-                        li.style.cursor = "pointer";
-                        li.onclick = function() { selectParty(party.PartyId, party.PartyName); };
+                        li.setAttribute('data-partyid', party.PartyId);
+                        li.onclick = function() { selectParty(party.PartyId, party.PartyName, li); };
                         partiesList.appendChild(li);
                     });
                 }
             };
             xhr.send();
         }
-        function selectParty(partyId, partyName) {
+        function selectParty(partyId, partyName, liElem) {
             selectedPartyId = partyId;
             document.getElementById("selectedPartySection").style.display = "block";
             document.getElementById("selectedPartyName").textContent = partyName;
+            // Highlight selected
+            let lis = document.querySelectorAll('#partiesList li');
+            lis.forEach(function(li){ li.classList.remove('selected'); });
+            liElem.classList.add('selected');
+            // Generate QR
             let qr = new QRious({
                 element: document.getElementById("qrPlaceholder"),
                 value: window.location.origin + "/submit.html?partyId=" + partyId,
@@ -105,6 +185,9 @@
                     let jsonObject = JSON.parse(xhr.responseText);
                     let requestsList = document.getElementById("requestsList");
                     requestsList.innerHTML = "";
+                    if(jsonObject.requests.length === 0) {
+                        requestsList.innerHTML = '<li>No requests yet.</li>';
+                    }
                     jsonObject.requests.forEach(function(req) {
                         let li = document.createElement("li");
                         li.textContent = req.SongName + (req.RequestedBy ? " (by " + req.RequestedBy + ")" : "");
