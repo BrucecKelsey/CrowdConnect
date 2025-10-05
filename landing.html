@@ -197,7 +197,18 @@
             };
             xhr.send();
         }
-        window.onload = loadParties;
+        // Add auto-refresh every 5 seconds
+        function startAutoRefresh() {
+            setInterval(function() {
+                if(selectedPartyId) {
+                    loadRequests(selectedPartyId);
+                }
+            }, 5000);
+        }
+        window.onload = function() {
+            loadParties();
+            startAutoRefresh();
+        };
     </script>
 </body>
 </html>

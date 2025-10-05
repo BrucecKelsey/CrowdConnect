@@ -4,6 +4,60 @@
     <title>Crowd Connect - Submit Song Request</title>
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
+            min-height: 100vh;
+            font-family: 'Ubuntu', sans-serif;
+        }
+        .dashboard-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 25px;
+            box-shadow: 0 0 20px #ff00cc99;
+            margin: 30px auto;
+            padding: 30px 40px;
+            max-width: 400px;
+            text-align: center;
+        }
+        input[type="text"] {
+            border-radius: 25px;
+            text-align: center;
+            width: 80%;
+            margin: 10px auto;
+            font-size: 1.1em;
+            padding: 10px;
+            border: 2px solid #ff00cc;
+            background: #fff;
+            box-shadow: 0 0 10px #ff00cc44;
+            font-family: 'Ubuntu', sans-serif;
+        }
+        .buttons {
+            font-size: 1.1em;
+            border-radius: 25px;
+            width: 70%;
+            margin: 15px auto;
+            font-family: 'Ubuntu', sans-serif;
+            background: linear-gradient(90deg, #fff700 0%, #ff00cc 100%);
+            color: #333399;
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 0 10px #ff00cc99;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .buttons:hover {
+            background: linear-gradient(90deg, #ff00cc 0%, #fff700 100%);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px #fff70099;
+        }
+        #submitResult {
+            color: #fff700;
+            font-size: 1em;
+            margin-top: 10px;
+            text-shadow: 0 0 5px #ff00cc;
+        }
+    </style>
 </head>
 <body>
     <div class="disco-bg"></div>
@@ -36,6 +90,10 @@
             let partyId = getPartyId();
             let songName = document.getElementById("songName").value;
             let requestedBy = document.getElementById("requestedBy").value;
+            if (!songName) {
+                document.getElementById("submitResult").innerHTML = "Please enter a song name.";
+                return;
+            }
             let tmp = { partyId: partyId, songName: songName, requestedBy: requestedBy };
             let jsonPayload = JSON.stringify(tmp);
             let url = 'http://178.128.4.96/LAMPAPI/SubmitRequest.php';
@@ -48,7 +106,7 @@
                     if (jsonObject.error) {
                         document.getElementById("submitResult").innerHTML = jsonObject.error;
                     } else {
-                        document.getElementById("submitResult").innerHTML = "Request submitted!";
+                        document.getElementById("submitResult").innerHTML = "Request submitted successfully!";
                         document.getElementById("songName").value = "";
                         document.getElementById("requestedBy").value = "";
                     }
