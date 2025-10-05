@@ -78,6 +78,39 @@
                 document.getElementById("registerResult").innerHTML = err.message;
             }
         }
+
+        function doLogin() {
+            let login = document.getElementById("loginName").value;
+            let password = document.getElementById("loginPassword").value;
+
+            document.getElementById("loginResult").innerHTML = "";
+
+            let tmp = {
+                login: login,
+                password: password
+            };
+            let jsonPayload = JSON.stringify(tmp);
+            let url = 'http://178.128.4.96/LAMPAPI/Login.php';
+
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            try {
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                        let jsonObject = JSON.parse(xhr.responseText);
+                        if (jsonObject.id > 0) {
+                            window.location.href = "landing.html";
+                        } else {
+                            document.getElementById("loginResult").innerHTML = jsonObject.error;
+                        }
+                    }
+                };
+                xhr.send(jsonPayload);
+            } catch (err) {
+                document.getElementById("loginResult").innerHTML = err.message;
+            }
+        }
     </script>
 </body>
 </html>
