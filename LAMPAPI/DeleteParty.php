@@ -13,7 +13,7 @@ if ($partyId <= 0) {
     exit();
 }
 
-$conn = new mysqli("localhost", "YOUR_DB_USER", "YOUR_DB_PASS", "YOUR_DB_NAME");
+$conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
 if ($conn->connect_error) {
     echo json_encode(["error" => $conn->connect_error]);
     exit();
