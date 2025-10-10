@@ -14,6 +14,8 @@
         <span id="inner-title">Welcome to the Party!<br>Login to join Crowd Connect</span>
         <input type="text" id="loginName" placeholder="Username" /><br />
         <input type="password" id="loginPassword" placeholder="Password"/><br />
+        <input type="text" id="loginName" placeholder="Username" onkeydown="if(event.key==='Enter'){doLogin();}" /><br />
+        <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter'){doLogin();}" /><br />
         <button type="button" id="loginButton" class="buttons" onclick="doLogin();">Login</button>
         <span id="loginResult"></span>
         <hr>
