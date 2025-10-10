@@ -81,6 +81,100 @@
 <body>
     <div class="disco-bg"></div>
     <h1 id="title">DJ Dashboard</h1>
+    <button id="settingsBtn" class="buttons disco-btn" style="position:absolute; top:24px; right:36px; font-size:1em;">Settings</button>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSettings();">&times;</span>
+            <h2>Account Settings</h2>
+            <div style="margin-bottom:18px;">
+                <label for="settingsUsername">Username:</label><br>
+                <input type="text" id="settingsUsername" value="" style="width:90%;margin-bottom:10px;" />
+                <label for="settingsFirstName">First Name:</label><br>
+                <input type="text" id="settingsFirstName" value="" style="width:90%;margin-bottom:10px;" />
+                <label for="settingsLastName">Last Name:</label><br>
+                <input type="text" id="settingsLastName" value="" style="width:90%;margin-bottom:10px;" />
+                <label for="settingsPassword">Password:</label><br>
+                <input type="password" id="settingsPassword" value="" style="width:90%;margin-bottom:10px;" />
+            </div>
+            <button class="buttons disco-btn" onclick="saveSettings();">Save Changes</button>
+            <button class="buttons disco-btn" style="background:#ff0033; color:#fff; float:right;" onclick="signOut();">Sign Out</button>
+            <div id="settingsResult" style="margin-top:12px;"></div>
+        </div>
+    </div>
+        // Settings tab logic
+        document.getElementById('settingsBtn').onclick = function() {
+            openSettings();
+        };
+
+        function openSettings() {
+            // Load user info from cookie or backend (here, from cookie)
+            let data = document.cookie;
+            let splits = data.split(",");
+            let username = "";
+            let firstName = "";
+            let lastName = "";
+            let userId = "";
+            for(let i = 0; i < splits.length; i++) {
+                let thisOne = splits[i].trim();
+                let tokens = thisOne.split("=");
+                if(tokens[0] == "firstName") firstName = tokens[1];
+                else if(tokens[0] == "lastName") lastName = tokens[1];
+                else if(tokens[0] == "userId") userId = tokens[1];
+                else if(tokens[0] == "login") username = tokens[1];
+            }
+            document.getElementById('settingsUsername').value = username;
+            document.getElementById('settingsFirstName').value = firstName;
+            document.getElementById('settingsLastName').value = lastName;
+            document.getElementById('settingsPassword').value = "";
+            document.getElementById('settingsModal').style.display = 'block';
+            document.getElementById('settingsResult').innerHTML = "";
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            // Example: send updated info to backend (implement endpoint as needed)
+            let username = document.getElementById('settingsUsername').value;
+            let firstName = document.getElementById('settingsFirstName').value;
+            let lastName = document.getElementById('settingsLastName').value;
+            let password = document.getElementById('settingsPassword').value;
+            let userId = null;
+            let data = document.cookie;
+            let splits = data.split(",");
+            for(let i = 0; i < splits.length; i++) {
+                let thisOne = splits[i].trim();
+                let tokens = thisOne.split("=");
+                if(tokens[0] == "userId") userId = tokens[1];
+            }
+            let tmp = { userId: userId, login: username, firstName: firstName, lastName: lastName, password: password };
+            let jsonPayload = JSON.stringify(tmp);
+            let url = 'http://178.128.4.96/LAMPAPI/UpdateUser.php'; // You need to implement this endpoint
+            let xhr = new XMLHttpRequest();
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    let jsonObject = JSON.parse(xhr.responseText);
+                    if (!jsonObject.error) {
+                        document.getElementById('settingsResult').innerHTML = "Account updated!";
+                    } else {
+                        document.getElementById('settingsResult').innerHTML = jsonObject.error;
+                    }
+                }
+            };
+            xhr.send(jsonPayload);
+        }
+
+        function signOut() {
+            // Clear cookie and redirect to login
+            document.cookie = "firstName= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie = "lastName= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie = "userId= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+            window.location.href = "index.html";
+        }
     <div id="partiesSection" class="dashboard-section">
         <h2>Your Parties</h2>
         <ul id="partiesList"></ul>
