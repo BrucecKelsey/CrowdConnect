@@ -81,27 +81,9 @@
 <body>
     <div class="disco-bg"></div>
     <h1 id="title">DJ Dashboard</h1>
-    <button id="settingsBtn" class="buttons disco-btn" style="position:absolute; top:24px; right:36px; font-size:1em;">Settings</button>
+    <a href="settings.html" id="settingsBtn" class="buttons disco-btn" style="position:fixed; top:18px; right:24px; font-size:0.95em; padding:6px 16px; z-index:100;">Settings</a>
 
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeSettings();">&times;</span>
-            <h2>Account Settings</h2>
-            <div style="margin-bottom:18px;">
-                <label for="settingsUsername">Username:</label><br>
-                <input type="text" id="settingsUsername" value="" style="width:90%;margin-bottom:10px;" />
-                <label for="settingsFirstName">First Name:</label><br>
-                <input type="text" id="settingsFirstName" value="" style="width:90%;margin-bottom:10px;" />
-                <label for="settingsLastName">Last Name:</label><br>
-                <input type="text" id="settingsLastName" value="" style="width:90%;margin-bottom:10px;" />
-                <label for="settingsPassword">Password:</label><br>
-                <input type="password" id="settingsPassword" value="" style="width:90%;margin-bottom:10px;" />
-            </div>
-            <button class="buttons disco-btn" onclick="saveSettings();">Save Changes</button>
-            <button class="buttons disco-btn" style="background:#ff0033; color:#fff; float:right;" onclick="signOut();">Sign Out</button>
-            <div id="settingsResult" style="margin-top:12px;"></div>
-        </div>
-    </div>
+
         // Settings tab logic
         document.getElementById('settingsBtn').onclick = function() {
             openSettings();
