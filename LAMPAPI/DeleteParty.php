@@ -1,0 +1,32 @@
+<?php
+header('Content-Type: application/json');
+
+$inData = json_decode(file_get_contents('php://input'), true);
+$partyId = isset($inData['partyId']) ? intval($inData['partyId']) : 0;
+
+if ($partyId <= 0) {
+    echo json_encode(["error" => "Invalid party ID."]);
+    exit();
+}
+
+$conn = new mysqli("localhost", "YOUR_DB_USER", "YOUR_DB_PASS", "YOUR_DB_NAME");
+if ($conn->connect_error) {
+    echo json_encode(["error" => $conn->connect_error]);
+    exit();
+}
+
+// Delete all song requests for this party
+$stmt = $conn->prepare("DELETE FROM Requests WHERE PartyId = ?");
+$stmt->bind_param("i", $partyId);
+$stmt->execute();
+$stmt->close();
+
+// Delete the party itself
+$stmt = $conn->prepare("DELETE FROM Parties WHERE PartyId = ?");
+$stmt->bind_param("i", $partyId);
+$stmt->execute();
+$stmt->close();
+
+$conn->close();
+echo json_encode(["success" => true]);
+?>
