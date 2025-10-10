@@ -87,7 +87,7 @@
         <button type="button" class="buttons disco-btn" onclick="showCreateParty();">Create New Party</button>
         <span id="partyResult"></span>
     </div>
-    <button id="deletePartyBtn" type="button" class="buttons disco-btn" style="display:none; background:#ff0033; color:#fff; margin-top:20px;">Delete Party</button>
+    <button id="deletePartyBtn" type="button" class="buttons disco-btn" style="display:none; background:#ff0033; color:#fff; margin: 30px auto 0 auto; padding: 6px 18px; font-size: 0.95em; border-radius: 16px; display: block; width: fit-content;">Delete Party</button>
     <div id="deleteConfirmModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeDeleteConfirm();">&times;</span>
@@ -185,8 +185,10 @@
                 size: 200
             });
             loadRequests(partyId);
-            // Show delete button
-            document.getElementById("deletePartyBtn").style.display = "inline-block";
+            // Show delete button, center it
+            var btn = document.getElementById("deletePartyBtn");
+            btn.style.display = "block";
+            btn.style.margin = "30px auto 0 auto";
         }
 
         document.getElementById("deletePartyBtn").onclick = function() {
@@ -208,16 +210,18 @@
             xhr.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
                     let jsonObject = JSON.parse(xhr.responseText);
+                    closeDeleteConfirm();
                     if (!jsonObject.error) {
                         // Hide section, refresh parties
                         document.getElementById("selectedPartySection").style.display = "none";
                         document.getElementById("deletePartyBtn").style.display = "none";
                         selectedPartyId = null;
-                        loadParties();
+                        setTimeout(function() {
+                            loadParties();
+                        }, 200);
                     } else {
                         alert(jsonObject.error);
                     }
-                    closeDeleteConfirm();
                 }
             };
             xhr.send(jsonPayload);
