@@ -172,6 +172,15 @@
             xhr.send();
         }
         function selectParty(partyId, partyName, liElem) {
+            // If already selected, deselect and close
+            if (selectedPartyId === partyId) {
+                selectedPartyId = null;
+                document.getElementById("selectedPartySection").style.display = "none";
+                document.getElementById("deletePartyBtn").style.display = "none";
+                let lis = document.querySelectorAll('#partiesList li');
+                lis.forEach(function(li){ li.classList.remove('selected'); });
+                return;
+            }
             selectedPartyId = partyId;
             document.getElementById("selectedPartySection").style.display = "block";
             document.getElementById("selectedPartyName").textContent = partyName;
