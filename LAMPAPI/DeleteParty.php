@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting for debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 $inData = json_decode(file_get_contents('php://input'), true);
@@ -17,12 +21,22 @@ if ($conn->connect_error) {
 
 // Delete all song requests for this party
 $stmt = $conn->prepare("DELETE FROM Requests WHERE PartyId = ?");
+if (!$stmt) {
+    echo json_encode(["error" => $conn->error]);
+    $conn->close();
+    exit();
+}
 $stmt->bind_param("i", $partyId);
 $stmt->execute();
 $stmt->close();
 
 // Delete the party itself
 $stmt = $conn->prepare("DELETE FROM Parties WHERE PartyId = ?");
+if (!$stmt) {
+    echo json_encode(["error" => $conn->error]);
+    $conn->close();
+    exit();
+}
 $stmt->bind_param("i", $partyId);
 $stmt->execute();
 $stmt->close();
