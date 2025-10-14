@@ -78,68 +78,51 @@
         }
     </style>
 </head>
-<body style="background:#18181b; min-height:100vh; font-family:'Poppins', 'PT Sans', Arial, sans-serif;">
-    <div class="container" style="max-width:1100px;margin:0 auto;padding:32px 8px;min-height:100vh;display:flex;flex-direction:column;">
-        <header style="width:100%;max-width:800px;margin:0 auto 24px auto;">
-            <div style="display:flex;justify-content:center;align-items:center;gap:16px;margin:24px 0 12px 0;flex-direction:column;">
-                <div style="display:flex;align-items:center;gap:16px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-12 w-12" style="color:#ff00cc;"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                    <h1 style="color:#fff;font-size:2.5rem;font-family:'Poppins','PT Sans',Arial,sans-serif;font-weight:700;letter-spacing:-1px;">Crowd Connect</h1>
-                </div>
-            </div>
-        </header>
-        <main style="width:100%;display:grid;grid-template-columns:1fr;gap:32px;max-width:800px;margin:0 auto;flex-grow:1;">
-            <div style="grid-column:1/-1;">
-                <div style="border-radius:16px;background:#23232b;color:#fff;box-shadow:0 4px 32px #0008;overflow:hidden;">
-                    <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between;padding:24px 24px 0 24px;">
-                        <div>
-                            <div style="font-weight:600;font-size:1.5rem;font-family:'Poppins','PT Sans',Arial,sans-serif;">Your Events</div>
-                            <div style="font-size:1rem;color:#bdbdbd;">Create and manage your events. Set one to 'Active' to receive song requests.</div>
-                        </div>
-                        <button onclick="showCreateParty();" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(90deg,#ff00cc 0%,#fff700 100%);color:#18181b;font-weight:600;padding:10px 20px;border:none;border-radius:8px;font-size:1rem;box-shadow:0 2px 8px #ff00cc33;cursor:pointer;transition:background 0.2s;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
-                            Create Event
-                        </button>
-                    </div>
-                    <div style="padding:32px 24px 24px 24px;">
-                        <ul id="partiesList" style="list-style:none;padding:0;margin:0;"></ul>
-                        <span id="partyResult" style="color:#ff0033;"></span>
-                    </div>
-                </div>
-            </div>
-            <aside style="grid-column:1/-1;">
-                <div style="border-radius:16px;background:#23232b;color:#fff;box-shadow:0 2px 16px #0006;overflow:hidden;margin-top:32px;">
-                    <div style="padding:24px 24px 0 24px;display:flex;flex-direction:column;gap:8px;">
-                        <div style="font-size:1.5rem;font-weight:600;display:flex;align-items:center;gap:8px;font-family:'Poppins','PT Sans',Arial,sans-serif;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code"><rect width="5" height="5" x="3" y="3" rx="1"></rect><rect width="5" height="5" x="16" y="3" rx="1"></rect><rect width="5" height="5" x="3" y="16" rx="1"></rect><path d="M21 16h-3a2 2 0 0 0-2 2v3"></path><path d="M21 21v.01"></path><path d="M12 7v3a2 2 0 0 1-2 2H7"></path><path d="M3 12h.01"></path><path d="M12 3h.01"></path><path d="M12 16v.01"></path><path d="M16 12h1"></path><path d="M21 12v.01"></path><path d="M12 21v-1"></path></svg>
-                            Share for Requests
-                        </div>
-                    </div>
-                    <div style="padding:24px;display:flex;flex-direction:column;align-items:center;gap:16px;">
-                        <p style="font-size:0.95rem;color:#bdbdbd;text-align:center;">Before sharing, make sure you have set an event to 'Active' to receive requests for the correct event.</p>
-                        <div style="display:flex;width:100%;gap:12px;flex-wrap:wrap;">
-                            <button onclick="showQRModal();" style="flex:1;display:inline-flex;align-items:center;gap:8px;background:#fff;color:#23232b;font-weight:600;padding:10px 0;border:none;border-radius:8px;font-size:1rem;box-shadow:0 2px 8px #ff00cc22;cursor:pointer;transition:background 0.2s;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><rect width="5" height="5" x="3" y="3" rx="1"></rect><rect width="5" height="5" x="16" y="3" rx="1"></rect><rect width="5" height="5" x="3" y="16" rx="1"></rect><path d="M21 16h-3a2 2 0 0 0-2 2v3"></path><path d="M21 21v.01"></path><path d="M12 7v3a2 2 0 0 1-2 2H7"></path><path d="M3 12h.01"></path><path d="M12 3h.01"></path><path d="M12 16v.01"></path><path d="M16 12h1"></path><path d="M21 12v.01"></path><path d="M12 21v-1"></path></svg>
-                                Show QR Code
-                            </button>
-                            <button onclick="shareRequestLink();" style="flex:1;display:inline-flex;align-items:center;gap:8px;background:linear-gradient(90deg,#ff00cc 0%,#fff700 100%);color:#18181b;font-weight:600;padding:10px 0;border:none;border-radius:8px;font-size:1rem;box-shadow:0 2px 8px #ff00cc33;cursor:pointer;transition:background 0.2s;">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-4 w-4"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line></svg>
-                                Share Link
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-        </main>
-        <footer style="width:100%;max-width:800px;margin:32px auto 0 auto;padding:32px 0 0 0;">
-            <div style="display:flex;justify-content:center;">
-                <a href="submit.html" style="text-decoration:none;">
-                    <button style="display:inline-flex;align-items:center;gap:8px;background:none;color:#bdbdbd;font-size:1rem;font-weight:500;border:none;cursor:pointer;text-decoration:underline;">View request page
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
-                    </button>
-                </a>
-            </div>
-        </footer>
+<body>
+    <div class="disco-bg"></div>
+    <h1 id="title">DJ Dashboard</h1>
+        <a href="settings.html" id="settingsBtn" style="position:fixed; top:18px; right:24px; width:32px; height:32px; background:#fff; border-radius:8px; box-shadow:0 0 8px #ff00cc99; display:flex; align-items:center; justify-content:center; z-index:100; text-decoration:none; border:1px solid #eee;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff00cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 8 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 8 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 16 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.14.31.22.65.22 1v.09A1.65 1.65 0 0 0 21 12c0 .35-.08.69-.22 1z"/></svg>
+        </a>
+
+
+
+    <div id="partiesSection" class="dashboard-section">
+        <h2>Your Parties</h2>
+        <ul id="partiesList"></ul>
+        <button type="button" class="buttons disco-btn" onclick="showCreateParty();">Create New Party</button>
+        <span id="partyResult"></span>
+    </div>
+    <!-- Delete button moved to bottom of selectedPartySection -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDeleteConfirm();">&times;</span>
+            <h2>Delete Party?</h2>
+            <p>Are you sure you want to delete this party and all its requests?</p>
+            <button type="button" class="buttons disco-btn" style="background:#ff0033; color:#fff;" onclick="confirmDeleteParty();">Yes, Delete</button>
+            <button type="button" class="buttons disco-btn" onclick="closeDeleteConfirm();">Cancel</button>
+        </div>
+    </div>
+    <div id="createPartyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCreateParty();">&times;</span>
+            <h2>Create a New Party</h2>
+            <input type="text" id="partyName" placeholder="Party Name" />
+            <button type="button" class="buttons disco-btn" onclick="createParty();">Create Party</button>
+        </div>
+    </div>
+    <div id="selectedPartySection" class="dashboard-section" style="display:none; position:relative; min-height:350px; padding-bottom:90px;">
+        <h2 id="selectedPartyName"></h2>
+        <div id="qrSection">
+            <h3>Shareable QR Code</h3>
+            <canvas id="qrPlaceholder"></canvas>
+            <p>Share this QR code with the crowd so they can submit song requests!</p>
+        </div>
+        <div id="requestsSection">
+            <h3>Song Requests</h3>
+            <ul id="requestsList"></ul>
+        </div>
+    <button id="deletePartyBtn" type="button" class="buttons disco-btn" style="display:none; background:#ff0033; color:#fff; padding: 6px 18px; font-size: 0.95em; border-radius: 16px; position:absolute; left:50%; transform:translateX(-50%); bottom:40px; width: fit-content;">Delete Party</button>
     </div>
     <script>
         let djId = 1; // Replace with actual logged-in DJ ID
