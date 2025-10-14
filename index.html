@@ -7,28 +7,32 @@
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
 </head>
-<body>
-    <div class="disco-bg"></div>
-    <h1 id="title">Crowd Connect</h1>
-    <div id="loginDiv">
-        <span id="inner-title">Welcome to the Party!<br>Login to join Crowd Connect</span>
-    <input type="text" id="loginName" placeholder="Username" onkeydown="if(event.key==='Enter'){doLogin();}" /><br />
-    <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter'){doLogin();}" /><br />
-        <button type="button" id="loginButton" class="buttons" onclick="doLogin();">Login</button>
-        <span id="loginResult"></span>
-        <hr>
-        <button type="button" id="registerButton" class="buttons disco-btn" onclick="showRegister();">Create Account</button>
-    </div>
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeRegister();">&times;</span>
-            <h2>Register for Crowd Connect</h2>
-            <input type="text" id="registerFirstName" placeholder="First Name" /><br />
-            <input type="text" id="registerLastName" placeholder="Last Name" /><br />
-            <input type="text" id="registerName" placeholder="Username" /><br />
-            <input type="password" id="registerPassword" placeholder="Password"/><br />
-            <button type="button" id="createAccountButton" class="buttons disco-btn" onclick="doRegister();">Create Account</button>
-            <span id="registerResult"></span>
+<body style="background:#18181b; min-height:100vh;">
+    <div class="flex-center" style="min-height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+            <img src="images/background.png" alt="Crowd Connect Logo" style="height:56px; width:56px; border-radius:16px; box-shadow:0 0 12px #ff00cc99; background:#fff;" />
+            <h1 style="color:#fff; font-size:2.5rem; font-family:'Ubuntu',sans-serif; font-weight:700; letter-spacing:-1px;">Crowd Connect</h1>
+        </div>
+        <div style="background:#23232b; border-radius:24px; box-shadow:0 4px 32px #0008; padding:40px 32px 32px 32px; min-width:320px; max-width:90vw; width:350px; display:flex; flex-direction:column; align-items:center;">
+            <div style="font-size:1.1rem; color:#bdbdbd; margin-bottom:18px; text-align:center;">Welcome! Please log in to continue</div>
+            <input type="text" id="loginName" placeholder="Username" onkeydown="if(event.key==='Enter'){doLogin();}" style="width:100%;margin-bottom:14px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;font-size:1rem;" />
+            <input type="password" id="loginPassword" placeholder="Password" onkeydown="if(event.key==='Enter'){doLogin();}" style="width:100%;margin-bottom:18px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;font-size:1rem;" />
+            <button type="button" id="loginButton" onclick="doLogin();" style="width:100%;background:linear-gradient(90deg,#ff00cc 0%,#fff700 100%);color:#18181b;font-weight:700;padding:10px 0;border:none;border-radius:8px;font-size:1.1rem;box-shadow:0 2px 8px #ff00cc33;cursor:pointer;transition:background 0.2s;">Login</button>
+            <span id="loginResult" style="color:#ff0033;display:block;margin-top:10px;"></span>
+            <hr style="width:100%;border:none;border-top:1px solid #333;margin:24px 0 16px 0;" />
+            <button type="button" id="registerButton" onclick="showRegister();" style="width:100%;background:#23232b;color:#fff;border:1px solid #444;padding:10px 0;border-radius:8px;font-size:1rem;cursor:pointer;">Create Account</button>
+        </div>
+        <div id="registerModal" class="modal">
+            <div class="modal-content" style="background:#23232b;color:#fff;">
+                <span class="close" onclick="closeRegister();">&times;</span>
+                <h2 style="color:#fff;">Register for Crowd Connect</h2>
+                <input type="text" id="registerFirstName" placeholder="First Name" style="width:100%;margin-bottom:10px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;" /><br />
+                <input type="text" id="registerLastName" placeholder="Last Name" style="width:100%;margin-bottom:10px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;" /><br />
+                <input type="text" id="registerName" placeholder="Username" style="width:100%;margin-bottom:10px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;" /><br />
+                <input type="password" id="registerPassword" placeholder="Password" style="width:100%;margin-bottom:18px;padding:10px 14px;border-radius:8px;border:1px solid #333;background:#18181b;color:#fff;" /><br />
+                <button type="button" id="createAccountButton" onclick="doRegister();" style="width:100%;background:linear-gradient(90deg,#ff00cc 0%,#fff700 100%);color:#18181b;font-weight:700;padding:10px 0;border:none;border-radius:8px;font-size:1.1rem;box-shadow:0 2px 8px #ff00cc33;cursor:pointer;">Create Account</button>
+                <span id="registerResult" style="color:#ff0033;display:block;margin-top:10px;"></span>
+            </div>
         </div>
     </div>
     <script>
