@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -31,31 +32,106 @@
             color: hsl(var(--foreground));
             min-height: 100vh;
             font-family: 'Ubuntu', sans-serif;
+            margin: 0;
         }
-        .dashboard-section {
-            background: hsl(var(--card) / 0.9);
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 12px 0 12px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-bottom: 32px;
+        }
+        .dashboard-logo {
+            height: 54px;
+            width: 54px;
+            background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2em;
+            color: hsl(var(--primary-foreground));
+            font-weight: bold;
+        }
+        .dashboard-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: hsl(var(--primary));
+            font-family: 'Ubuntu', sans-serif;
+        }
+        .dashboard-card {
+            background: hsl(var(--card) / 0.95);
             border-radius: 25px;
-            box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
-            margin: 30px auto;
-            padding: 30px 40px;
-            max-width: 500px;
-            text-align: center;
+            box-shadow: 0 0 20px hsl(var(--primary) / 0.18);
+            margin: 0 auto 32px auto;
+            padding: 32px 36px 28px 36px;
+            max-width: 600px;
+            width: 100%;
+            text-align: left;
         }
-        #partiesList li {
+        .dashboard-card h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: hsl(var(--primary));
+            margin-bottom: 8px;
+        }
+        .dashboard-card .desc {
+            color: hsl(var(--muted-foreground));
+            font-size: 1.05em;
+            margin-bottom: 18px;
+        }
+        .party-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 18px 0;
+        }
+        .party-list li {
             background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
             color: hsl(var(--primary-foreground));
             margin: 10px 0;
-            padding: 12px 20px;
-            border-radius: 20px;
+            padding: 14px 22px;
+            border-radius: 18px;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        #partiesList li.selected {
+        .party-list li.selected {
             background: linear-gradient(90deg, hsl(var(--secondary)) 0%, hsl(var(--primary)) 100%);
             color: hsl(var(--foreground));
         }
-        .modal {
+        .dashboard-btn {
+            font-size: 1.1em;
+            border-radius: 25px;
+            width: 100%;
+            margin: 18px 0 0 0;
+            font-family: 'Ubuntu', sans-serif;
+            background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+            color: hsl(var(--primary-foreground));
+            font-weight: bold;
+            border: none;
+            box-shadow: 0 0 10px hsl(var(--primary) / 0.10);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 13px 0;
+        }
+        .dashboard-btn:hover {
+            background: linear-gradient(90deg, hsl(var(--secondary)) 0%, hsl(var(--primary)) 100%);
+            color: hsl(var(--foreground));
+            transform: scale(1.05);
+            box-shadow: 0 0 20px hsl(var(--primary) / 0.18);
+        }
+        .dashboard-modal {
             display: none;
             position: fixed;
             z-index: 10;
@@ -64,7 +140,7 @@
             background: hsl(var(--secondary) / 0.8);
             backdrop-filter: blur(3px);
         }
-        .modal-content {
+        .dashboard-modal-content {
             background: hsl(var(--card));
             margin: 10vh auto;
             padding: 30px 40px;
@@ -82,14 +158,33 @@
             cursor: pointer;
             font-weight: bold;
         }
-        #qrSection {
-            margin: 20px 0;
+        .qr-section {
+            margin: 24px 0 0 0;
+            text-align: center;
         }
-        #qrPlaceholder {
-            margin: 10px auto;
-            display: block;
+        .qr-section h3 {
+            color: hsl(var(--primary));
+            font-size: 1.15em;
+            margin-bottom: 8px;
         }
-        #requestsList li {
+        .qr-section p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.98em;
+        }
+        .requests-section {
+            margin: 24px 0 0 0;
+        }
+        .requests-section h3 {
+            color: hsl(var(--primary));
+            font-size: 1.15em;
+            margin-bottom: 8px;
+        }
+        .requests-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .requests-list li {
             background: hsl(var(--muted));
             color: hsl(var(--muted-foreground));
             margin: 8px 0;
@@ -101,32 +196,40 @@
 </head>
 <body>
     <div class="disco-bg"></div>
-    <h1 id="title">DJ Dashboard</h1>
-    <div id="partiesSection" class="dashboard-section">
-        <h2>Your Parties</h2>
-        <ul id="partiesList"></ul>
-        <button type="button" class="buttons disco-btn" onclick="showCreateParty();">Create New Party</button>
-        <span id="partyResult"></span>
-    </div>
-    <div id="createPartyModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeCreateParty();">&times;</span>
-            <h2>Create a New Party</h2>
-            <input type="text" id="partyName" placeholder="Party Name" />
-            <button type="button" class="buttons disco-btn" onclick="createParty();">Create Party</button>
-        </div>
-    </div>
-    <div id="selectedPartySection" class="dashboard-section" style="display:none;">
-        <h2 id="selectedPartyName"></h2>
-        <div id="qrSection">
-            <h3>Shareable QR Code</h3>
-            <canvas id="qrPlaceholder"></canvas>
-            <p>Share this QR code with the crowd so they can submit song requests!</p>
-        </div>
-        <div id="requestsSection">
-            <h3>Song Requests</h3>
-            <ul id="requestsList"></ul>
-        </div>
+    <div class="container">
+        <header class="dashboard-header">
+            <div class="dashboard-logo">🎵</div>
+            <div class="dashboard-title">Crowd Connect</div>
+        </header>
+        <main>
+            <section class="dashboard-card">
+                <h2>Your Parties</h2>
+                <div class="desc">Create and manage your parties. Select one to view requests and share the QR code.</div>
+                <ul id="partiesList" class="party-list"></ul>
+                <button type="button" class="dashboard-btn" onclick="showCreateParty();">Create New Party</button>
+                <span id="partyResult"></span>
+            </section>
+            <div id="createPartyModal" class="dashboard-modal">
+                <div class="dashboard-modal-content">
+                    <span class="close" onclick="closeCreateParty();">&times;</span>
+                    <h2 style="color:hsl(var(--primary));margin-bottom:18px;">Create a New Party</h2>
+                    <input type="text" id="partyName" class="login-input" placeholder="Party Name" />
+                    <button type="button" class="dashboard-btn" onclick="createParty();">Create Party</button>
+                </div>
+            </div>
+            <section id="selectedPartySection" class="dashboard-card" style="display:none;">
+                <h2 id="selectedPartyName"></h2>
+                <div class="qr-section">
+                    <h3>Shareable QR Code</h3>
+                    <canvas id="qrPlaceholder"></canvas>
+                    <p>Share this QR code with the crowd so they can submit song requests!</p>
+                </div>
+                <div class="requests-section">
+                    <h3>Song Requests</h3>
+                    <ul id="requestsList" class="requests-list"></ul>
+                </div>
+            </section>
+        </main>
     </div>
     <script>
         let djId = 1; // Replace with actual logged-in DJ ID
