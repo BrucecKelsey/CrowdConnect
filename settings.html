@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Crowd Connect - Settings</title>
+	<link href="css/styles.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
+	<style>
+		:root {
+			--background: 222.2 84% 4.9%;
+			--foreground: 210 40% 98%;
+			--card: 222.2 84% 4.9%;
+			--card-foreground: 210 40% 98%;
+			--primary: 217.2 91.2% 59.8%;
+			--primary-foreground: 222.2 47.4% 11.2%;
+			--secondary: 217.2 32.6% 17.5%;
+			--secondary-foreground: 210 40% 98%;
+			--muted: 217.2 32.6% 17.5%;
+			--muted-foreground: 215 20.2% 65.1%;
+			--accent: 217.2 32.6% 17.5%;
+			--accent-foreground: 210 40% 98%;
+			--destructive: 0 62.8% 30.6%;
+			--destructive-foreground: 210 40% 98%;
+			--border: 217.2 32.6% 17.5%;
+			--input: 217.2 32.6% 17.5%;
+			--ring: 212.7 26.8% 83.9%;
+			--radius: 0.5rem;
+		}
+		body {
+			background: hsl(var(--background));
+			color: hsl(var(--foreground));
+			min-height: 100vh;
+			font-family: 'Ubuntu', sans-serif;
+		}
+		.settings-section {
+			background: hsl(var(--card) / 0.9);
+			border-radius: 25px;
+			box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
+			margin: 40px auto;
+			padding: 36px 44px;
+			max-width: 420px;
+			text-align: center;
+		}
+		.settings-title {
+			font-size: 2.2em;
+			font-weight: bold;
+			margin-bottom: 18px;
+			color: hsl(var(--primary));
+			font-family: 'Ubuntu', sans-serif;
+		}
+		.settings-label {
+			color: hsl(var(--muted-foreground));
+			font-size: 1.1em;
+			margin-bottom: 6px;
+			display: block;
+		}
+		.settings-value {
+			color: hsl(var(--foreground));
+			font-size: 1.2em;
+			margin-bottom: 18px;
+			font-weight: 500;
+		}
+		.settings-btn {
+			font-size: 1.1em;
+			border-radius: 25px;
+			width: 80%;
+			margin: 18px auto 0 auto;
+			font-family: 'Ubuntu', sans-serif;
+			background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+			color: hsl(var(--primary-foreground));
+			font-weight: bold;
+			border: none;
+			box-shadow: 0 0 10px hsl(var(--primary) / 0.2);
+			cursor: pointer;
+			transition: transform 0.2s, box-shadow 0.2s;
+			padding: 12px 0;
+		}
+		.settings-btn:hover {
+			background: linear-gradient(90deg, hsl(var(--secondary)) 0%, hsl(var(--primary)) 100%);
+			color: hsl(var(--foreground));
+			transform: scale(1.05);
+			box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+		}
+	</style>
+</head>
+<body>
+	<div class="disco-bg"></div>
+	<div class="settings-section">
+		<div class="settings-title">Account Settings</div>
+		<div class="settings-label">Username</div>
+		<div class="settings-value" id="settingsUsername">Loading...</div>
+		<div class="settings-label">Name</div>
+		<div class="settings-value" id="settingsName">Loading...</div>
+		<button class="settings-btn" onclick="signOut();">Sign Out</button>
+	</div>
+	<script>
+		// Simulate fetching user info from localStorage or backend
+		function getUserInfo() {
+			// In a real app, fetch from backend or localStorage
+			// Here, just use placeholders or values from localStorage if set
+			let username = localStorage.getItem('username') || 'demoUser';
+			let name = localStorage.getItem('name') || 'Demo User';
+			document.getElementById('settingsUsername').textContent = username;
+			document.getElementById('settingsName').textContent = name;
+		}
+		function signOut() {
+			// Clear localStorage and redirect to login
+			localStorage.clear();
+			window.location.href = 'index.html';
+		}
+		window.onload = getUserInfo;
+	</script>
+</body>
+</html>
