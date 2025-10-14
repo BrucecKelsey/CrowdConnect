@@ -6,23 +6,44 @@
     <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
+        :root {
+            --background: 222.2 84% 4.9%;
+            --foreground: 210 40% 98%;
+            --card: 222.2 84% 4.9%;
+            --card-foreground: 210 40% 98%;
+            --primary: 217.2 91.2% 59.8%;
+            --primary-foreground: 222.2 47.4% 11.2%;
+            --secondary: 217.2 32.6% 17.5%;
+            --secondary-foreground: 210 40% 98%;
+            --muted: 217.2 32.6% 17.5%;
+            --muted-foreground: 215 20.2% 65.1%;
+            --accent: 217.2 32.6% 17.5%;
+            --accent-foreground: 210 40% 98%;
+            --destructive: 0 62.8% 30.6%;
+            --destructive-foreground: 210 40% 98%;
+            --border: 217.2 32.6% 17.5%;
+            --input: 217.2 32.6% 17.5%;
+            --ring: 212.7 26.8% 83.9%;
+            --radius: 0.5rem;
+        }
         body {
-            background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
             min-height: 100vh;
             font-family: 'Ubuntu', sans-serif;
         }
         .dashboard-section {
-            background: rgba(255,255,255,0.1);
+            background: hsl(var(--card) / 0.9);
             border-radius: 25px;
-            box-shadow: 0 0 20px #ff00cc99;
+            box-shadow: 0 0 20px hsl(var(--primary) / 0.4);
             margin: 30px auto;
             padding: 30px 40px;
             max-width: 500px;
             text-align: center;
         }
         #partiesList li {
-            background: linear-gradient(90deg, #fff700 0%, #ff00cc 100%);
-            color: #333399;
+            background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
+            color: hsl(var(--primary-foreground));
             margin: 10px 0;
             padding: 12px 20px;
             border-radius: 20px;
@@ -31,8 +52,8 @@
             transition: background 0.2s, color 0.2s;
         }
         #partiesList li.selected {
-            background: linear-gradient(90deg, #ff00cc 0%, #fff700 100%);
-            color: #fff;
+            background: linear-gradient(90deg, hsl(var(--secondary)) 0%, hsl(var(--primary)) 100%);
+            color: hsl(var(--foreground));
         }
         .modal {
             display: none;
@@ -40,16 +61,16 @@
             z-index: 10;
             left: 0; top: 0;
             width: 100vw; height: 100vh;
-            background: rgba(51, 51, 153, 0.8);
+            background: hsl(var(--secondary) / 0.8);
             backdrop-filter: blur(3px);
         }
         .modal-content {
-            background: #fff;
+            background: hsl(var(--card));
             margin: 10vh auto;
             padding: 30px 40px;
             border-radius: 30px;
             width: 350px;
-            box-shadow: 0 0 30px #ff00cc99;
+            box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
             text-align: center;
             position: relative;
         }
@@ -57,7 +78,7 @@
             position: absolute;
             top: 10px; right: 20px;
             font-size: 2em;
-            color: #ff00cc;
+            color: hsl(var(--primary));
             cursor: pointer;
             font-weight: bold;
         }
@@ -69,8 +90,8 @@
             display: block;
         }
         #requestsList li {
-            background: #fff700;
-            color: #333399;
+            background: hsl(var(--muted));
+            color: hsl(var(--muted-foreground));
             margin: 8px 0;
             padding: 10px 15px;
             border-radius: 15px;
