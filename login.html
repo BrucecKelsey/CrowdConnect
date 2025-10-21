@@ -77,11 +77,15 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Response from Login.php:', data); // Debugging log
-                if (data.token && data.username && data.userId) {
+                if (data.token && data.id && data.firstName && data.lastName) {
+                    // Construct the username from firstName and lastName
+                    const username = `${data.firstName.trim()} ${data.lastName.trim()}`;
+
                     // Store the token, username, and userId in localStorage
                     localStorage.setItem('userToken', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('userId', data.id);
+
                     // Redirect to the landing page
                     window.location.href = './landing.html';
                 } else {
