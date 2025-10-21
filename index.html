@@ -92,9 +92,14 @@
 
         // Function to display the username dynamically
         function displayUsername() {
-            const username = localStorage.getItem('username') || 'DJ'; // Replace 'DJ' with a default value if username is not set
+            const username = localStorage.getItem('username');
             const greetingElement = document.getElementById('greeting');
-            greetingElement.textContent = `Hello DJ ${username}`;
+            if (username) {
+                greetingElement.textContent = `Hello DJ ${username}`;
+            } else {
+                greetingElement.textContent = "Hello DJ";
+                console.warn("Username not found in localStorage. Defaulting to 'DJ'.");
+            }
         }
 
         // Call the function on page load

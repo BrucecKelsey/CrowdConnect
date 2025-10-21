@@ -97,4 +97,12 @@ function createEvent(eventName) {
     xhr.send(JSON.stringify(data));
 }
 
-document.querySelector('.btn').addEventListener('click', openCreateEventPopup);
+// Ensure the DOM is fully loaded before adding the event listener
+document.addEventListener('DOMContentLoaded', () => {
+    const createEventButton = document.querySelector('.btn');
+    if (createEventButton) {
+        createEventButton.addEventListener('click', openCreateEventPopup);
+    } else {
+        console.error("Create Event button with class '.btn' not found.");
+    }
+});
