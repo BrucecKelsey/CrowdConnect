@@ -421,22 +421,23 @@
         });
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const settingsButton = document.getElementById('settingsButton');
-            const settingsDropdown = document.getElementById('settingsDropdown');
+            document.addEventListener('DOMContentLoaded', () => {
+                const settingsButton = document.getElementById('settingsButton');
+                const settingsDropdown = document.getElementById('settingsDropdown');
 
-            settingsButton.addEventListener('mouseover', () => {
-                settingsDropdown.classList.remove('hidden');
-            });
+                settingsButton.addEventListener('mouseover', () => {
+                    settingsDropdown.classList.remove('hidden');
+                });
 
-            settingsButton.addEventListener('mouseleave', () => {
-                settingsDropdown.classList.add('hidden');
-            });
+                settingsButton.addEventListener('mouseleave', () => {
+                    settingsDropdown.classList.add('hidden');
+                });
 
-            settingsDropdown.addEventListener('mouseleave', () => {
-                settingsDropdown.classList.add('hidden');
+                settingsDropdown.addEventListener('mouseleave', () => {
+                    settingsDropdown.classList.add('hidden');
+                });
             });
-        });
-    </script>
+        </script>
+    </div>
 </body>
 </html>
