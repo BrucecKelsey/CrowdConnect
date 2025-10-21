@@ -13,7 +13,7 @@
 	}
 	else
 	{
-		$stmt = $conn->prepare("SELECT ID,firstName,lastName FROM Users WHERE Login=? AND Password =?");
+		$stmt = $conn->prepare("SELECT ID,firstName,lastName,Login FROM Users WHERE Login=? AND Password =?");
 		$stmt->bind_param("ss", $inData["login"], $inData["password"]);
 		$stmt->execute();
 		$result = $stmt->get_result();
@@ -24,6 +24,7 @@
 				"id" => $row['ID'],
 				"firstName" => $row['firstName'],
 				"lastName" => $row['lastName'],
+				"login" => $row['Login'], // Include the login column for the username
 				"token" => bin2hex(random_bytes(16)) // Generate a session token
 			);
 			sendResultInfoAsJson(json_encode($response));
