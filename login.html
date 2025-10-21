@@ -65,8 +65,27 @@
     <script>
         document.querySelector('.login-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            // Simulate successful login
-            window.location.href = './landing.html';
+
+            const username = event.target.username.value;
+            const password = event.target.password.value;
+
+            fetch('LAMPAPI/Login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ login: username, password: password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Store the token in localStorage
+                    localStorage.setItem('userToken', data.token);
+                    // Redirect to the landing page
+                    window.location.href = './landing.html';
+                } else {
+                    alert('Login failed: ' + data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
         });
     </script>
 </body>

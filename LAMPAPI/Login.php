@@ -1,4 +1,3 @@
-
 <?php
 
 	$inData = getRequestInfo();
@@ -21,7 +20,13 @@
 
 		if( $row = $result->fetch_assoc()  )
 		{
-			returnWithInfo( $row['firstName'], $row['lastName'], $row['ID'] );
+			$response = array(
+				"id" => $row['ID'],
+				"firstName" => $row['firstName'],
+				"lastName" => $row['lastName'],
+				"token" => bin2hex(random_bytes(16)) // Generate a session token
+			);
+			sendResultInfoAsJson(json_encode($response));
 		}
 		else
 		{
