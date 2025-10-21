@@ -238,6 +238,56 @@
         .group:hover #settingsDropdown {
             display: block;
         }
+
+        /* Dropdown container */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Dropdown button */
+        .dropdown button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 16px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* Dropdown content (hidden by default) */
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+
+        /* Links inside dropdown */
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+
+        /* Hover effects */
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+
+        /* Show dropdown on hover */
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown:hover button {
+            background-color: #2980b9;
+        }
     </style>
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
@@ -248,16 +298,13 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                     <h1 class="headline">Crowd Connect</h1>
                 </div>
-                <div class="relative group">
-                    <button id="settingsButton" class="px-4 py-2 bg-card text-card-foreground border border-gray-300 rounded-lg shadow-md">Settings</button>
-                    <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-48 bg-card text-card-foreground border border-gray-300 rounded-lg shadow-lg group-hover:block">
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+                <div class="dropdown">
+                    <button>Settings</button>
+                    <div class="dropdown-content">
+                        <a href="#">Profile</a>
+                        <a href="#">Logout</a>
                     </div>
                 </div>
-            </div>
-            <div class="header-inner">
-                <p id="greeting" class="mt-4 text-2xl text-center font-bold"></p>
             </div>
         </header>
         <main class="w-full flex flex-col gap-8 max-w-4xl mx-auto flex-grow">
@@ -279,7 +326,7 @@
             </div>
             <div>
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm share-for-requests-box">
-                    <div class="text-2xl font-semibold leading-none tracking-tight font-headline flex items-center gap-2">
+                    <div class="text-2xl font-semibold leading-none tracking-tight font-headline flex items-center gap-2"></div>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code"><rect width="5" height="5" x="3" y="3" rx="1"></rect><rect width="5" height="5" x="16" y="3" rx="1"></rect><rect width="5" height="5" x="3" y="16" rx="1"></rect><path d="M21 16h-3a2 2 0 0 0-2 2v3"></path><path d="M21 21v.01"></path><path d="M12 7v3a2 2 0 0 1-2 2H7"></path><path d="M3 12h.01"></path><path d="M12 3h.01"></path><path d="M12 16v.01"></path><path d="M16 12h1"></path><path d="M21 12v.01"></path><path d="M12 21v-1"></path></svg>
                         Share for Requests
                     </div>
@@ -309,6 +356,38 @@
         </footer>
     </div>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsDropdown = document.getElementById('settingsDropdown');
+
+            console.log('settingsButton:', settingsButton);
+            console.log('settingsDropdown:', settingsDropdown);
+
+            if (settingsButton && settingsDropdown) {
+                settingsButton.addEventListener('mouseover', () => {
+                    console.log('Mouse over settingsButton');
+                    settingsDropdown.classList.remove('hidden');
+                });
+
+                settingsButton.addEventListener('mouseleave', () => {
+                    console.log('Mouse leave settingsButton');
+                    settingsDropdown.classList.add('hidden');
+                });
+
+                settingsDropdown.addEventListener('mouseover', () => {
+                    console.log('Mouse over settingsDropdown');
+                    settingsDropdown.classList.remove('hidden');
+                });
+
+                settingsDropdown.addEventListener('mouseleave', () => {
+                    console.log('Mouse leave settingsDropdown');
+                    settingsDropdown.classList.add('hidden');
+                });
+            } else {
+                console.error('settingsButton or settingsDropdown not found in the DOM.');
+            }
+        });
+
         let djId = 1; // Replace with actual logged-in DJ ID
         let selectedPartyId = null;
         function showQRModal() {
@@ -318,141 +397,9 @@
             let qr = new QRious({
                 element: document.getElementById("qrPlaceholder"),
                 value: window.location.origin + "/submit.html?partyId=" + partyId,
-                size: 200
             });
         }
-        function closeQRModal() {
-            document.getElementById('qrModal').style.display = 'none';
-        }
-        function loadParties() {
-            let url = 'http://178.128.4.96/LAMPAPI/GetParties.php?djId=' + djId;
-            let xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-            xhr.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    let jsonObject = JSON.parse(xhr.responseText);
-                    let partiesList = document.getElementById("partiesList");
-                    if (!partiesList) {
-                        console.error("Element with ID 'partiesList' not found.");
-                        return;
-                    }
-                    partiesList.innerHTML = "";
-                    if(jsonObject.parties.length === 0) {
-                        document.getElementById("emptyEvents").style.display = '';
-                    } else {
-                        document.getElementById("emptyEvents").style.display = 'none';
-                        jsonObject.parties.forEach(function(party) {
-                            let li = document.createElement("li");
-                            li.textContent = party.PartyName;
-                            li.setAttribute('data-partyid', party.PartyId);
-                            li.onclick = function() { selectParty(party.PartyId, party.PartyName, li); };
-                            partiesList.appendChild(li);
-                        });
-                    }
-                }
-            };
-            xhr.send();
-        }
-        function selectParty(partyId, partyName, liElem) {
-            selectedPartyId = partyId;
-            // Highlight selected
-            let lis = document.querySelectorAll('#partiesList li');
-            lis.forEach(function(li){ li.classList.remove('selected'); });
-            liElem.classList.add('selected');
-        }
-        function shareLink() {
-            let partyId = selectedPartyId || '';
-            let requestUrl = window.location.origin + "/submit.html?partyId=" + partyId;
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Request a Song!',
-                    text: 'Scan the QR code or click the link to request a song.',
-                    url: requestUrl,
-                });
-            } else {
-                navigator.clipboard.writeText(requestUrl);
-                alert('The request link has been copied to your clipboard.');
-            }
-        }
-        window.onload = function() {
-            loadParties();
-        };
     </script>
-    <script>
-        // Check if the user is authenticated
-        const userToken = localStorage.getItem('userToken');
-        if (!userToken) {
-            // Redirect to login page if no token is found
-            window.location.href = './login.html';
-        } else {
-            console.log('User authenticated with token:', userToken);
-        }
-    </script>
-    <script>
-            // Function to display the username dynamically
-            function displayUsername() {
-                const username = localStorage.getItem('username');
-                const greetingElement = document.getElementById('greeting');
-                console.log('Executing displayUsername function');
-                console.log('Username from localStorage:', username);
-                if (username) {
-                    greetingElement.textContent = `Hello DJ ${username}`;
-                } else {
-                    greetingElement.textContent = "Hello DJ";
-                    console.warn("Username not found in localStorage. Defaulting to 'DJ'.");
-                }
-            }
-
-            // Call the function on page load
-            window.onload = displayUsername;
-        </script>
-    <script>
-        const profileButton = document.getElementById('profileButton');
-        const profileDropdown = document.getElementById('profileDropdown');
-
-        profileButton.addEventListener('click', () => {
-            profileDropdown.classList.toggle('hidden');
-        });
-
-        window.addEventListener('click', (event) => {
-            if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
-                profileDropdown.classList.add('hidden');
-            }
-        });
-    </script>
-    <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const settingsButton = document.getElementById('settingsButton');
-                const settingsDropdown = document.getElementById('settingsDropdown');
-
-                console.log('settingsButton:', settingsButton);
-                console.log('settingsDropdown:', settingsDropdown);
-
-                if (settingsButton && settingsDropdown) {
-                    settingsButton.addEventListener('mouseover', () => {
-                        console.log('Mouse over settingsButton');
-                        settingsDropdown.classList.remove('hidden');
-                    });
-
-                    settingsButton.addEventListener('mouseleave', () => {
-                        console.log('Mouse leave settingsButton');
-                        settingsDropdown.classList.add('hidden');
-                    });
-
-                    settingsDropdown.addEventListener('mouseover', () => {
-                        console.log('Mouse over settingsDropdown');
-                        settingsDropdown.classList.remove('hidden');
-                    });
-
-                    settingsDropdown.addEventListener('mouseleave', () => {
-                        console.log('Mouse leave settingsDropdown');
-                        settingsDropdown.classList.add('hidden');
-                    });
-                } else {
-                    console.error('settingsButton or settingsDropdown not found in the DOM.');
-                }
-            });
-        </script>
     </div>
 </body>
 </html>
