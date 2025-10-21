@@ -94,6 +94,8 @@
         function displayUsername() {
             const username = localStorage.getItem('username');
             const greetingElement = document.getElementById('greeting');
+            console.log('Executing displayUsername function');
+            console.log('Username from localStorage:', username);
             if (username) {
                 greetingElement.textContent = `Hello DJ ${username}`;
             } else {
