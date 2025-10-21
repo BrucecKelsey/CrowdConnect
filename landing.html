@@ -247,10 +247,10 @@
                 </div>
                 <div class="relative">
                     <button id="settingsButton" class="px-4 py-2 bg-card text-card-foreground border border-gray-300 rounded-lg shadow-md">Settings</button>
-                    <div id="settingsDropdown" class="hidden absolute right-0 mt-2 w-48 bg-card text-card-foreground border border-gray-300 rounded-lg shadow-lg">
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a>
-                        <a href="#" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
-                    </div>
+                    <ul id="settingsDropdown" class="hidden absolute right-0 mt-2 w-48 bg-card text-card-foreground border border-gray-300 rounded-lg shadow-lg">
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Profile</a></li>
+                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Logout</a></li>
+                    </ul>
                 </div>
             </div>
             <div class="header-inner">
@@ -421,12 +421,13 @@
         const settingsButton = document.getElementById('settingsButton');
         const settingsDropdown = document.getElementById('settingsDropdown');
 
-        settingsButton.addEventListener('click', () => {
+        settingsButton.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent click from propagating
             settingsDropdown.classList.toggle('hidden');
         });
 
-        window.addEventListener('click', (event) => {
-            if (!settingsButton.contains(event.target) && !settingsDropdown.contains(event.target)) {
+        window.addEventListener('click', () => {
+            if (!settingsDropdown.classList.contains('hidden')) {
                 settingsDropdown.classList.add('hidden');
             }
         });
