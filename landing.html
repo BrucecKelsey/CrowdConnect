@@ -421,18 +421,21 @@
         });
     </script>
     <script>
-        const settingsButton = document.getElementById('settingsButton');
-        const settingsDropdown = document.getElementById('settingsDropdown');
+        document.addEventListener('DOMContentLoaded', () => {
+            const settingsButton = document.getElementById('settingsButton');
+            const settingsDropdown = document.getElementById('settingsDropdown');
 
-        settingsButton.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent click from propagating
-            settingsDropdown.classList.toggle('hidden');
-        });
+            settingsButton.addEventListener('mouseover', () => {
+                settingsDropdown.classList.remove('hidden');
+            });
 
-        window.addEventListener('click', () => {
-            if (!settingsDropdown.classList.contains('hidden')) {
+            settingsButton.addEventListener('mouseleave', () => {
                 settingsDropdown.classList.add('hidden');
-            }
+            });
+
+            settingsDropdown.addEventListener('mouseleave', () => {
+                settingsDropdown.classList.add('hidden');
+            });
         });
     </script>
 </body>
