@@ -363,6 +363,8 @@
         if (!userToken) {
             // Redirect to login page if no token is found
             window.location.href = './login.html';
+        } else {
+            console.log('User authenticated with token:', userToken);
         }
     </script>
 </body>
