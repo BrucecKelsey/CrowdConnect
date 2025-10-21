@@ -80,6 +80,7 @@
                 if (data.token && data.id && data.login) {
                     // Use the login field as the username
                     const username = data.login;
+                    console.log('Saving username to localStorage:', username); // Debugging log
 
                     // Store the token, username, and userId in localStorage
                     localStorage.setItem('userToken', data.token);
