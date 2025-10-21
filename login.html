@@ -78,8 +78,8 @@
             .then(data => {
                 console.log('Response from Login.php:', data); // Debugging log
                 if (data.token && data.id && data.firstName && data.lastName) {
-                    // Construct the username from firstName and lastName
-                    const username = `${data.firstName.trim()} ${data.lastName.trim()}`;
+                    // Use the login field as the username
+                    const username = data.login;
 
                     // Store the token, username, and userId in localStorage
                     localStorage.setItem('userToken', data.token);
