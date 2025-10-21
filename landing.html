@@ -193,6 +193,20 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            position: relative;
+            padding: 1rem;
+        }
+        .your-events-header {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .your-events-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
         }
     </style>
 </head>
@@ -209,15 +223,15 @@
         <main class="w-full flex flex-col gap-8 max-w-4xl mx-auto flex-grow">
             <div>
                 <div class="rounded-lg border bg-card text-card-foreground shadow-lg your-events-box">
-                    <div>
-                        <div class="font-semibold tracking-tight font-headline text-2xl">Your Events</div>
-                        <div class="text-sm text-muted-foreground">No events yet<br>Click "Create Event" to get started.</div>
-                    </div>
-                    <div class="btn-container">
+                    <div class="your-events-header">Your Events</div>
+                    <div class="your-events-button">
                         <button class="btn" type="button">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
                             Create Event
                         </button>
+                    </div>
+                    <div>
+                        <div class="text-sm text-muted-foreground">No events yet<br>Click "Create Event" to get started.</div>
                     </div>
                 </div>
             </div>
