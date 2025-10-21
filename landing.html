@@ -239,13 +239,21 @@
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
     <div class="container">
-        <header class="w-full max-w-4xl mx-auto mb-4">
-            <div class="header-inner">
-                <div class="header-row">
+        <header class="w-full max-w-4xl mx-auto mb-4 relative">
+            <div class="header-inner flex items-center justify-between">
+                <div class="header-row flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                     <h1 class="headline">Crowd Connect</h1>
                 </div>
-                <p id="greeting" class="mt-4 text-2xl text-center font-bold"></p>
+                <div class="relative">
+                    <button id="profileButton" class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg w-6 h-6"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    </button>
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white border border-gray-300 rounded-lg shadow-lg">
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Settings</a>
+                        <a href="#" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Logout</a>
+                    </div>
+                </div>
             </div>
         </header>
         <main class="w-full flex flex-col gap-8 max-w-4xl mx-auto flex-grow">
@@ -394,5 +402,19 @@
             // Call the function on page load
             window.onload = displayUsername;
         </script>
+    <script>
+        const profileButton = document.getElementById('profileButton');
+        const profileDropdown = document.getElementById('profileDropdown');
+
+        profileButton.addEventListener('click', () => {
+            profileDropdown.classList.toggle('hidden');
+        });
+
+        window.addEventListener('click', (event) => {
+            if (!profileButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+                profileDropdown.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
