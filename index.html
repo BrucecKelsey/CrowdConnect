@@ -79,13 +79,26 @@
 <body>
     <button class="login-btn" onclick="redirectToLogin()">Login</button>
     <div class="cover-container">
-        <h1 class="cover-title">Welcome to Crowd Connect</h1>
+        <div id="header">
+            <h1 class="cover-title">Welcome to Crowd Connect</h1>
+            <p id="greeting"></p>
+        </div>
         <p class="cover-description">Making your live events smoother and simpler. Crowd Connect helps you manage events, receive song requests, and engage with your audience effortlessly.</p>
     </div>
     <script>
         function redirectToLogin() {
             window.location.href = './login.html';
         }
+
+        // Function to display the username dynamically
+        function displayUsername() {
+            const username = localStorage.getItem('username') || 'DJ'; // Replace 'DJ' with a default value if username is not set
+            const greetingElement = document.getElementById('greeting');
+            greetingElement.textContent = `Hello DJ ${username}`;
+        }
+
+        // Call the function on page load
+        window.onload = displayUsername;
     </script>
 </body>
 </html>

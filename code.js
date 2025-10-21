@@ -1,6 +1,5 @@
 // Function to open the Create Event popup
 function openCreateEventPopup() {
-    // Create the popup container
     const popup = document.createElement('div');
     popup.id = 'create-event-popup';
     popup.style.position = 'fixed';
@@ -14,7 +13,6 @@ function openCreateEventPopup() {
     popup.style.alignItems = 'center';
     popup.style.zIndex = '1000';
 
-    // Create the popup content
     const popupContent = document.createElement('div');
     popupContent.style.backgroundColor = '#fff';
     popupContent.style.padding = '20px';
@@ -23,7 +21,6 @@ function openCreateEventPopup() {
     popupContent.style.textAlign = 'center';
     popupContent.style.width = '300px';
 
-    // Add the input field
     const input = document.createElement('input');
     input.type = 'text';
     input.placeholder = 'Enter event name';
@@ -33,7 +30,6 @@ function openCreateEventPopup() {
     input.style.border = '1px solid #ccc';
     input.style.borderRadius = '4px';
 
-    // Add the Create button
     const createButton = document.createElement('button');
     createButton.textContent = 'Create';
     createButton.style.marginRight = '10px';
@@ -44,7 +40,6 @@ function openCreateEventPopup() {
     createButton.style.borderRadius = '4px';
     createButton.style.cursor = 'pointer';
 
-    // Add the Cancel button
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Cancel';
     cancelButton.style.padding = '10px 20px';
@@ -54,21 +49,16 @@ function openCreateEventPopup() {
     cancelButton.style.borderRadius = '4px';
     cancelButton.style.cursor = 'pointer';
 
-    // Append elements to the popup content
     popupContent.appendChild(input);
     popupContent.appendChild(createButton);
     popupContent.appendChild(cancelButton);
     popup.appendChild(popupContent);
-
-    // Append the popup to the body
     document.body.appendChild(popup);
 
-    // Cancel button functionality
     cancelButton.addEventListener('click', () => {
         document.body.removeChild(popup);
     });
 
-    // Create button functionality
     createButton.addEventListener('click', () => {
         const eventName = input.value.trim();
         if (eventName) {
@@ -92,7 +82,6 @@ function createEvent(eventName) {
                 const response = JSON.parse(xhr.responseText);
                 if (response.success) {
                     alert('Event created successfully!');
-                    // Optionally, refresh the events list here
                 } else {
                     alert('Failed to create event: ' + response.error);
                 }
