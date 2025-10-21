@@ -260,6 +260,7 @@
         .dropdown-content {
             display: none;
             position: absolute;
+            right: 0;
             background-color: white;
             min-width: 160px;
             box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
@@ -288,6 +289,13 @@
         .dropdown:hover button {
             background-color: #2980b9;
         }
+
+        .top-right {
+            display: flex;
+            justify-content: flex-end;
+            padding: 20px;
+            background-color: transparent; /* Match the existing header background */
+        }
     </style>
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
@@ -299,11 +307,13 @@
                     <h1 class="headline">Crowd Connect</h1>
                 </div>
                 <p id="greeting" class="mt-4 text-2xl text-center font-bold">Hello DJ <span id="username"></span></p>
-                <div class="dropdown absolute top-0 right-0 mt-2 mr-2">
-                    <button>Settings</button>
-                    <div class="dropdown-content">
-                        <a href="#">Profile</a>
-                        <a href="#">Logout</a>
+                <div class="top-right">
+                    <div class="dropdown">
+                        <button>Settings</button>
+                        <div class="dropdown-content">
+                            <a href="#">Profile</a>
+                            <a href="#">Logout</a>
+                        </div>
                     </div>
                 </div>
             </div>
