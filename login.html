@@ -62,5 +62,12 @@
             <button type="submit">Login</button>
         </form>
     </div>
+    <script>
+        document.querySelector('.login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            // Simulate successful login
+            window.location.href = './landing.html';
+        });
+    </script>
 </body>
 </html>
