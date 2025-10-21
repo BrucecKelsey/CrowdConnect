@@ -208,6 +208,16 @@
             top: 1rem;
             right: 1rem;
         }
+        .no-events-text {
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        .music-logo {
+            display: block;
+            margin: 0 auto 0.5rem;
+            width: 50px;
+            height: 50px;
+        }
     </style>
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
@@ -231,7 +241,9 @@
                         </button>
                     </div>
                     <div>
-                        <div class="text-sm text-muted-foreground">No events yet<br>Click "Create Event" to get started.</div>
+                        <img src="images/music-logo.png" alt="Music Logo" class="music-logo">
+                        <div class="text-sm text-muted-foreground no-events-text">No events yet</div>
+                        <div class="text-sm text-muted-foreground">Click "Create Event" to get started.</div>
                     </div>
                 </div>
             </div>
