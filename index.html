@@ -1,12 +1,11 @@
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Crowd Connect - Login</title>
-    <script type="text/javascript" src="js/md5.js"></script>
-    <script type="text/javascript" src="js/code.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Crowd Connect</title>
     <link href="css/styles.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css?family=Ubuntu:700,900" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --background: 222.2 84% 4.9%;
@@ -29,216 +28,63 @@
             --radius: 0.5rem;
         }
         body {
+            font-family: 'Poppins', 'PT Sans', sans-serif;
             background: hsl(var(--background));
             color: hsl(var(--foreground));
-            min-height: 100vh;
-            font-family: 'Ubuntu', sans-serif;
+            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-        .login-card {
-            background: hsl(var(--card) / 0.95);
-            border-radius: 30px;
-            box-shadow: 0 0 30px hsl(var(--primary) / 0.25);
-            padding: 44px 38px 32px 38px;
-            max-width: 370px;
-            width: 100%;
+            min-height: 100vh;
             text-align: center;
-            margin: 40px 0;
         }
-        .login-title {
-            font-size: 2.3em;
-            font-weight: bold;
-            color: hsl(var(--primary));
-            margin-bottom: 10px;
-            font-family: 'Ubuntu', sans-serif;
-        }
-        .login-subtitle {
-            color: hsl(var(--muted-foreground));
-            font-size: 1.1em;
-            margin-bottom: 24px;
-        }
-        .login-input {
-            border-radius: 25px;
-            text-align: center;
-            width: 90%;
-            margin: 10px auto;
-            font-size: 1.1em;
-            padding: 12px;
-            border: 2px solid hsl(var(--primary));
-            background: #fff;
-            box-shadow: 0 0 10px hsl(var(--primary) / 0.10);
-            font-family: 'Ubuntu', sans-serif;
-            display: block;
-        }
-        .login-btn, .register-btn {
-            font-size: 1.1em;
-            border-radius: 25px;
-            width: 90%;
-            margin: 18px auto 0 auto;
-            font-family: 'Ubuntu', sans-serif;
-            background: linear-gradient(90deg, hsl(var(--primary)) 0%, hsl(var(--secondary)) 100%);
-            color: hsl(var(--primary-foreground));
-            font-weight: bold;
-            border: none;
-            box-shadow: 0 0 10px hsl(var(--primary) / 0.15);
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            padding: 13px 0;
-        }
-        .login-btn:hover, .register-btn:hover {
-            background: linear-gradient(90deg, hsl(var(--secondary)) 0%, hsl(var(--primary)) 100%);
-            color: hsl(var(--foreground));
-            transform: scale(1.05);
-            box-shadow: 0 0 20px hsl(var(--primary) / 0.25);
-        }
-        .login-divider {
-            border: none;
-            border-top: 1px solid hsl(var(--border));
-            margin: 24px 0 12px 0;
-        }
-        .login-result {
-            display: block;
-            font-size: 0.95em;
-            width: 100%;
-            text-align: center;
-            margin: 10px 0 0 0;
-            color: #95060a;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10;
-            left: 0; top: 0;
-            width: 100vw; height: 100vh;
-            background: hsl(var(--secondary) / 0.8);
-            backdrop-filter: blur(3px);
-        }
-        .modal-content {
+        .cover-container {
+            max-width: 800px;
+            padding: 2rem;
+            border-radius: 1rem;
             background: hsl(var(--card));
-            margin: 10vh auto;
-            padding: 30px 40px;
-            border-radius: 30px;
-            width: 350px;
-            box-shadow: 0 0 30px hsl(var(--primary) / 0.4);
-            text-align: center;
-            position: relative;
+            box-shadow: 0 4px 24px hsl(var(--primary) / 0.2);
         }
-        .close {
-            position: absolute;
-            top: 10px; right: 20px;
-            font-size: 2em;
+        .cover-title {
+            font-size: 2.5rem;
+            font-weight: 700;
             color: hsl(var(--primary));
+            margin-bottom: 1rem;
+        }
+        .cover-description {
+            font-size: 1.2rem;
+            color: hsl(var(--muted-foreground));
+            margin-bottom: 2rem;
+        }
+        .login-btn {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: hsl(var(--primary-foreground));
+            background: hsl(var(--primary));
+            border: none;
+            border-radius: 0.5rem;
             cursor: pointer;
-            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .login-btn:hover {
+            background: hsl(var(--primary) / 0.9);
         }
     </style>
 </head>
 <body>
-    <div class="disco-bg"></div>
-    <div class="login-card">
-        <div class="login-title">Crowd Connect</div>
-        <div class="login-subtitle">Welcome to the Party!<br>Login to join Crowd Connect</div>
-        <input type="text" id="loginName" class="login-input" placeholder="Username" autocomplete="username" />
-        <input type="password" id="loginPassword" class="login-input" placeholder="Password" autocomplete="current-password" />
-        <button type="button" id="loginButton" class="login-btn" onclick="doLogin();">Login</button>
-        <span id="loginResult" class="login-result"></span>
-        <hr class="login-divider">
-        <button type="button" id="registerButton" class="register-btn" onclick="showRegister();">Create Account</button>
-    </div>
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeRegister();">&times;</span>
-            <h2 style="color:hsl(var(--primary));margin-bottom:18px;">Register for Crowd Connect</h2>
-            <input type="text" id="registerFirstName" class="login-input" placeholder="First Name" /><br />
-            <input type="text" id="registerLastName" class="login-input" placeholder="Last Name" /><br />
-            <input type="text" id="registerName" class="login-input" placeholder="Username" /><br />
-            <input type="password" id="registerPassword" class="login-input" placeholder="Password"/><br />
-            <button type="button" id="createAccountButton" class="register-btn" onclick="doRegister();">Create Account</button>
-            <span id="registerResult" class="login-result"></span>
-        </div>
+    <button class="login-btn" onclick="redirectToLogin()">Login</button>
+    <div class="cover-container">
+        <h1 class="cover-title">Welcome to Crowd Connect</h1>
+        <p class="cover-description">Making your live events smoother and simpler. Crowd Connect helps you manage events, receive song requests, and engage with your audience effortlessly.</p>
     </div>
     <script>
-        function showRegister() {
-            document.getElementById('registerModal').style.display = 'block';
-        }
-        function closeRegister() {
-            document.getElementById('registerModal').style.display = 'none';
-        }
-        // Placeholder for registration logic
-        function doRegister() {
-            let login = document.getElementById("registerName").value;
-            let password = document.getElementById("registerPassword").value;
-            let firstName = document.getElementById("registerFirstName").value;
-            let lastName = document.getElementById("registerLastName").value;
-
-            document.getElementById("registerResult").innerHTML = "";
-
-            let tmp = {
-                login: login,
-                password: password,
-                firstName: firstName,
-                lastName: lastName
-            };
-            let jsonPayload = JSON.stringify(tmp);
-            let url = 'http://178.128.4.96/LAMPAPI/Register.php';
-
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-            try {
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        let jsonObject = JSON.parse(xhr.responseText);
-                        if (jsonObject.error) {
-                            document.getElementById("registerResult").innerHTML = jsonObject.error;
-                        } else {
-                            document.getElementById("registerResult").innerHTML = "Registration complete! Returning to login...";
-                            setTimeout(function() {
-                                closeRegister();
-                            }, 1500);
-                        }
-                    }
-                };
-                xhr.send(jsonPayload);
-            } catch (err) {
-                document.getElementById("registerResult").innerHTML = err.message;
-            }
-        }
-
-        function doLogin() {
-            let login = document.getElementById("loginName").value;
-            let password = document.getElementById("loginPassword").value;
-
-            document.getElementById("loginResult").innerHTML = "";
-
-            let tmp = {
-                login: login,
-                password: password
-            };
-            let jsonPayload = JSON.stringify(tmp);
-            let url = 'http://178.128.4.96/LAMPAPI/Login.php';
-
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-            try {
-                xhr.onreadystatechange = function() {
-                    if (this.readyState == 4 && this.status == 200) {
-                        let jsonObject = JSON.parse(xhr.responseText);
-                        if (jsonObject.id > 0) {
-                            window.location.href = "landing.html";
-                        } else {
-                            document.getElementById("loginResult").innerHTML = jsonObject.error;
-                        }
-                    }
-                };
-                xhr.send(jsonPayload);
-            } catch (err) {
-                document.getElementById("loginResult").innerHTML = err.message;
-            }
+        function redirectToLogin() {
+            window.location.href = 'login.html';
         }
     </script>
 </body>
