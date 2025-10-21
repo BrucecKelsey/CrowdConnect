@@ -428,20 +428,28 @@
                 console.log('settingsButton:', settingsButton);
                 console.log('settingsDropdown:', settingsDropdown);
 
-                if (settingsButton) {
+                if (settingsButton && settingsDropdown) {
                     settingsButton.addEventListener('mouseover', () => {
+                        console.log('Mouse over settingsButton');
                         settingsDropdown.classList.remove('hidden');
                     });
 
                     settingsButton.addEventListener('mouseleave', () => {
+                        console.log('Mouse leave settingsButton');
                         settingsDropdown.classList.add('hidden');
                     });
 
+                    settingsDropdown.addEventListener('mouseover', () => {
+                        console.log('Mouse over settingsDropdown');
+                        settingsDropdown.classList.remove('hidden');
+                    });
+
                     settingsDropdown.addEventListener('mouseleave', () => {
+                        console.log('Mouse leave settingsDropdown');
                         settingsDropdown.classList.add('hidden');
                     });
                 } else {
-                    console.error('settingsButton not found in the DOM.');
+                    console.error('settingsButton or settingsDropdown not found in the DOM.');
                 }
             });
         </script>
