@@ -77,7 +77,7 @@
             .then(response => response.json())
             .then(data => {
                 console.log('Response from Login.php:', data); // Debugging log
-                if (data.token && data.id && data.firstName && data.lastName) {
+                if (data.token && data.id && data.login) {
                     // Use the login field as the username
                     const username = data.login;
 
