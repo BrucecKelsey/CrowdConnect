@@ -70,7 +70,6 @@ function openCreateEventPopup() {
     });
 }
 
-// Function to create an event in the database
 function createEvent(eventName) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', 'LAMPAPI/CreateParty.php', true);
@@ -98,5 +97,4 @@ function createEvent(eventName) {
     xhr.send(JSON.stringify(data));
 }
 
-// Attach the openCreateEventPopup function to the Create Event button
 document.querySelector('.btn').addEventListener('click', openCreateEventPopup);
