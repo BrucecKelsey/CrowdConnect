@@ -89,23 +89,6 @@
         function redirectToLogin() {
             window.location.href = './login.html';
         }
-
-        // Function to display the username dynamically
-        function displayUsername() {
-            const username = localStorage.getItem('username');
-            const greetingElement = document.getElementById('greeting');
-            console.log('Executing displayUsername function');
-            console.log('Username from localStorage:', username);
-            if (username) {
-                greetingElement.textContent = `Hello DJ ${username}`;
-            } else {
-                greetingElement.textContent = "Hello DJ";
-                console.warn("Username not found in localStorage. Defaulting to 'DJ'.");
-            }
-        }
-
-        // Call the function on page load
-        window.onload = displayUsername;
     </script>
 </body>
 </html>
