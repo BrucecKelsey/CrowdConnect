@@ -425,17 +425,24 @@
                 const settingsButton = document.getElementById('settingsButton');
                 const settingsDropdown = document.getElementById('settingsDropdown');
 
-                settingsButton.addEventListener('mouseover', () => {
-                    settingsDropdown.classList.remove('hidden');
-                });
+                console.log('settingsButton:', settingsButton);
+                console.log('settingsDropdown:', settingsDropdown);
 
-                settingsButton.addEventListener('mouseleave', () => {
-                    settingsDropdown.classList.add('hidden');
-                });
+                if (settingsButton) {
+                    settingsButton.addEventListener('mouseover', () => {
+                        settingsDropdown.classList.remove('hidden');
+                    });
 
-                settingsDropdown.addEventListener('mouseleave', () => {
-                    settingsDropdown.classList.add('hidden');
-                });
+                    settingsButton.addEventListener('mouseleave', () => {
+                        settingsDropdown.classList.add('hidden');
+                    });
+
+                    settingsDropdown.addEventListener('mouseleave', () => {
+                        settingsDropdown.classList.add('hidden');
+                    });
+                } else {
+                    console.error('settingsButton not found in the DOM.');
+                }
             });
         </script>
     </div>
