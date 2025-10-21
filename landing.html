@@ -77,14 +77,9 @@
             max-width: 56rem;
             margin: 0 auto;
             flex-grow: 1;
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 2rem;
-        }
-        @media (min-width: 1024px) {
-            main {
-                grid-template-columns: repeat(2, 1fr);
-            }
         }
         .card {
             border-radius: 0.5rem;
@@ -188,8 +183,8 @@
                 </div>
             </div>
         </header>
-        <main class="w-full grid grid-cols-1 gap-8 max-w-4xl mx-auto flex-grow">
-            <div class="lg:col-span-2">
+        <main class="w-full flex flex-col gap-8 max-w-4xl mx-auto flex-grow">
+            <div>
                 <div class="rounded-lg border bg-card text-card-foreground shadow-lg">
                     <div class="space-y-1.5 flex flex-row items-center justify-between p-4">
                         <div>
@@ -210,7 +205,7 @@
                     </div>
                 </div>
             </div>
-            <div class="lg:col-span-2">
+            <div>
                 <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
                     <div class="flex flex-col space-y-1.5 p-6">
                         <div class="text-2xl font-semibold leading-none tracking-tight font-headline flex items-center gap-2">
