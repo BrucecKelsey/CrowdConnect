@@ -196,17 +196,6 @@
                             <div class="font-semibold tracking-tight font-headline text-2xl">Your Events</div>
                             <div class="text-sm text-muted-foreground">Create and manage your events. Set one to 'Active' to receive song requests.</div>
                         </div>
-                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2" type="button" onclick="showCreateParty();">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus mr-2 h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
-                            Create Event
-                        </button>
-                    </div>
-                    <div class="p-6 pt-0">
-                        <div class="text-center py-12 px-6 border-2 border-dashed rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music mx-auto h-12 w-12 text-muted-foreground"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                            <h3 class="mt-4 text-lg font-semibold font-headline">No events yet</h3>
-                            <p class="mt-1 text-sm text-muted-foreground">Click "Create Event" to get started.</p>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -245,14 +234,6 @@
             </div>
         </footer>
         <!-- Modals -->
-        <div id="createPartyModal" class="dashboard-modal">
-            <div class="dashboard-modal-content">
-                <span class="close" onclick="closeCreateParty();">&times;</span>
-                <h2 style="color:hsl(var(--primary));margin-bottom:18px;">Create a New Party</h2>
-                <input type="text" id="partyName" class="login-input" placeholder="Party Name" />
-                <button type="button" class="btn w-full mt-4" onclick="createParty();">Create Party</button>
-            </div>
-        </div>
         <div id="qrModal" class="dashboard-modal">
             <div class="dashboard-modal-content">
                 <span class="close" onclick="closeQRModal();">&times;</span>
@@ -265,12 +246,6 @@
     <script>
         let djId = 1; // Replace with actual logged-in DJ ID
         let selectedPartyId = null;
-        function showCreateParty() {
-            document.getElementById('createPartyModal').style.display = 'block';
-        }
-        function closeCreateParty() {
-            document.getElementById('createPartyModal').style.display = 'none';
-        }
         function showQRModal() {
             document.getElementById('qrModal').style.display = 'block';
             // Generate QR for currently selected party or fallback
@@ -283,27 +258,6 @@
         }
         function closeQRModal() {
             document.getElementById('qrModal').style.display = 'none';
-        }
-        function createParty() {
-            let partyName = document.getElementById("partyName").value;
-            let tmp = { partyName: partyName, djId: djId };
-            let jsonPayload = JSON.stringify(tmp);
-            let url = 'http://178.128.4.96/LAMPAPI/CreateParty.php';
-            let xhr = new XMLHttpRequest();
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-type", "application/json; charset=UTF-8");
-            xhr.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    let jsonObject = JSON.parse(xhr.responseText);
-                    if (!jsonObject.error) {
-                        closeCreateParty();
-                        loadParties();
-                    } else {
-                        document.getElementById("partyResult").innerHTML = jsonObject.error;
-                    }
-                }
-            };
-            xhr.send(jsonPayload);
         }
         function loadParties() {
             let url = 'http://178.128.4.96/LAMPAPI/GetParties.php?djId=' + djId;
