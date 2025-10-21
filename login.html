@@ -76,6 +76,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Response from Login.php:', data); // Debugging log
                 if (data.token && data.username && data.userId) {
                     // Store the token, username, and userId in localStorage
                     localStorage.setItem('userToken', data.token);
