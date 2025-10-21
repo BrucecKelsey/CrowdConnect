@@ -76,9 +76,11 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.token) {
-                    // Store the token in localStorage
+                if (data.token && data.username && data.userId) {
+                    // Store the token, username, and userId in localStorage
                     localStorage.setItem('userToken', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('userId', data.userId);
                     // Redirect to the landing page
                     window.location.href = './landing.html';
                 } else {
