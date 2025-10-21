@@ -186,6 +186,14 @@
         .text-muted-foreground { color: hsl(var(--muted-foreground)); }
         .text-primary { color: hsl(var(--primary)); }
         .text-primary-foreground { color: hsl(var(--primary-foreground)); }
+        .your-events-box {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
@@ -200,25 +208,16 @@
         </header>
         <main class="w-full flex flex-col gap-8 max-w-4xl mx-auto flex-grow">
             <div>
-                <div class="rounded-lg border bg-card text-card-foreground shadow-lg">
-                    <div class="space-y-1.5 flex flex-row items-center p-4">
-                        <div class="flex-grow">
-                            <div class="font-semibold tracking-tight font-headline text-2xl">Your Events</div>
-                            <div class="text-sm text-muted-foreground">Create and manage your events. Set one to 'Active' to receive song requests.</div>
-                        </div>
-                        <div class="btn-container">
-                            <button class="btn" type="button">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
-                                Create Event
-                            </button>
-                        </div>
+                <div class="rounded-lg border bg-card text-card-foreground shadow-lg your-events-box">
+                    <div>
+                        <div class="font-semibold tracking-tight font-headline text-2xl">Your Events</div>
+                        <div class="text-sm text-muted-foreground">No events yet<br>Click "Create Event" to get started.</div>
                     </div>
-                    <div class="p-6 pt-0">
-                        <div class="text-center py-12 px-6 border-2 border-dashed rounded-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music mx-auto h-12 w-12 text-muted-foreground"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-                            <h3 class="mt-4 text-lg font-semibold font-headline">No events yet</h3>
-                            <p class="mt-1 text-sm text-muted-foreground">Click "Create Event" to get started.</p>
-                        </div>
+                    <div class="btn-container">
+                        <button class="btn" type="button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-plus"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>
+                            Create Event
+                        </button>
                     </div>
                 </div>
             </div>
