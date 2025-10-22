@@ -361,21 +361,71 @@
     </style>
 </head>
 <body class="font-body antialiased min-h-screen bg-background">
+    <!-- Top Banner Navbar -->
+    <div class="navbar">
+        <div class="dropdown">
+            <button>Settings</button>
+            <div class="dropdown-content">
+                <a href="#">Profile</a>
+                <a href="#">Logout</a>
+            </div>
+        </div>
+    </div>
     <div class="container">
+</style>
+<style>
+    .navbar {
+        background-color: #333;
+        color: white;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 10px 20px;
+    }
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .dropdown button {
+        background-color: #3498db;
+        color: white;
+        padding: 10px 16px;
+        font-size: 16px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        z-index: 1;
+    }
+    .dropdown-content a {
+        color: black;
+        padding: 10px 14px;
+        text-decoration: none;
+        display: block;
+    }
+    .dropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+    .dropdown:hover button {
+        background-color: #2980b9;
+    }
+</style>
         <header class="w-full max-w-4xl mx-auto mb-4 relative">
             <div class="header-inner flex items-center justify-between">
                 <div class="header-row flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                     <h1 class="headline">Crowd Connect</h1>
-                </div>
-                <div class="top-right">
-                    <div class="dropdown">
-                        <button>Settings</button>
-                        <div class="dropdown-content">
-                            <a href="#">Profile</a>
-                            <a href="#">Logout</a>
-                        </div>
-                    </div>
                 </div>
             </div>
             <p id="greeting" class="mt-2 text-2xl text-center font-bold">Hello DJ <span id="username"></span></p>
