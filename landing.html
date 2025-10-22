@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch('LAMPAPI/CreateParty.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ partyName: eventName, djId: localStorage.getItem('djId') })
+                    body: JSON.stringify({ partyName: eventName, djId: parseInt(localStorage.getItem('djId'), 10) })
                 })
                 .then(res => res.json())
                 .then(data => {
