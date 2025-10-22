@@ -368,6 +368,18 @@
             <div class="dropdown-content">
                 <a href="#">Profile</a>
                 <a href="#">Logout</a>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const logoutBtn = document.querySelector('.dropdown-content a[href="#"]:last-child');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                    });
+                }
+            });
+        </script>
             </div>
         </div>
     </div>
