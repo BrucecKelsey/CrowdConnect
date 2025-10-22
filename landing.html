@@ -527,8 +527,13 @@
         </footer>
     </div>
     <script>
+
         document.addEventListener('DOMContentLoaded', () => {
-            const username = localStorage.getItem('username') || 'DJ';
+            const username = localStorage.getItem('username');
+            if (!username) {
+                window.location.href = 'login.html';
+                return;
+            }
             document.getElementById('username').textContent = username;
         });
 
