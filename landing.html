@@ -496,19 +496,25 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 input.style.borderColor = '#3b82f6'; // reset to blue
-                // Use fetch like login.html
                 fetch('http://178.128.4.96/LAMPAPI/CreateParty.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ partyName: eventName, djId: parseInt(localStorage.getItem('djId'), 10) })
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.error) {
-                        modal.style.display = 'none';
-                    } else {
+                .then(async response => {
+                    const text = await response.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if (!data.error) {
+                            modal.style.display = 'none';
+                        } else {
+                            input.style.borderColor = '#f87171';
+                            alert(data.error || 'Failed to create event.');
+                        }
+                    } catch (e) {
                         input.style.borderColor = '#f87171';
-                        alert(data.error || 'Failed to create event.');
+                        console.error('Raw response from CreateParty.php:', text);
+                        alert('Server returned invalid JSON. Raw response: ' + text);
                     }
                 })
                 .catch(error => {
