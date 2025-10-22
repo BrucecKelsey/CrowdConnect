@@ -495,11 +495,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.focus();
                     return;
                 }
+                let djId = localStorage.getItem('djId');
+                if (!djId || isNaN(parseInt(djId, 10))) {
+                    alert('Error: DJ ID is missing or invalid! Value: ' + djId);
+                    input.style.borderColor = '#f87171';
+                    return;
+                }
                 input.style.borderColor = '#3b82f6'; // reset to blue
                 fetch('http://178.128.4.96/LAMPAPI/CreateParty.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ partyName: eventName, djId: parseInt(localStorage.getItem('djId'), 10) })
+                    body: JSON.stringify({ partyName: eventName, djId: parseInt(djId, 10) })
                 })
                 .then(async response => {
                     const text = await response.text();
