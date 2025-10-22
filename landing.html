@@ -489,7 +489,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         if (createBtn) {
             createBtn.addEventListener('click', () => {
+                if (!input.value.trim()) {
+                    input.style.borderColor = '#f87171'; // red
+                    input.focus();
+                    return;
+                }
+                input.style.borderColor = '#3b82f6'; // reset to blue
                 modal.style.display = 'none';
+            });
+            // Reset border color on input
+            input.addEventListener('input', () => {
+                input.style.borderColor = '#3b82f6';
             });
         }
         modal.addEventListener('click', (e) => {
