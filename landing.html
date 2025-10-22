@@ -388,13 +388,14 @@
         display: inline-block;
     }
     .dropdown button {
-        background-color: #3498db;
-        color: white;
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
         padding: 4px 10px;
         font-size: 13px;
         border: none;
         cursor: pointer;
         border-radius: 4px;
+        transition: background 0.3s;
     }
     .dropdown-content {
         display: none;
@@ -419,7 +420,7 @@
         display: block;
     }
     .dropdown:hover button {
-        background-color: #2980b9;
+        background: hsl(var(--primary) / 0.9);
     }
 </style>
         <header class="w-full max-w-4xl mx-auto mb-4 relative">
