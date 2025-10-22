@@ -368,9 +368,10 @@
             <div class="dropdown-content">
                 <a href="#">Profile</a>
                 <a href="#">Logout</a>
+    <a href="#" id="logoutBtn">Logout</a>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
-                const logoutBtn = document.querySelector('.dropdown-content a[href="#"]:last-child');
+                const logoutBtn = document.getElementById('logoutBtn');
                 if (logoutBtn) {
                     logoutBtn.addEventListener('click', function(e) {
                         e.preventDefault();
