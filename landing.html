@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 input.style.borderColor = '#3b82f6'; // reset to blue
                 // Send to backend
-                fetch('LAMPAPI/CreateParty.php', {
+                fetch('http://178.128.4.96/CrowdConnect/LAMPAPI/CreateParty.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ partyName: eventName, djId: parseInt(localStorage.getItem('djId'), 10) })
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         // Load events and display in the events section
         function loadEvents() {
-            fetch('LAMPAPI/GetParties.php?djId=' + encodeURIComponent(localStorage.getItem('djId')))
+            fetch('http://178.128.4.96/CrowdConnect/LAMPAPI/GetParties.php?djId=' + encodeURIComponent(localStorage.getItem('djId')))
                 .then(res => res.json())
                 .then(data => {
                     const box = document.querySelector('.your-events-box');
