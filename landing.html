@@ -489,19 +489,65 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         if (createBtn) {
             createBtn.addEventListener('click', () => {
-                if (!input.value.trim()) {
+                const eventName = input.value.trim();
+                if (!eventName) {
                     input.style.borderColor = '#f87171'; // red
                     input.focus();
                     return;
                 }
                 input.style.borderColor = '#3b82f6'; // reset to blue
-                modal.style.display = 'none';
+                // Call backend to create event
+                fetch('LAMPAPI/CreateParty.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: eventName, djId: localStorage.getItem('djId') })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        modal.style.display = 'none';
+                        loadEvents();
+                    } else {
+                        input.style.borderColor = '#f87171';
+                        alert(data.error || 'Failed to create event.');
+                    }
+                })
+                .catch(() => {
+                    input.style.borderColor = '#f87171';
+                    alert('Failed to create event.');
+                });
             });
             // Reset border color on input
             input.addEventListener('input', () => {
                 input.style.borderColor = '#3b82f6';
             });
         }
+// Load events and display in the events section
+function loadEvents() {
+    fetch('LAMPAPI/GetParties.php?djId=' + encodeURIComponent(localStorage.getItem('djId')))
+        .then(res => res.json())
+        .then(data => {
+            const box = document.querySelector('.your-events-box');
+            if (!box) return;
+            // Remove old events
+            box.querySelectorAll('.event-item').forEach(e => e.remove());
+            if (data && data.length > 0) {
+                data.forEach(event => {
+                    const div = document.createElement('div');
+                    div.className = 'event-item';
+                    div.style = 'margin: 0.5rem 0; padding: 0.7rem 1rem; background: #18181b; color: #fff; border-radius: 8px; font-size: 1.1rem;';
+                    div.textContent = event.name;
+                    box.appendChild(div);
+                });
+            } else {
+                // If no events, show the empty state
+                // (No action needed, as the empty state is already present)
+            }
+        });
+}
+
+// Load events on page load
+document.addEventListener('DOMContentLoaded', loadEvents);
         modal.addEventListener('click', (e) => {
             if (e.target === modal) modal.style.display = 'none';
         });
