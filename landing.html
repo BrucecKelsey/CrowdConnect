@@ -495,9 +495,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.focus();
                     return;
                 }
-                let djId = localStorage.getItem('djId');
+                let djId = localStorage.getItem('userId');
                 if (!djId || isNaN(parseInt(djId, 10))) {
-                    alert('Error: DJ ID is missing or invalid! Value: ' + djId);
+                    alert('Error: DJ ID (userId) is missing or invalid! Value: ' + djId);
                     input.style.borderColor = '#f87171';
                     return;
                 }
