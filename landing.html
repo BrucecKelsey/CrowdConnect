@@ -517,17 +517,29 @@
                             }
                             setActiveBtn.addEventListener('click', async (e) => {
                                 e.stopPropagation();
-                                // Determine if this is already active
-                                const isActive = (userActivePartyId && String(party.PartyId) === String(userActivePartyId));
                                 const userId = localStorage.getItem('userId');
+                                const isActive = (window._userActivePartyId && String(party.PartyId) === String(window._userActivePartyId));
                                 // Call backend to set/unset active party
                                 const response = await fetch('LAMPAPI/SetActiveParty.php', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ userId: userId, partyId: isActive ? null : party.PartyId })
                                 });
-                                // On success, reload the event list to update UI
-                                location.reload();
+                                // On success, update UI for all Set Active buttons
+                                if (response.ok) {
+                                    window._userActivePartyId = isActive ? null : party.PartyId;
+                                    // Update all Set Active buttons
+                                    document.querySelectorAll('.btn.btn-secondary').forEach(btn => {
+                                        btn.style.background = '';
+                                        btn.style.color = '';
+                                        btn.textContent = 'Set Active';
+                                    });
+                                    if (!isActive) {
+                                        setActiveBtn.style.background = '#3b82f6';
+                                        setActiveBtn.style.color = '#fff';
+                                        setActiveBtn.textContent = 'Active';
+                                    }
+                                }
                             });
                             // Arrow button
                             const arrowBtn = document.createElement('button');
