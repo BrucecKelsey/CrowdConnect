@@ -28,13 +28,61 @@
 </head>
 <body>
     <div class="event-title" id="eventTitle">Event</div>
+    <button id="deleteEventBtn" style="margin-top: 3rem; padding: 1rem 2.5rem; font-size: 1.2rem; font-weight: 700; background: #e11d48; color: #fff; border: none; border-radius: 10px; cursor: pointer; box-shadow: 0 2px 12px rgba(0,0,0,0.10);">Delete Event</button>
     <script>
         // Get event title from query string
         const params = new URLSearchParams(window.location.search);
         const title = params.get('title');
-        if (title) {
-            document.getElementById('eventTitle').textContent = title;
+        document.getElementById('eventTitle').textContent = title || 'Event';
+
+        // Get userId from localStorage
+        const userId = localStorage.getItem('userId');
+
+        // Fetch PartyId for this event title
+        let partyId = null;
+        async function getPartyId() {
+            if (!userId || !title) return null;
+            try {
+                const response = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
+                const data = await response.json();
+                if (data.parties) {
+                    const party = data.parties.find(p => p.PartyName === title);
+                    return party ? party.PartyId : null;
+                }
+            } catch (e) { return null; }
+            return null;
         }
+
+        document.getElementById('deleteEventBtn').addEventListener('click', async function() {
+            if (!userId || !title) {
+                alert('Missing user or event info.');
+                return;
+            }
+            if (!confirm('Are you sure you want to delete this event? This cannot be undone.')) return;
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) {
+                alert('Could not find event to delete.');
+                return;
+            }
+            try {
+                const response = await fetch('LAMPAPI/DeleteParty.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ partyId: partyId, djId: userId })
+                });
+                const text = await response.text();
+                let result;
+                try { result = JSON.parse(text); } catch (e) { result = {}; }
+                if (!result.error) {
+                    alert('Event deleted successfully.');
+                    window.location.href = 'landing.html';
+                } else {
+                    alert('Delete failed: ' + (result.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Delete failed: ' + e.message);
+            }
+        });
     </script>
 </body>
 </html>
