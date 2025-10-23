@@ -520,16 +520,30 @@
                             e.stopPropagation();
                             setActiveBtn.disabled = true;
                             const isActive = (window._userActivePartyId && String(party.PartyId) === String(window._userActivePartyId));
+                            console.log('[SetActive] Clicked. PartyId:', party.PartyId, 'isActive:', isActive, 'userId:', userId);
                             // Call backend to set/unset active party
-                            await fetch('LAMPAPI/SetActiveParty.php', {
+                            const resp = await fetch('LAMPAPI/SetActiveParty.php', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ userId: userId, partyId: isActive ? null : party.PartyId })
                             });
+                            let respData = {};
+                            try {
+                                respData = await resp.json();
+                            } catch (err) {
+                                console.error('[SetActive] Error parsing SetActiveParty.php response:', err);
+                            }
+                            console.log('[SetActive] SetActiveParty.php response:', respData);
+                            if (respData.error) {
+                                alert('SetActiveParty.php error: ' + respData.error);
+                                setActiveBtn.disabled = false;
+                                return;
+                            }
                             // Re-fetch active party and update all buttons
                             const userResp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
                             const userData = await userResp.json();
                             window._userActivePartyId = userData.ActivePartyId;
+                            console.log('[SetActive] New ActivePartyId:', userData.ActivePartyId);
                             // Re-render event list
                             renderEvents();
                         });
