@@ -22,6 +22,34 @@
     </style>
 </head>
 <body>
-    <div class="hello">hello</div>
+    <div id="request-content" class="hello">Loading...</div>
+    <script>
+    // Get userId from URL or prompt (for demo, use ?userId=123)
+    function getQueryParam(name) {
+        const url = new URL(window.location.href);
+        return url.searchParams.get(name);
+    }
+    const userId = getQueryParam('userId');
+    const contentDiv = document.getElementById('request-content');
+    if (!userId) {
+        contentDiv.textContent = 'No user specified.';
+    } else {
+        fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                contentDiv.textContent = 'Error: ' + data.error;
+            } else if (!data.ActivePartyId) {
+                contentDiv.textContent = 'No event is currently active.';
+            } else {
+                // Optionally fetch event details here
+                contentDiv.textContent = 'Active Event ID: ' + data.ActivePartyId;
+            }
+        })
+        .catch(e => {
+            contentDiv.textContent = 'Failed to load active event.';
+        });
+    }
+    </script>
 </body>
 </html>
