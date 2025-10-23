@@ -429,6 +429,10 @@
         background-color: #f1f1f1;
     }
     .dropdown:hover .dropdown-content {
+                    <div class="events-container">
+                        <h2>Your Events</h2>
+                        <div id="events-list">Loading your events...</div>
+                    </div>
         display: block;
     }
     .dropdown:hover button {
@@ -441,6 +445,38 @@
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="logo-svg"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
                     <h1 class="headline">Crowd Connect</h1>
                 </div>
+            <script>
+            // Fetch and display user's events
+            document.addEventListener('DOMContentLoaded', function() {
+                const userId = localStorage.getItem('userId');
+                const eventsList = document.getElementById('events-list');
+                if (!userId) {
+                    eventsList.textContent = 'You must be logged in to see your events.';
+                    return;
+                }
+                fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data.parties || data.parties.length === 0) {
+                            eventsList.textContent = 'You have no events.';
+                            return;
+                        }
+                        // Build event list
+                        const ul = document.createElement('ul');
+                        data.parties.forEach(party => {
+                            const li = document.createElement('li');
+                            li.textContent = party.PartyName;
+                            ul.appendChild(li);
+                        });
+                        eventsList.innerHTML = '';
+                        eventsList.appendChild(ul);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching events:', error);
+                        eventsList.textContent = 'Failed to load events.';
+                    });
+            });
+            </script>
             </div>
             <p id="greeting" class="mt-2 text-2xl text-center font-bold">Hello DJ <span id="username"></span></p>
         </header>
