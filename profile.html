@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Crowd Connect</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', 'PT Sans', sans-serif;
+            background: hsl(222.2, 84%, 4.9%);
+            color: hsl(210, 40%, 98%);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .profile-container {
+            max-width: 500px;
+            margin: 80px auto 0 auto;
+            padding: 2.5rem 2rem;
+            border-radius: 1rem;
+            background: hsl(222.2, 84%, 4.9%);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+        }
+        .profile-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .profile-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .profile-list li {
+            font-size: 1.15rem;
+            margin-bottom: 1.1rem;
+            background: #232323;
+            padding: 0.9rem 1.2rem;
+            border-radius: 0.6rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="profile-container">
+        <div class="profile-title">Profile Information</div>
+        <ul class="profile-list" id="profileList">
+            <li>Loading...</li>
+        </ul>
+    </div>
+    <script>
+    // Fetch and display user profile info
+    document.addEventListener('DOMContentLoaded', async function() {
+        const userId = localStorage.getItem('userId');
+        const profileList = document.getElementById('profileList');
+        if (!userId) {
+            profileList.innerHTML = '<li>Not logged in.</li>';
+            return;
+        }
+        try {
+            const resp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+            const data = await resp.json();
+            if (data.error) {
+                profileList.innerHTML = `<li>${data.error}</li>`;
+                return;
+            }
+            let html = '';
+            for (const key in data) {
+                if (key !== 'error') {
+                    html += `<li><strong>${key}:</strong> ${data[key]}</li>`;
+                }
+            }
+            profileList.innerHTML = html || '<li>No profile data found.</li>';
+        } catch (e) {
+            profileList.innerHTML = `<li>Error loading profile.</li>`;
+        }
+    });
+    </script>
+</body>
+</html>
