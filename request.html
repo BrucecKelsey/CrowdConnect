@@ -22,34 +22,201 @@
     </style>
 </head>
 <body>
-    <div id="request-content" class="hello">Loading...</div>
-    <script>
-    // Get userId from URL or prompt (for demo, use ?userId=123)
-    function getQueryParam(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
-    }
-    const userId = getQueryParam('userId');
-    const contentDiv = document.getElementById('request-content');
-    if (!userId) {
-        contentDiv.textContent = 'No user specified.';
-    } else {
-        fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`)
-        .then(r => r.json())
-        .then(data => {
-            if (data.error) {
-                contentDiv.textContent = 'Error: ' + data.error;
-            } else if (!data.ActivePartyId) {
-                contentDiv.textContent = 'No event is currently active.';
-            } else {
-                // Optionally fetch event details here
-                contentDiv.textContent = 'Active Event ID: ' + data.ActivePartyId;
+        <div id="request-card" class="request-card">
+            <div class="request-header">
+                <span class="music-icon">🎵</span>
+                <span class="request-title">Send a Request</span>
+            </div>
+            <div class="request-for">for <span id="eventName" class="event-name">...</span></div>
+            <div class="request-tabs">
+                <button class="tab active" id="tab-song">Song</button>
+                <button class="tab" id="tab-genre" disabled>Genre</button>
+            </div>
+            <form id="requestForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="songTitle">Song Title</label>
+                    <input type="text" id="songTitle" name="songTitle" placeholder="Enter song title" required />
+                </div>
+                <div class="form-group">
+                    <label for="artist">Artist</label>
+                    <input type="text" id="artist" name="artist" placeholder="Enter artist name" required />
+                </div>
+                <button type="submit" class="send-btn">
+                    <span class="send-icon">✈️</span> Send Song Request
+                </button>
+            </form>
+            <div id="requestMsg" class="request-msg"></div>
+        </div>
+        <script>
+        function getQueryParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+        const userId = getQueryParam('userId');
+        const eventNameSpan = document.getElementById('eventName');
+        let partyId = null;
+        // Fetch active event name
+        async function loadEventName() {
+            if (!userId) {
+                eventNameSpan.textContent = 'No user';
+                return;
             }
-        })
-        .catch(e => {
-            contentDiv.textContent = 'Failed to load active event.';
+            // Get active partyId for user
+            let activePartyId = getQueryParam('partyId');
+            if (!activePartyId) {
+                // Fetch from backend
+                const resp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+                const data = await resp.json();
+                if (!data.ActivePartyId) {
+                    eventNameSpan.textContent = 'No event';
+                    return;
+                }
+                activePartyId = data.ActivePartyId;
+            }
+            partyId = activePartyId;
+            // Fetch party name
+            const resp2 = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
+            const data2 = await resp2.json();
+            const party = (data2.parties || []).find(p => String(p.PartyId) === String(activePartyId));
+            eventNameSpan.textContent = party ? party.PartyName : 'Unknown';
+        }
+        loadEventName();
+
+        // Form submission (no backend yet)
+        document.getElementById('requestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('requestMsg').textContent = 'Request sent! (demo)';
+            document.getElementById('requestMsg').style.color = '#a78bfa';
+            this.reset();
         });
-    }
-    </script>
+        </script>
 </body>
+<style>
+body {
+    min-height: 100vh;
+    background: #232325;
+    color: #fff;
+    font-family: 'Poppins', 'PT Sans', 'Ubuntu', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.request-card {
+    background: #18181b;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.32);
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    min-width: 370px;
+    max-width: 95vw;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.2rem;
+}
+.request-header {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+    color: #fff;
+}
+.music-icon {
+    font-size: 2.1rem;
+    color: #a78bfa;
+}
+.request-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+.request-for {
+    text-align: center;
+    color: #bdbdbd;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+.event-name {
+    color: #a78bfa;
+    font-weight: 600;
+}
+.request-tabs {
+    display: flex;
+    gap: 0.2rem;
+    margin-bottom: 1.2rem;
+}
+.tab {
+    flex: 1;
+    background: #232325;
+    color: #bdbdbd;
+    border: none;
+    border-radius: 6px 6px 0 0;
+    padding: 0.6rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.tab.active {
+    background: #23232b;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+}
+.tab:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 1.1rem;
+}
+label {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #fff;
+}
+input[type="text"] {
+    background: #232325;
+    border: 2px solid #23232b;
+    border-radius: 6px;
+    padding: 0.7rem 1rem;
+    color: #fff;
+    font-size: 1.05rem;
+    outline: none;
+    transition: border 0.2s;
+}
+input[type="text"]:focus {
+    border: 2px solid #a78bfa;
+}
+.send-btn {
+    background: #a78bfa;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    transition: background 0.2s;
+}
+.send-btn:hover {
+    background: #8b5cf6;
+}
+.send-icon {
+    font-size: 1.2rem;
+}
+.request-msg {
+    text-align: center;
+    margin-top: 0.7rem;
+    font-size: 1.05rem;
+}
+</style>
 </html>
