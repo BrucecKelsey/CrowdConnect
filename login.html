@@ -76,6 +76,11 @@
         </div>
     </div>
     <script>
+        // Redirect to dashboard if already logged in
+        if (localStorage.getItem('userToken') && localStorage.getItem('userId')) {
+            window.location.href = 'landing.html';
+        }
+
         document.querySelector('.login-form').addEventListener('submit', function(event) {
             event.preventDefault();
 

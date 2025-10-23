@@ -91,6 +91,12 @@
         <div id="registerMsg" style="margin-top:1rem;font-size:1.1rem;"></div>
     </div>
     <script>
+        // Redirect to dashboard if already logged in
+        if (localStorage.getItem('userToken') && localStorage.getItem('userId')) {
+            window.location.href = 'landing.html';
+        }
+    </script>
+    <script>
         document.getElementById('registerForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const form = event.target;
