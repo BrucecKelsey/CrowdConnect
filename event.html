@@ -262,7 +262,11 @@
             }
         }
         // Load requests after partyId is resolved
-        getPartyId().then(pid => { partyId = pid; loadRequests(); });
+        getPartyId().then(pid => {
+            partyId = pid;
+            loadRequests();
+            setInterval(loadRequests, 5000); // Poll every 5 seconds
+        });
     </script>
 </body>
 </html>
