@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #232323;
+            color: #fff;
+            font-family: 'Poppins', 'PT Sans', 'Ubuntu', sans-serif;
+        }
+        .event-title {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: #18181b;
+            padding: 2.5rem 4rem;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.25);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="event-title" id="eventTitle">Event</div>
+    <script>
+        // Get event title from query string
+        const params = new URLSearchParams(window.location.search);
+        const title = params.get('title');
+        if (title) {
+            document.getElementById('eventTitle').textContent = title;
+        }
+    </script>
+</body>
+</html>

@@ -483,31 +483,42 @@
                         let selectedIdx = null;
                         data.parties.forEach((party, idx) => {
                             const li = document.createElement('li');
-                            li.textContent = party.PartyName;
-                            li.style.padding = '0.75rem 1rem';
-                            li.style.background = '#18181b';
-                            li.style.borderRadius = '8px';
-                            li.style.cursor = 'pointer';
-                            li.style.transition = 'background 0.2s, color 0.2s';
-                            li.addEventListener('mouseenter', () => {
-                                if (selectedIdx !== idx) li.style.background = '#232323';
+                            li.style.display = 'flex';
+                            li.style.alignItems = 'center';
+                            li.style.justifyContent = 'space-between';
+                            li.style.padding = '1.2rem 1.5rem 1rem 1.5rem';
+                            li.style.background = '#232323';
+                            li.style.borderRadius = '12px';
+                            li.style.marginBottom = '1.2rem';
+                            li.style.boxShadow = '0 2px 12px rgba(0,0,0,0.10)';
+                            // Title
+                            const titleDiv = document.createElement('div');
+                            titleDiv.textContent = party.PartyName;
+                            titleDiv.style.fontWeight = '700';
+                            titleDiv.style.fontSize = '1.25rem';
+                            // Arrow button
+                            const arrowBtn = document.createElement('button');
+                            arrowBtn.style.background = '#29294d';
+                            arrowBtn.style.border = 'none';
+                            arrowBtn.style.borderRadius = '6px';
+                            arrowBtn.style.padding = '0.5rem 1.1rem';
+                            arrowBtn.style.display = 'flex';
+                            arrowBtn.style.alignItems = 'center';
+                            arrowBtn.style.cursor = 'pointer';
+                            arrowBtn.style.transition = 'background 0.2s';
+                            arrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>`;
+                            arrowBtn.addEventListener('mouseenter', () => {
+                                arrowBtn.style.background = '#3b82f6';
                             });
-                            li.addEventListener('mouseleave', () => {
-                                if (selectedIdx !== idx) li.style.background = '#18181b';
+                            arrowBtn.addEventListener('mouseleave', () => {
+                                arrowBtn.style.background = '#29294d';
                             });
-                            li.addEventListener('click', () => {
-                                // Deselect previous
-                                if (selectedIdx !== null) {
-                                    list.children[selectedIdx].style.background = '#18181b';
-                                    list.children[selectedIdx].style.color = '';
-                                }
-                                // Select current
-                                li.style.background = '#3b82f6';
-                                li.style.color = '#fff';
-                                selectedIdx = idx;
-                                // You can add more logic here for what happens when an event is selected
-                                console.log('Selected event:', party);
+                            arrowBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                window.location.href = `event.html?title=${encodeURIComponent(party.PartyName)}`;
                             });
+                            li.appendChild(titleDiv);
+                            li.appendChild(arrowBtn);
                             list.appendChild(li);
                         });
                         eventsList.innerHTML = '';
