@@ -470,15 +470,30 @@
                             eventsList.textContent = 'You have no events.';
                             return;
                         }
-                        // Build event list
-                        const ul = document.createElement('ul');
+                        // Build event table
+                        const table = document.createElement('table');
+                        table.style.width = '100%';
+                        table.style.borderCollapse = 'collapse';
+                        table.innerHTML = `
+                            <thead>
+                                <tr style="background: #232323; color: #fff;">
+                                    <th style="padding: 0.5rem; border-bottom: 2px solid #3b82f6; text-align:left;">Event Name</th>
+                                    <th style="padding: 0.5rem; border-bottom: 2px solid #3b82f6; text-align:left;">Event ID</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        `;
+                        const tbody = table.querySelector('tbody');
                         data.parties.forEach(party => {
-                            const li = document.createElement('li');
-                            li.textContent = party.PartyName;
-                            ul.appendChild(li);
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td style="padding: 0.5rem; border-bottom: 1px solid #444;">${party.PartyName}</td>
+                                <td style="padding: 0.5rem; border-bottom: 1px solid #444;">${party.PartyId}</td>
+                            `;
+                            tbody.appendChild(tr);
                         });
                         eventsList.innerHTML = '';
-                        eventsList.appendChild(ul);
+                        eventsList.appendChild(table);
                     })
                     .catch(error => {
                         console.error('Error fetching events:', error);
