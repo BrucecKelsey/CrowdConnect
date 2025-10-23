@@ -483,7 +483,7 @@
                         let selectedIdx = null;
                         data.parties.forEach((party, idx) => {
                             const li = document.createElement('li');
-                            li.textContent = `${party.PartyName} (ID: ${party.PartyId})`;
+                            li.textContent = party.PartyName;
                             li.style.padding = '0.75rem 1rem';
                             li.style.background = '#18181b';
                             li.style.borderRadius = '8px';
