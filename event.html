@@ -242,7 +242,7 @@
                 const data = await resp.json();
                 if (data.requests && data.requests.length > 0) {
                     let html = '<div style="width:100%"><table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
-                    html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Requested By</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th></tr>';
+                    html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th></tr>';
                     for (const req of data.requests) {
                         html += `<tr><td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td></tr>`;
                     }
