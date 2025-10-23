@@ -14,11 +14,14 @@ if ($conn->connect_error) {
     echo json_encode($retValue);
     exit();
 }
-$stmt = $conn->prepare("SELECT ActivePartyId FROM Users WHERE ID=?");
+$stmt = $conn->prepare("SELECT FirstName, LastName, Login, ActivePartyId FROM Users WHERE ID=?");
 $stmt->bind_param("i", $userId);
 $stmt->execute();
-$stmt->bind_result($activePartyId);
+$stmt->bind_result($firstName, $lastName, $login, $activePartyId);
 if ($stmt->fetch()) {
+    $retValue["FirstName"] = $firstName;
+    $retValue["LastName"] = $lastName;
+    $retValue["Username"] = $login;
     $retValue["ActivePartyId"] = $activePartyId;
 } else {
     $retValue["error"] = "User not found.";

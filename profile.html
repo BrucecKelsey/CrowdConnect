@@ -49,6 +49,15 @@
         <ul class="profile-list" id="profileList">
             <li>Loading...</li>
         </ul>
+        <hr style="margin:2rem 0 1.5rem 0;border:0;border-top:1px solid #444;">
+        <div class="profile-title" style="font-size:1.3rem;margin-bottom:1rem;">Change Password</div>
+        <form id="changePasswordForm" style="display:flex;flex-direction:column;gap:1.1rem;">
+            <input type="password" id="currentPassword" placeholder="Current Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
+            <input type="password" id="newPassword" placeholder="New Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
+            <input type="password" id="confirmPassword" placeholder="Confirm New Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
+            <button type="submit" style="padding:0.8rem;font-size:1.1rem;font-weight:600;background:#a78bfa;color:#232323;border:none;border-radius:0.5rem;cursor:pointer;">Change Password</button>
+            <div id="passwordMsg" style="margin-top:0.5rem;font-size:1rem;"></div>
+        </form>
     </div>
     <script>
     // Fetch and display user profile info
@@ -76,6 +85,41 @@
         } catch (e) {
             profileList.innerHTML = `<li>Error loading profile.</li>`;
         }
+
+        // Password change form logic
+        const form = document.getElementById('changePasswordForm');
+        const msg = document.getElementById('passwordMsg');
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            msg.textContent = '';
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (newPassword !== confirmPassword) {
+                msg.textContent = 'New passwords do not match.';
+                msg.style.color = '#e11d48';
+                return;
+            }
+            try {
+                const resp = await fetch('LAMPAPI/ChangePassword.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, currentPassword, newPassword })
+                });
+                const data = await resp.json();
+                if (data.error) {
+                    msg.textContent = data.error;
+                    msg.style.color = '#e11d48';
+                } else {
+                    msg.textContent = 'Password changed successfully!';
+                    msg.style.color = '#22c55e';
+                    form.reset();
+                }
+            } catch (err) {
+                msg.textContent = 'Error changing password.';
+                msg.style.color = '#e11d48';
+            }
+        });
     });
     </script>
 </body>
