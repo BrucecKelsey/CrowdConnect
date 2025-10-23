@@ -82,13 +82,45 @@
         }
         loadEventName();
 
-        // Form submission (no backend yet)
-        document.getElementById('requestForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            document.getElementById('requestMsg').textContent = 'Request sent! (demo)';
-            document.getElementById('requestMsg').style.color = '#a78bfa';
-            this.reset();
-        });
+            // Form submission: send to backend
+            document.getElementById('requestForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const songName = document.getElementById('songTitle').value.trim();
+                const artist = document.getElementById('artist').value.trim();
+                const msgDiv = document.getElementById('requestMsg');
+                msgDiv.textContent = '';
+                if (!partyId) {
+                    msgDiv.textContent = 'No event selected.';
+                    msgDiv.style.color = '#f87171';
+                    return;
+                }
+                if (!songName || !artist) {
+                    msgDiv.textContent = 'Please enter both song title and artist.';
+                    msgDiv.style.color = '#f87171';
+                    return;
+                }
+                msgDiv.textContent = 'Sending...';
+                msgDiv.style.color = '#bdbdbd';
+                try {
+                    const resp = await fetch('LAMPAPI/SubmitRequest.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ partyId: partyId, songName: songName, requestedBy: artist })
+                    });
+                    const data = await resp.json();
+                    if (data.error) {
+                        msgDiv.textContent = 'Error: ' + data.error;
+                        msgDiv.style.color = '#f87171';
+                    } else {
+                        msgDiv.textContent = 'Request sent!';
+                        msgDiv.style.color = '#a78bfa';
+                        e.target.reset();
+                    }
+                } catch (err) {
+                    msgDiv.textContent = 'Failed to send request.';
+                    msgDiv.style.color = '#f87171';
+                }
+            });
         </script>
 </body>
 <style>

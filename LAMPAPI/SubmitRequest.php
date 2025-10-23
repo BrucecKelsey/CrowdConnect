@@ -12,11 +12,12 @@ if ($conn->connect_error)
 }
 else
 {
-    $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy) VALUES (?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp) VALUES (?, ?, ?, NOW())");
     $stmt->bind_param("iss", $partyId, $songName, $requestedBy);
     if ($stmt->execute())
     {
-        returnWithInfo("Request submitted successfully!");
+        $retValue = array("error" => "", "success" => true, "RequestId" => $stmt->insert_id);
+        sendResultInfoAsJson(json_encode($retValue));
     }
     else
     {
@@ -40,9 +41,5 @@ function returnWithError($err)
     $retValue = '{"error":"' . $err . '"}';
     sendResultInfoAsJson($retValue);
 }
-function returnWithInfo($msg)
-{
-    $retValue = '{"error":""}';
-    sendResultInfoAsJson($retValue);
-}
+// returnWithInfo removed, now returns more info above
 ?>
