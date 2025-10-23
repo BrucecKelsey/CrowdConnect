@@ -466,16 +466,15 @@
                             console.error('Invalid JSON:', e);
                             return;
                         }
+                        const noEventsContainer = document.getElementById('no-events-container');
                         if (!data.parties || data.parties.length === 0) {
                             eventsList.textContent = 'You have no events.';
-                            // Show the no-events message if it exists
-                            const noEventsMsg = document.querySelector('.no-events-text');
-                            if (noEventsMsg) noEventsMsg.style.display = '';
+                            // Show the no-events container if it exists
+                            if (noEventsContainer) noEventsContainer.style.display = '';
                             return;
                         }
-                        // Hide the no-events message if it exists
-                        const noEventsMsg = document.querySelector('.no-events-text');
-                        if (noEventsMsg) noEventsMsg.style.display = 'none';
+                        // Hide the no-events container if it exists
+                        if (noEventsContainer) noEventsContainer.style.display = 'none';
                         // Build event table
                         const table = document.createElement('table');
                         table.style.width = '100%';
