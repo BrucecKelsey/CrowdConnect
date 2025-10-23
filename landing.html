@@ -506,40 +506,28 @@
                             setActiveBtn.className = 'btn btn-secondary';
                             setActiveBtn.style.fontSize = '0.95rem';
                             setActiveBtn.style.padding = '0.4rem 1.1rem';
-                            // Highlight if this is the active event
-                            const activePartyId = localStorage.getItem('activePartyId');
-                            if (activePartyId && String(party.PartyId) === String(activePartyId)) {
+                            let userActivePartyId = null;
+                            if (window._userActivePartyId !== undefined) {
+                                userActivePartyId = window._userActivePartyId;
+                            }
+                            if (userActivePartyId && String(party.PartyId) === String(userActivePartyId)) {
                                 setActiveBtn.style.background = '#3b82f6';
                                 setActiveBtn.style.color = '#fff';
                                 setActiveBtn.textContent = 'Active';
                             }
-                            setActiveBtn.addEventListener('click', (e) => {
+                            setActiveBtn.addEventListener('click', async (e) => {
                                 e.stopPropagation();
-                                const currentActive = localStorage.getItem('activePartyId');
-                                // Only update Set Active buttons, not all .btn.btn-secondary
-                                const allSetActiveBtns = Array.from(document.querySelectorAll('#events-list .btn.btn-secondary'));
-                                if (currentActive && String(currentActive) === String(party.PartyId)) {
-                                    // Turn off
-                                    localStorage.removeItem('activePartyId');
-                                    localStorage.removeItem('activePartyName');
-                                    allSetActiveBtns.forEach(btn => {
-                                        btn.style.background = '';
-                                        btn.style.color = '';
-                                        btn.textContent = 'Set Active';
-                                    });
-                                } else {
-                                    // Set as active
-                                    localStorage.setItem('activePartyId', party.PartyId);
-                                    localStorage.setItem('activePartyName', party.PartyName);
-                                    allSetActiveBtns.forEach(btn => {
-                                        btn.style.background = '';
-                                        btn.style.color = '';
-                                        btn.textContent = 'Set Active';
-                                    });
-                                    setActiveBtn.style.background = '#3b82f6';
-                                    setActiveBtn.style.color = '#fff';
-                                    setActiveBtn.textContent = 'Active';
-                                }
+                                // Determine if this is already active
+                                const isActive = (userActivePartyId && String(party.PartyId) === String(userActivePartyId));
+                                const userId = localStorage.getItem('userId');
+                                // Call backend to set/unset active party
+                                const response = await fetch('LAMPAPI/SetActiveParty.php', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ userId: userId, partyId: isActive ? null : party.PartyId })
+                                });
+                                // On success, reload the event list to update UI
+                                location.reload();
                             });
                             // Arrow button
                             const arrowBtn = document.createElement('button');
