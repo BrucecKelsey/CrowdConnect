@@ -57,7 +57,7 @@
             left: 0;
             background-color: #333;
             color: white;
-            padding: 4px 14px;
+            padding: 4px 14px 4px 8px;
             min-height: 32px;
             box-sizing: border-box;
         }
@@ -78,25 +78,32 @@
         }
         .navbar .dropdown {
             margin-left: auto;
+            margin-right: 12px;
         }
         .navbar .dropdown button {
-            background: none;
+            background: hsl(217.2, 91.2%, 59.8%);
+            color: hsl(222.2, 47.4%, 11.2%);
+            padding: 4px 10px;
+            font-size: 13px;
             border: none;
-            color: #fff;
-            font-size: 1rem;
             cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+            min-width: 90px;
         }
         .navbar .dropdown-content {
             display: none;
             position: absolute;
-            background-color: #333;
+            right: 0;
+            background-color: white;
             min-width: 160px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
             z-index: 1;
         }
         .navbar .dropdown-content a {
-            color: #fff;
-            padding: 12px 16px;
+            color: black;
+            padding: 10px 14px;
             text-decoration: none;
             display: block;
         }
