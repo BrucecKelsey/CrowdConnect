@@ -57,10 +57,27 @@
             color: hsl(var(--muted-foreground));
             margin-bottom: 2rem;
         }
-        .login-btn {
+        .register-btn {
             position: absolute;
             top: 1rem;
             left: 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: hsl(var(--primary-foreground));
+            background: hsl(var(--primary));
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .register-btn:hover {
+            background: hsl(var(--primary) / 0.9);
+        }
+        .login-btn {
+            position: absolute;
+            top: 1rem;
+            left: 8.5rem;
             padding: 0.5rem 1rem;
             font-size: 1rem;
             font-weight: 600;
@@ -77,6 +94,7 @@
     </style>
 </head>
 <body>
+    <button class="register-btn" onclick="redirectToRegister()">Register</button>
     <button class="login-btn" onclick="redirectToLogin()">Login</button>
     <div class="cover-container">
         <div id="header">
@@ -88,6 +106,9 @@
     <script>
         function redirectToLogin() {
             window.location.href = './login.html';
+        }
+        function redirectToRegister() {
+            window.location.href = './register.html';
         }
     </script>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Crowd Connect</title>
+    <title>Register - Crowd Connect</title>
     <link href="css/styles.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -18,30 +18,30 @@
             justify-content: center;
             min-height: 100vh;
         }
-        .login-container {
+        .register-container {
             max-width: 500px;
             padding: 3rem;
             border-radius: 1rem;
             background: hsl(222.2, 84%, 4.9%);
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         }
-        .login-title {
+        .register-title {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
         }
-        .login-form {
+        .register-form {
             display: flex;
             flex-direction: column;
         }
-        .login-form input {
+        .register-form input {
             margin-bottom: 1.5rem;
             padding: 1rem;
             font-size: 1.2rem;
             border: 1px solid hsl(217.2, 32.6%, 17.5%);
             border-radius: 0.5rem;
         }
-        .login-form button {
+        .register-form button {
             padding: 1rem;
             font-size: 1.2rem;
             font-weight: 600;
@@ -50,6 +50,17 @@
             border: none;
             border-radius: 0.5rem;
             cursor: pointer;
+        }
+        .register-form button:hover {
+            background: hsl(217.2, 91.2%, 50%);
+        }
+        .register-link {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+        .register-link a {
+            color: hsl(var(--primary));
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -64,51 +75,58 @@
             Powered by Sequoia Beats
         </div>
     </div>
-    <div class="login-container" style="margin-top:56px;">
-        <h1 class="login-title">Login</h1>
-        <form class="login-form" action="LAMPAPI/Login.php" method="POST">
+    <div class="register-container" style="margin-top:56px;">
+        <h1 class="register-title">Register</h1>
+        <form class="register-form" id="registerForm">
+            <input type="text" name="firstName" placeholder="First Name" required>
+            <input type="text" name="lastName" placeholder="Last Name" required>
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
+            <input type="password" name="confirmPassword" placeholder="Confirm Password" required>
+            <button type="submit">Register</button>
         </form>
-        <div class="register-link" style="margin-top:1.5rem;text-align:center;">
-            Don't have an account? <a href="register.html" style="color:hsl(217.2,91.2%,59.8%);text-decoration:underline;">Register</a>
+        <div class="register-link">
+            Already have an account? <a href="login.html">Login</a>
         </div>
+        <div id="registerMsg" style="margin-top:1rem;font-size:1.1rem;"></div>
     </div>
     <script>
-        document.querySelector('.login-form').addEventListener('submit', function(event) {
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
             event.preventDefault();
-
-            const username = event.target.username.value;
-            const password = event.target.password.value;
-
-            fetch('LAMPAPI/Login.php', {
+            const form = event.target;
+            const firstName = form.firstName.value.trim();
+            const lastName = form.lastName.value.trim();
+            const username = form.username.value.trim();
+            const password = form.password.value;
+            const confirmPassword = form.confirmPassword.value;
+            const msg = document.getElementById('registerMsg');
+            msg.textContent = '';
+            if (password !== confirmPassword) {
+                msg.textContent = 'Passwords do not match.';
+                msg.style.color = '#e11d48';
+                return;
+            }
+            fetch('LAMPAPI/Register.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ login: username, password: password })
+                body: JSON.stringify({ firstName, lastName, login: username, password })
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Response from Login.php:', data); // Debugging log
-                if (data.token && data.id && data.login) {
-                    // Use the login field as the username
-                    const username = data.login;
-                    console.log('Saving username to localStorage:', username); // Debugging log
-
-                    // Store the token, username, and userId in localStorage
-                    localStorage.setItem('userToken', data.token);
-                    localStorage.setItem('username', username);
-                    localStorage.setItem('userId', data.id);
-
-                    // Redirect to the landing page
-                    window.location.href = './landing.html';
+                if (data.success) {
+                    msg.textContent = 'Registration successful! Redirecting to login...';
+                    msg.style.color = '#22c55e';
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1500);
                 } else {
-                    alert('Login failed: ' + data.error);
+                    msg.textContent = data.error || 'Registration failed.';
+                    msg.style.color = '#e11d48';
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred during login.');
+                msg.textContent = 'An error occurred during registration.';
+                msg.style.color = '#e11d48';
             });
         });
     </script>
