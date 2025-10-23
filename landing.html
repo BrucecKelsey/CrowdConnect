@@ -662,7 +662,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         Before sharing, make sure you have set an event to 'Active' to receive requests for the correct event.
                     </p>
                     <div class="btn-container">
-                        <button class="btn btn-secondary" type="button">
+                        <button class="btn btn-secondary" type="button" id="showQrBtn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code">
                                 <rect width="5" height="5" x="3" y="3" rx="1"></rect>
                                 <rect width="5" height="5" x="16" y="3" rx="1"></rect>
@@ -679,6 +679,15 @@ document.addEventListener('DOMContentLoaded', function() {
                             </svg>
                             Show QR Code
                         </button>
+                        <div id="qrModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:3000;">
+                            <div style="background:#232323; color:#fff; border-radius:12px; padding:2.5rem 2.5rem 2rem 2.5rem; min-width:320px; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,0.4); display:flex; flex-direction:column; align-items:center; gap:1.2rem;">
+                                <div style="font-size:1.3rem; font-weight:600; margin-bottom:0.5rem;">Your Request Page QR</div>
+                                <canvas id="qrCanvas"></canvas>
+                                <div style="margin-top:1.2rem;">
+                                    <button id="closeQrBtn" class="btn btn-secondary" style="padding:0.5rem 1.5rem;">Close</button>
+                                </div>
+                            </div>
+                        </div>
                         <button class="btn" type="button">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2">
                                 <circle cx="18" cy="5" r="3"></circle>
@@ -706,7 +715,35 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
     <script>
 
-        document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+            // QR code modal logic
+            const showQrBtn = document.getElementById('showQrBtn');
+            const qrModal = document.getElementById('qrModal');
+            const closeQrBtn = document.getElementById('closeQrBtn');
+            const qrCanvas = document.getElementById('qrCanvas');
+            if (showQrBtn && qrModal && closeQrBtn && qrCanvas) {
+                showQrBtn.addEventListener('click', () => {
+                    const userId = localStorage.getItem('userId');
+                    if (!userId) {
+                        alert('No user ID found.');
+                        return;
+                    }
+                    const url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
+                    // Generate QR code
+                    const qr = new QRious({
+                        element: qrCanvas,
+                        value: url,
+                        size: 220
+                    });
+                    qrModal.style.display = 'flex';
+                });
+                closeQrBtn.addEventListener('click', () => {
+                    qrModal.style.display = 'none';
+                });
+                qrModal.addEventListener('click', (e) => {
+                    if (e.target === qrModal) qrModal.style.display = 'none';
+                });
+            }
             const username = localStorage.getItem('username');
             if (!username) {
                 window.location.href = 'login.html';
