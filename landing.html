@@ -745,7 +745,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>
                             </div>
                         </div>
-                        <button class="btn" type="button">
+                        <button class="btn" type="button" id="shareLinkBtn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share2">
                                 <circle cx="18" cy="5" r="3"></circle>
                                 <circle cx="6" cy="12" r="3"></circle>
@@ -755,6 +755,17 @@ document.addEventListener('DOMContentLoaded', function() {
                             </svg>
                             Share Link
                         </button>
+                        <div id="shareLinkModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:4000;">
+                            <div style="background:#fff; color:#232323; border-radius:12px; padding:2.5rem 2.5rem 2rem 2.5rem; min-width:320px; max-width:90vw; box-shadow:0 8px 32px rgba(0,0,0,0.4); display:flex; flex-direction:column; align-items:center; gap:1.2rem;">
+                                <div style="font-size:1.3rem; font-weight:600; margin-bottom:0.5rem; color:#232323;">Share Your Request Page</div>
+                                <canvas id="shareQrCanvas" width="320" height="320" style="margin-bottom:1.2rem;"></canvas>
+                                <div style="display:flex; gap:1rem; margin-top:1.2rem;">
+                                    <button id="downloadShareQrBtn" class="btn btn-secondary" style="padding:0.5rem 1.5rem;">Download</button>
+                                    <button id="printShareQrBtn" class="btn btn-secondary" style="padding:0.5rem 1.5rem;">Print</button>
+                                    <button id="closeShareLinkBtn" class="btn btn-secondary" style="padding:0.5rem 1.5rem;">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -867,6 +878,50 @@ document.addEventListener('DOMContentLoaded', function() {
             let qr = new QRious({
                 element: document.getElementById("qrPlaceholder"),
                 value: window.location.origin + "/submit.html?partyId=" + partyId,
+            });
+        }
+
+        // Share Link modal logic
+        const shareLinkBtn = document.getElementById('shareLinkBtn');
+        const shareLinkModal = document.getElementById('shareLinkModal');
+        const closeShareLinkBtn = document.getElementById('closeShareLinkBtn');
+        const downloadShareQrBtn = document.getElementById('downloadShareQrBtn');
+        const printShareQrBtn = document.getElementById('printShareQrBtn');
+        const shareQrCanvas = document.getElementById('shareQrCanvas');
+        if (shareLinkBtn && shareLinkModal && closeShareLinkBtn && downloadShareQrBtn && printShareQrBtn && shareQrCanvas) {
+            shareLinkBtn.addEventListener('click', () => {
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    alert('No user ID found.');
+                    return;
+                }
+                const url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
+                // Generate large QR code
+                new QRious({
+                    element: shareQrCanvas,
+                    value: url,
+                    size: 320
+                });
+                shareLinkModal.style.display = 'flex';
+            });
+            closeShareLinkBtn.addEventListener('click', () => {
+                shareLinkModal.style.display = 'none';
+            });
+            shareLinkModal.addEventListener('click', (e) => {
+                if (e.target === shareLinkModal) shareLinkModal.style.display = 'none';
+            });
+            downloadShareQrBtn.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = 'CrowdConnect-QR.png';
+                link.href = shareQrCanvas.toDataURL('image/png');
+                link.click();
+            });
+            printShareQrBtn.addEventListener('click', () => {
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(`<!DOCTYPE html><html><head><title>Print QR</title><style>@media print { body { margin:0; } .qr-print { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; } }</style></head><body><div class='qr-print'><img src='${shareQrCanvas.toDataURL('image/png')}' style='width:320px;height:320px;'><div style='margin-top:1.5rem;font-size:1.2rem;color:#232323;'>Scan to request a song at my event!</div></div></body></html>`);
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
             });
         }
     </script>
