@@ -431,13 +431,14 @@
     .dropdown:hover .dropdown-content {
         display: block;
     }
-        <div class="events-container">
-            <h2>Your Events</h2>
-            <div id="events-list">Loading your events...</div>
-        </div>
     .dropdown:hover button {
         background: hsl(var(--primary) / 0.9);
     }
+    <!-- Events section: only one instance, right after <body> -->
+    <div class="events-container" style="margin: 2rem 0;">
+        <h2>Your Events</h2>
+        <div id="events-list">Loading your events...</div>
+    </div>
 </style>
         <header class="w-full max-w-4xl mx-auto mb-4 relative">
             <div class="header-inner flex items-center justify-between">
