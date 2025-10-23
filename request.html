@@ -57,29 +57,29 @@
         let partyId = null;
         // Fetch active event name
         async function loadEventName() {
-            if (!userId) {
-                eventNameSpan.textContent = 'No user';
-                return;
-            }
-            // Get active partyId for user
-            let activePartyId = getQueryParam('partyId');
-            if (!activePartyId) {
-                // Fetch from backend
-                const resp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
-                const data = await resp.json();
-                if (!data.ActivePartyId) {
-                    eventNameSpan.textContent = 'No event';
-                    return;
+                    if (!userId) {
+                        eventNameSpan.textContent = 'No user';
+                        return;
+                    }
+                    // Get active partyId for user
+                    let activePartyId = getQueryParam('partyId');
+                    if (!activePartyId) {
+                        // Fetch from backend
+                        const resp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+                        const data = await resp.json();
+                        if (!data.ActivePartyId) {
+                            window.location.href = 'no-active-event.html';
+                            return;
+                        }
+                        activePartyId = data.ActivePartyId;
+                    }
+                    partyId = activePartyId;
+                    // Fetch party name
+                    const resp2 = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
+                    const data2 = await resp2.json();
+                    const party = (data2.parties || []).find(p => String(p.PartyId) === String(activePartyId));
+                    eventNameSpan.textContent = party ? party.PartyName : 'Unknown';
                 }
-                activePartyId = data.ActivePartyId;
-            }
-            partyId = activePartyId;
-            // Fetch party name
-            const resp2 = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
-            const data2 = await resp2.json();
-            const party = (data2.parties || []).find(p => String(p.PartyId) === String(activePartyId));
-            eventNameSpan.textContent = party ? party.PartyName : 'Unknown';
-        }
         loadEventName();
 
             // Form submission: send to backend
