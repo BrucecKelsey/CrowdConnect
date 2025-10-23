@@ -1,3 +1,60 @@
+/* --- CrowdConnect Event List Custom Styles --- */
+.your-events-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 320px;
+    max-height: 420px;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.your-events-header {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 1.2rem 0 0.5rem 0;
+    text-align: center;
+    width: 100%;
+}
+
+#events-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    margin: 0 auto 1rem auto;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #18181b;
+}
+
+#events-list ul {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+#events-list li {
+    width: 98%;
+    margin: 0.5rem auto;
+    box-sizing: border-box;
+}
+
+/* Custom scrollbar for Webkit browsers */
+#events-list::-webkit-scrollbar {
+    width: 8px;
+}
+#events-list::-webkit-scrollbar-thumb {
+    background: #3b82f6;
+    border-radius: 6px;
+}
+#events-list::-webkit-scrollbar-track {
+    background: #18181b;
+    border-radius: 6px;
+}
 body 
 {
     background: linear-gradient(135deg, #ff00cc 0%, #333399 100%);
