@@ -593,6 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const data = JSON.parse(text);
                         if (!data.error) {
                             modal.style.display = 'none';
+                            location.reload(); // Refresh the page to update the event list
                         } else {
                             input.style.borderColor = '#f87171';
                             alert(data.error || 'Failed to create event.');
