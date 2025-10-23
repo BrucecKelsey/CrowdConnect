@@ -475,30 +475,45 @@
                         }
                         // Hide the no-events container if it exists
                         if (noEventsContainer) noEventsContainer.style.display = 'none';
-                        // Build event table
-                        const table = document.createElement('table');
-                        table.style.width = '100%';
-                        table.style.borderCollapse = 'collapse';
-                        table.innerHTML = `
-                            <thead>
-                                <tr style="background: #232323; color: #fff;">
-                                    <th style="padding: 0.5rem; border-bottom: 2px solid #3b82f6; text-align:left;">Event Name</th>
-                                    <th style="padding: 0.5rem; border-bottom: 2px solid #3b82f6; text-align:left;">Event ID</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        `;
-                        const tbody = table.querySelector('tbody');
-                        data.parties.forEach(party => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td style="padding: 0.5rem; border-bottom: 1px solid #444;">${party.PartyName}</td>
-                                <td style="padding: 0.5rem; border-bottom: 1px solid #444;">${party.PartyId}</td>
-                            `;
-                            tbody.appendChild(tr);
+                        // Build selectable event list
+                        const list = document.createElement('ul');
+                        list.style.listStyle = 'none';
+                        list.style.padding = '0';
+                        list.style.margin = '0';
+                        list.style.width = '100%';
+                        let selectedIdx = null;
+                        data.parties.forEach((party, idx) => {
+                            const li = document.createElement('li');
+                            li.textContent = `${party.PartyName} (ID: ${party.PartyId})`;
+                            li.style.padding = '0.75rem 1rem';
+                            li.style.marginBottom = '0.5rem';
+                            li.style.background = '#18181b';
+                            li.style.borderRadius = '8px';
+                            li.style.cursor = 'pointer';
+                            li.style.transition = 'background 0.2s, color 0.2s';
+                            li.addEventListener('mouseenter', () => {
+                                if (selectedIdx !== idx) li.style.background = '#232323';
+                            });
+                            li.addEventListener('mouseleave', () => {
+                                if (selectedIdx !== idx) li.style.background = '#18181b';
+                            });
+                            li.addEventListener('click', () => {
+                                // Deselect previous
+                                if (selectedIdx !== null) {
+                                    list.children[selectedIdx].style.background = '#18181b';
+                                    list.children[selectedIdx].style.color = '';
+                                }
+                                // Select current
+                                li.style.background = '#3b82f6';
+                                li.style.color = '#fff';
+                                selectedIdx = idx;
+                                // You can add more logic here for what happens when an event is selected
+                                console.log('Selected event:', party);
+                            });
+                            list.appendChild(li);
                         });
                         eventsList.innerHTML = '';
-                        eventsList.appendChild(table);
+                        eventsList.appendChild(list);
                     })
                     .catch(error => {
                         console.error('Error fetching events:', error);
