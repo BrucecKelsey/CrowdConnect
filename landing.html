@@ -704,18 +704,28 @@ document.addEventListener('DOMContentLoaded', function() {
         </main>
         <footer class="w-full max-w-4xl mx-auto py-8">
             <div class="flex justify-center">
-                <a href="/request">
-                    <button class="btn underline-offset-4 hover:underline h-10 px-4 py-2 text-muted-foreground hover:text-primary">
-                        View request page
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link ml-2 h-4 w-4"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
-                    </button>
-                </a>
+                <button id="viewRequestBtn" class="btn underline-offset-4 hover:underline h-10 px-4 py-2 text-muted-foreground hover:text-primary">
+                    View request page
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-external-link ml-2 h-4 w-4"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg>
+                </button>
             </div>
         </footer>
     </div>
     <script>
 
     document.addEventListener('DOMContentLoaded', () => {
+        // View request page button logic
+        const viewRequestBtn = document.getElementById('viewRequestBtn');
+        if (viewRequestBtn) {
+            viewRequestBtn.addEventListener('click', () => {
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    alert('No user ID found.');
+                    return;
+                }
+                window.location.href = `request.html?userId=${encodeURIComponent(userId)}`;
+            });
+        }
             // QR code modal logic
             const showQrBtn = document.getElementById('showQrBtn');
             const qrModal = document.getElementById('qrModal');
