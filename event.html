@@ -234,38 +234,64 @@
             }
         });
         // Fetch and display requests for this event
-        async function loadRequests() {
+        // --- Improved polling: append only new requests, no flicker ---
+        let lastRequestId = 0;
+        let requestCount = 0;
+        function renderTableHeaderIfNeeded(box) {
+            if (!box._table) {
+                let html = '<div style="width:100%;overflow-y:auto;"><table id="requestsTable" style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
+                html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th></tr>';
+                html += '</table></div>';
+                box.innerHTML = html;
+                box._table = document.getElementById('requestsTable');
+            }
+        }
+        async function pollRequests() {
             if (!partyId) partyId = await getPartyId();
             if (!partyId) return;
             const box = document.getElementById('requestsBox');
-            box.innerHTML = '<div class="requests-empty-title">Loading requests...</div>';
+            renderTableHeaderIfNeeded(box);
+            const table = box._table;
             try {
-                const resp = await fetch(`LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}`);
+                const resp = await fetch(`LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}${lastRequestId ? `&sinceId=${lastRequestId}` : ''}`);
                 const data = await resp.json();
+                if (data.requests && data.requests.length > 0) {
+                    for (const req of data.requests) {
+                        // Only append if not already present
+                        if (!table.querySelector(`[data-requestid='${req.RequestId}']`)) {
+                            const tr = document.createElement('tr');
+                            tr.setAttribute('data-requestid', req.RequestId);
+                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td>`;
+                            table.appendChild(tr);
+                            requestCount++;
+                            if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
+                        }
+                    }
+                }
+                // Update count in tab
                 const activeTabBtn = document.getElementById('activeTabBtn');
                 if (activeTabBtn) {
-                    activeTabBtn.textContent = `Active (${data.requests ? data.requests.length : 0})`;
+                    activeTabBtn.textContent = `Active (${requestCount})`;
                 }
-                if (data.requests && data.requests.length > 0) {
-                    let html = '<div style="width:100%;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
-                    html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th></tr>';
-                    for (const req of data.requests) {
-                        html += `<tr><td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td></tr>`;
-                    }
-                    html += '</table></div>';
-                    box.innerHTML = html;
-                } else {
+                // If no requests at all, show empty state
+                if (requestCount === 0) {
                     box.innerHTML = '<div class="requests-empty-title">Waiting for requests...</div><div class="requests-empty-desc">Share the QR code from the main dashboard to get started.</div>';
+                    box._table = null;
                 }
             } catch (e) {
-                box.innerHTML = '<div class="requests-empty-title">Failed to load requests.</div>';
+                // Optionally show error
             }
         }
-        // Load requests after partyId is resolved
-        getPartyId().then(pid => {
+        // Initial load: get all requests, then poll for new
+        getPartyId().then(async pid => {
             partyId = pid;
-            loadRequests();
-            setInterval(loadRequests, 5000); // Poll every 5 seconds
+            // Initial load: get all
+            lastRequestId = 0;
+            requestCount = 0;
+            const box = document.getElementById('requestsBox');
+            box._table = null;
+            await pollRequests();
+            setInterval(pollRequests, 5000); // Poll every 5 seconds, append only new
         });
     </script>
 </body>
