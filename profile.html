@@ -53,6 +53,25 @@
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:1.08rem;font-weight:600;color:#a78bfa;letter-spacing:0.03em;white-space:nowrap;pointer-events:none;">
             Powered by Sequoia Beats
         </div>
+        <div class="dropdown" style="margin-left:auto;">
+            <button>Settings</button>
+            <div class="dropdown-content">
+                <a href="profile.html">Profile</a>
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                    });
+                }
+            });
+        </script>
     </div>
     <div class="profile-container" style="margin-top:56px;">
         <div class="profile-title">Profile Information</div>
