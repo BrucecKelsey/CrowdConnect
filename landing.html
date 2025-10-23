@@ -453,128 +453,117 @@
                     eventsList.textContent = 'You must be logged in to see your events.';
                     return;
                 }
-                fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`)
-                    .then(response => response.text())
-                    .then(rawText => {
-                        console.log('Raw response from GetParties.php:', rawText);
-                        let data;
-                        try {
-                            data = JSON.parse(rawText);
-                        } catch (e) {
-                            eventsList.textContent = 'Invalid JSON response.';
-                            console.error('Invalid JSON:', e);
-                            return;
+
+                async function renderEvents() {
+                    // Fetch parties
+                    const partiesResp = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
+                    const partiesText = await partiesResp.text();
+                    let data;
+                    try {
+                        data = JSON.parse(partiesText);
+                    } catch (e) {
+                        eventsList.textContent = 'Invalid JSON response.';
+                        console.error('Invalid JSON:', e);
+                        return;
+                    }
+                    // Fetch current active party from backend
+                    let userActivePartyId = null;
+                    try {
+                        const userResp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+                        const userData = await userResp.json();
+                        userActivePartyId = userData.ActivePartyId;
+                        window._userActivePartyId = userActivePartyId;
+                    } catch (e) { userActivePartyId = null; }
+                    const noEventsContainer = document.getElementById('no-events-container');
+                    if (!data.parties || data.parties.length === 0) {
+                        eventsList.textContent = 'You have no events.';
+                        if (noEventsContainer) noEventsContainer.style.display = '';
+                        return;
+                    }
+                    if (noEventsContainer) noEventsContainer.style.display = 'none';
+                    const list = document.createElement('ul');
+                    list.style.listStyle = 'none';
+                    list.style.padding = '0';
+                    list.style.margin = '0';
+                    list.style.width = '100%';
+                    data.parties.forEach((party, idx) => {
+                        const li = document.createElement('li');
+                        li.style.display = 'flex';
+                        li.style.alignItems = 'center';
+                        li.style.justifyContent = 'space-between';
+                        li.style.padding = '1.2rem 1.5rem 1rem 1.5rem';
+                        li.style.background = '#232323';
+                        li.style.borderRadius = '12px';
+                        li.style.marginBottom = '1.2rem';
+                        li.style.boxShadow = '0 2px 12px rgba(0,0,0,0.10)';
+                        // Title
+                        const titleDiv = document.createElement('div');
+                        titleDiv.textContent = party.PartyName;
+                        titleDiv.style.fontWeight = '700';
+                        titleDiv.style.fontSize = '1.25rem';
+                        // Button group
+                        const btnGroup = document.createElement('div');
+                        btnGroup.style.display = 'flex';
+                        btnGroup.style.gap = '0.7rem';
+                        // Set Active button
+                        const setActiveBtn = document.createElement('button');
+                        setActiveBtn.textContent = 'Set Active';
+                        setActiveBtn.className = 'btn btn-secondary';
+                        setActiveBtn.style.fontSize = '0.95rem';
+                        setActiveBtn.style.padding = '0.4rem 1.1rem';
+                        if (userActivePartyId && String(party.PartyId) === String(userActivePartyId)) {
+                            setActiveBtn.style.background = '#3b82f6';
+                            setActiveBtn.style.color = '#fff';
+                            setActiveBtn.textContent = 'Active';
                         }
-                        const noEventsContainer = document.getElementById('no-events-container');
-                        if (!data.parties || data.parties.length === 0) {
-                            eventsList.textContent = 'You have no events.';
-                            // Show the no-events container if it exists
-                            if (noEventsContainer) noEventsContainer.style.display = '';
-                            return;
-                        }
-                        // Hide the no-events container if it exists
-                        if (noEventsContainer) noEventsContainer.style.display = 'none';
-                        // Build selectable event list
-                        const list = document.createElement('ul');
-                        list.style.listStyle = 'none';
-                        list.style.padding = '0';
-                        list.style.margin = '0';
-                        list.style.width = '100%'; // Let CSS handle width
-                        let selectedIdx = null;
-                        data.parties.forEach((party, idx) => {
-                            const li = document.createElement('li');
-                            li.style.display = 'flex';
-                            li.style.alignItems = 'center';
-                            li.style.justifyContent = 'space-between';
-                            li.style.padding = '1.2rem 1.5rem 1rem 1.5rem';
-                            li.style.background = '#232323';
-                            li.style.borderRadius = '12px';
-                            li.style.marginBottom = '1.2rem';
-                            li.style.boxShadow = '0 2px 12px rgba(0,0,0,0.10)';
-                            // Title
-                            const titleDiv = document.createElement('div');
-                            titleDiv.textContent = party.PartyName;
-                            titleDiv.style.fontWeight = '700';
-                            titleDiv.style.fontSize = '1.25rem';
-                            // Button group
-                            const btnGroup = document.createElement('div');
-                            btnGroup.style.display = 'flex';
-                            btnGroup.style.gap = '0.7rem';
-                            // Set Active button
-                            const setActiveBtn = document.createElement('button');
-                            setActiveBtn.textContent = 'Set Active';
-                            setActiveBtn.className = 'btn btn-secondary';
-                            setActiveBtn.style.fontSize = '0.95rem';
-                            setActiveBtn.style.padding = '0.4rem 1.1rem';
-                            let userActivePartyId = null;
-                            if (window._userActivePartyId !== undefined) {
-                                userActivePartyId = window._userActivePartyId;
-                            }
-                            if (userActivePartyId && String(party.PartyId) === String(userActivePartyId)) {
-                                setActiveBtn.style.background = '#3b82f6';
-                                setActiveBtn.style.color = '#fff';
-                                setActiveBtn.textContent = 'Active';
-                            }
-                            setActiveBtn.addEventListener('click', async (e) => {
-                                e.stopPropagation();
-                                const userId = localStorage.getItem('userId');
-                                const isActive = (window._userActivePartyId && String(party.PartyId) === String(window._userActivePartyId));
-                                // Call backend to set/unset active party
-                                const response = await fetch('LAMPAPI/SetActiveParty.php', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ userId: userId, partyId: isActive ? null : party.PartyId })
-                                });
-                                // On success, update UI for all Set Active buttons
-                                if (response.ok) {
-                                    window._userActivePartyId = isActive ? null : party.PartyId;
-                                    // Update all Set Active buttons
-                                    document.querySelectorAll('.btn.btn-secondary').forEach(btn => {
-                                        btn.style.background = '';
-                                        btn.style.color = '';
-                                        btn.textContent = 'Set Active';
-                                    });
-                                    if (!isActive) {
-                                        setActiveBtn.style.background = '#3b82f6';
-                                        setActiveBtn.style.color = '#fff';
-                                        setActiveBtn.textContent = 'Active';
-                                    }
-                                }
+                        setActiveBtn.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            setActiveBtn.disabled = true;
+                            const isActive = (window._userActivePartyId && String(party.PartyId) === String(window._userActivePartyId));
+                            // Call backend to set/unset active party
+                            await fetch('LAMPAPI/SetActiveParty.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ userId: userId, partyId: isActive ? null : party.PartyId })
                             });
-                            // Arrow button
-                            const arrowBtn = document.createElement('button');
-                            arrowBtn.style.background = '#29294d';
-                            arrowBtn.style.border = 'none';
-                            arrowBtn.style.borderRadius = '6px';
-                            arrowBtn.style.padding = '0.5rem 1.1rem';
-                            arrowBtn.style.display = 'flex';
-                            arrowBtn.style.alignItems = 'center';
-                            arrowBtn.style.cursor = 'pointer';
-                            arrowBtn.style.transition = 'background 0.2s';
-                            arrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>`;
-                            arrowBtn.addEventListener('mouseenter', () => {
-                                arrowBtn.style.background = '#3b82f6';
-                            });
-                            arrowBtn.addEventListener('mouseleave', () => {
-                                arrowBtn.style.background = '#29294d';
-                            });
-                            arrowBtn.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                window.location.href = `event.html?title=${encodeURIComponent(party.PartyName)}`;
-                            });
-                            btnGroup.appendChild(setActiveBtn);
-                            btnGroup.appendChild(arrowBtn);
-                            li.appendChild(titleDiv);
-                            li.appendChild(btnGroup);
-                            list.appendChild(li);
+                            // Re-fetch active party and update all buttons
+                            const userResp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+                            const userData = await userResp.json();
+                            window._userActivePartyId = userData.ActivePartyId;
+                            // Re-render event list
+                            renderEvents();
                         });
-                        eventsList.innerHTML = '';
-                        eventsList.appendChild(list);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching events:', error);
-                        eventsList.textContent = 'Failed to load events.';
+                        // Arrow button
+                        const arrowBtn = document.createElement('button');
+                        arrowBtn.style.background = '#29294d';
+                        arrowBtn.style.border = 'none';
+                        arrowBtn.style.borderRadius = '6px';
+                        arrowBtn.style.padding = '0.5rem 1.1rem';
+                        arrowBtn.style.display = 'flex';
+                        arrowBtn.style.alignItems = 'center';
+                        arrowBtn.style.cursor = 'pointer';
+                        arrowBtn.style.transition = 'background 0.2s';
+                        arrowBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>`;
+                        arrowBtn.addEventListener('mouseenter', () => {
+                            arrowBtn.style.background = '#3b82f6';
+                        });
+                        arrowBtn.addEventListener('mouseleave', () => {
+                            arrowBtn.style.background = '#29294d';
+                        });
+                        arrowBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            window.location.href = `event.html?title=${encodeURIComponent(party.PartyName)}`;
+                        });
+                        btnGroup.appendChild(setActiveBtn);
+                        btnGroup.appendChild(arrowBtn);
+                        li.appendChild(titleDiv);
+                        li.appendChild(btnGroup);
+                        list.appendChild(li);
                     });
+                    eventsList.innerHTML = '';
+                    eventsList.appendChild(list);
+                }
+                renderEvents();
             });
             </script>
             </div>
