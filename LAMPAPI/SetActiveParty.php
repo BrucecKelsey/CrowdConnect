@@ -17,10 +17,10 @@ if ($conn->connect_error) {
     exit();
 }
 if ($partyId) {
-    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=? WHERE UserId=?");
+    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=? WHERE ID=?");
     $stmt->bind_param("ii", $partyId, $userId);
 } else {
-    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=NULL WHERE UserId=?");
+    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=NULL WHERE ID=?");
     $stmt->bind_param("i", $userId);
 }
 if (!$stmt->execute()) {
