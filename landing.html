@@ -516,19 +516,22 @@
                             setActiveBtn.addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 const currentActive = localStorage.getItem('activePartyId');
+                                // Only update Set Active buttons, not all .btn.btn-secondary
+                                const allSetActiveBtns = Array.from(document.querySelectorAll('#events-list .btn.btn-secondary'));
                                 if (currentActive && String(currentActive) === String(party.PartyId)) {
                                     // Turn off
                                     localStorage.removeItem('activePartyId');
                                     localStorage.removeItem('activePartyName');
-                                    setActiveBtn.style.background = '';
-                                    setActiveBtn.style.color = '';
-                                    setActiveBtn.textContent = 'Set Active';
+                                    allSetActiveBtns.forEach(btn => {
+                                        btn.style.background = '';
+                                        btn.style.color = '';
+                                        btn.textContent = 'Set Active';
+                                    });
                                 } else {
                                     // Set as active
                                     localStorage.setItem('activePartyId', party.PartyId);
                                     localStorage.setItem('activePartyName', party.PartyName);
-                                    // Unhighlight all other buttons
-                                    document.querySelectorAll('.btn.btn-secondary').forEach(btn => {
+                                    allSetActiveBtns.forEach(btn => {
                                         btn.style.background = '';
                                         btn.style.color = '';
                                         btn.textContent = 'Set Active';
