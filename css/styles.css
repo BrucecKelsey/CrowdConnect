@@ -11,9 +11,9 @@
 }
 
 .your-events-header {
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin: 1.2rem 0 0.5rem 1.2rem;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 1.8rem 0 0.7rem 1.2rem;
     text-align: left;
     width: auto;
 }
@@ -24,7 +24,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    margin: 1.5rem auto 1rem auto; /* Add top margin to move list downward */
+    margin: 3.5rem auto 1rem auto; /* Increase top margin to move list further down */
     max-height: 260px;
     overflow-y: auto;
     scrollbar-width: thin;
