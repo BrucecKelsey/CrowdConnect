@@ -455,8 +455,17 @@
                     return;
                 }
                 fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`)
-                    .then(response => response.json())
-                    .then(data => {
+                    .then(response => response.text())
+                    .then(rawText => {
+                        console.log('Raw response from GetParties.php:', rawText);
+                        let data;
+                        try {
+                            data = JSON.parse(rawText);
+                        } catch (e) {
+                            eventsList.textContent = 'Invalid JSON response.';
+                            console.error('Invalid JSON:', e);
+                            return;
+                        }
                         if (!data.parties || data.parties.length === 0) {
                             eventsList.textContent = 'You have no events.';
                             return;
