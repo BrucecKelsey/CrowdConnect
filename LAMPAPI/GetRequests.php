@@ -9,7 +9,7 @@ if ($conn->connect_error)
     echo json_encode($retValue);
     exit();
 }
-$stmt = $conn->prepare("SELECT SongName, RequestedBy FROM Requests WHERE PartyId=? ORDER BY Timestamp DESC");
+$stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp FROM Requests WHERE PartyId=? ORDER BY Timestamp DESC");
 $stmt->bind_param("i", $partyId);
 $stmt->execute();
 $result = $stmt->get_result();
