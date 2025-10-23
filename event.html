@@ -253,21 +253,37 @@
             renderTableHeaderIfNeeded(box);
             const table = box._table;
             try {
-                const resp = await fetch(`LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}${lastRequestId ? `&sinceId=${lastRequestId}` : ''}`);
+                // On initial load, get all requests, otherwise get only new
+                const url = lastRequestId ?
+                    `LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}&sinceId=${lastRequestId}` :
+                    `LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}`;
+                const resp = await fetch(url);
                 const data = await resp.json();
-                if (data.requests && data.requests.length > 0) {
-                    // Insert new requests at the top (after header row)
+                if (!lastRequestId) {
+                    // Initial load: clear and render all in descending order
+                    while (table.rows.length > 1) table.deleteRow(1);
+                    requestCount = 0;
+                    if (data.requests && data.requests.length > 0) {
+                        // Sort descending by RequestId (most recent first)
+                        data.requests.sort((a, b) => b.RequestId - a.RequestId);
+                        for (const req of data.requests) {
+                            const tr = document.createElement('tr');
+                            tr.setAttribute('data-requestid', req.RequestId);
+                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td>`;
+                            table.appendChild(tr);
+                            requestCount++;
+                            if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
+                        }
+                    }
+                } else if (data.requests && data.requests.length > 0) {
+                    // For new requests, sort ascending and insert each at the top
+                    data.requests.sort((a, b) => a.RequestId - b.RequestId);
                     for (const req of data.requests) {
                         if (!table.querySelector(`[data-requestid='${req.RequestId}']`)) {
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td>`;
-                            // Insert after header row (index 1)
-                            if (table.rows.length > 1) {
-                                table.insertBefore(tr, table.rows[1]);
-                            } else {
-                                table.appendChild(tr);
-                            }
+                            table.insertBefore(tr, table.rows[1]);
                             requestCount++;
                             if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
                         }
