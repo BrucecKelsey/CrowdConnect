@@ -51,42 +51,61 @@
             Crowd Connect
         </a>
         <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:1.08rem;font-weight:600;color:#a78bfa;letter-spacing:0.03em;white-space:nowrap;pointer-events:none;">
-            Powered by Sequoia Beats
-        </div>
-        <div class="dropdown" style="margin-left:auto;">
-            <button>Settings</button>
-            <div class="dropdown-content">
-                <a href="profile.html">Profile</a>
-                <a href="#" id="logoutBtn">Logout</a>
-            </div>
-        </div>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        localStorage.clear();
-                        window.location.href = 'login.html';
-                    });
-                }
-            });
-        </script>
-    </div>
-    <div class="profile-container" style="margin-top:56px;">
-        <div class="profile-title">Profile Information</div>
-        <ul class="profile-list" id="profileList">
-            <li>Loading...</li>
-        </ul>
-        <hr style="margin:2rem 0 1.5rem 0;border:0;border-top:1px solid #444;">
-        <div class="profile-title" style="font-size:1.3rem;margin-bottom:1rem;">Change Password</div>
-        <form id="changePasswordForm" style="display:flex;flex-direction:column;gap:1.1rem;">
-            <input type="password" id="currentPassword" placeholder="Current Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
-            <input type="password" id="newPassword" placeholder="New Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
-            <input type="password" id="confirmPassword" placeholder="Confirm New Password" required style="padding:0.8rem;font-size:1.1rem;border-radius:0.5rem;border:1px solid #333;background:#232323;color:#fff;">
-            <button type="submit" style="padding:0.8rem;font-size:1.1rem;font-weight:600;background:#a78bfa;color:#232323;border:none;border-radius:0.5rem;cursor:pointer;">Change Password</button>
-            <div id="passwordMsg" style="margin-top:0.5rem;font-size:1rem;"></div>
-        </form>
+    <style>
+        .navbar {
+            background-color: #333;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 4px 14px;
+            min-height: 32px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-btn {
+            background: hsl(217.2, 91.2%, 59.8%);
+            color: hsl(222.2, 47.4%, 11.2%);
+            padding: 4px 10px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            z-index: 1;
+        }
+        .dropdown-content a {
+            color: black;
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: #f1f1f1;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown:hover .dropdown-btn {
+            background: hsl(217.2, 91.2%, 50%);
+        }
+    </style>
     </div>
     <script>
     // Fetch and display user profile info
