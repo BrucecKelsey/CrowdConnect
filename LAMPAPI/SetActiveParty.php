@@ -16,17 +16,61 @@ if ($conn->connect_error) {
     echo json_encode($retValue);
     exit();
 }
-if ($partyId) {
-    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=? WHERE ID=?");
-    $stmt->bind_param("ii", $partyId, $userId);
+$success = true;
+// Always set all parties for this DJ to RequestsEnabled=0
+$stmt = $conn->prepare("UPDATE Parties SET RequestsEnabled=0 WHERE DJId=?");
+if (!$stmt) {
+    $retValue["error"] = $conn->error;
+    $success = false;
 } else {
-    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=NULL WHERE ID=?");
     $stmt->bind_param("i", $userId);
+    if (!$stmt->execute()) {
+        $retValue["error"] = $stmt->error;
+        $success = false;
+    }
+    $stmt->close();
 }
-if (!$stmt->execute()) {
-    $retValue["error"] = $stmt->error;
+
+if ($partyId && $success) {
+    // Set the selected party to RequestsEnabled=1 (activate only this one)
+    $stmt = $conn->prepare("UPDATE Parties SET RequestsEnabled=1 WHERE PartyId=? AND DJId=?");
+    if (!$stmt) {
+        $retValue["error"] = $conn->error;
+        $success = false;
+    } else {
+        $stmt->bind_param("ii", $partyId, $userId);
+        if (!$stmt->execute()) {
+            $retValue["error"] = $stmt->error;
+            $success = false;
+        }
+        $stmt->close();
+    }
+    // Set active party in Users
+    if ($success) {
+        $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=? WHERE ID=?");
+        if (!$stmt) {
+            $retValue["error"] = $conn->error;
+        } else {
+            $stmt->bind_param("ii", $partyId, $userId);
+            if (!$stmt->execute()) {
+                $retValue["error"] = $stmt->error;
+            }
+            $stmt->close();
+        }
+    }
+} else if ($success) {
+    // Deactivate: set active party in Users to NULL
+    $stmt = $conn->prepare("UPDATE Users SET ActivePartyId=NULL WHERE ID=?");
+    if (!$stmt) {
+        $retValue["error"] = $conn->error;
+    } else {
+        $stmt->bind_param("i", $userId);
+        if (!$stmt->execute()) {
+            $retValue["error"] = $stmt->error;
+        }
+        $stmt->close();
+    }
 }
-$stmt->close();
 $conn->close();
 echo json_encode($retValue);
 ?>

@@ -12,6 +12,24 @@ if ($conn->connect_error)
 }
 else
 {
+    // Check if requests are enabled for this party
+    $stmt = $conn->prepare("SELECT RequestsEnabled FROM Parties WHERE PartyId=?");
+    $stmt->bind_param("i", $partyId);
+    $stmt->execute();
+    $stmt->bind_result($requestsEnabled);
+    if ($stmt->fetch() === false) {
+        $stmt->close();
+        $conn->close();
+        returnWithError("Event not found.");
+        exit();
+    }
+    $stmt->close();
+    if (!$requestsEnabled) {
+        $conn->close();
+        returnWithError("Song requests are currently disabled for this event.");
+        exit();
+    }
+    // Insert request as normal
     $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp) VALUES (?, ?, ?, NOW())");
     $stmt->bind_param("iss", $partyId, $songName, $requestedBy);
     if ($stmt->execute())
