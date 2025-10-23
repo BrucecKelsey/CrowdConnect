@@ -169,7 +169,7 @@
                 </div>
             </div>
             <div class="tab-bar">
-                <button class="tab active" type="button">Active (0)</button>
+                <button class="tab active" id="activeTabBtn" type="button">Active (0)</button>
                 <button class="tab" type="button">Archived (0)</button>
             </div>
             <div class="requests-box" id="requestsBox">
@@ -242,6 +242,10 @@
             try {
                 const resp = await fetch(`LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}`);
                 const data = await resp.json();
+                const activeTabBtn = document.getElementById('activeTabBtn');
+                if (activeTabBtn) {
+                    activeTabBtn.textContent = `Active (${data.requests ? data.requests.length : 0})`;
+                }
                 if (data.requests && data.requests.length > 0) {
                     let html = '<div style="width:100%;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
                     html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th></tr>';
