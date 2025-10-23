@@ -496,6 +496,22 @@
                             titleDiv.textContent = party.PartyName;
                             titleDiv.style.fontWeight = '700';
                             titleDiv.style.fontSize = '1.25rem';
+                            // Button group
+                            const btnGroup = document.createElement('div');
+                            btnGroup.style.display = 'flex';
+                            btnGroup.style.gap = '0.7rem';
+                            // Set Active button
+                            const setActiveBtn = document.createElement('button');
+                            setActiveBtn.textContent = 'Set Active';
+                            setActiveBtn.className = 'btn btn-secondary';
+                            setActiveBtn.style.fontSize = '0.95rem';
+                            setActiveBtn.style.padding = '0.4rem 1.1rem';
+                            setActiveBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                localStorage.setItem('activePartyId', party.PartyId);
+                                localStorage.setItem('activePartyName', party.PartyName);
+                                alert(`Active event set to: ${party.PartyName}`);
+                            });
                             // Arrow button
                             const arrowBtn = document.createElement('button');
                             arrowBtn.style.background = '#29294d';
@@ -517,8 +533,10 @@
                                 e.stopPropagation();
                                 window.location.href = `event.html?title=${encodeURIComponent(party.PartyName)}`;
                             });
+                            btnGroup.appendChild(setActiveBtn);
+                            btnGroup.appendChild(arrowBtn);
                             li.appendChild(titleDiv);
-                            li.appendChild(arrowBtn);
+                            li.appendChild(btnGroup);
                             list.appendChild(li);
                         });
                         eventsList.innerHTML = '';
@@ -719,11 +737,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (viewRequestBtn) {
             viewRequestBtn.addEventListener('click', () => {
                 const userId = localStorage.getItem('userId');
+                const activePartyId = localStorage.getItem('activePartyId');
                 if (!userId) {
                     alert('No user ID found.');
                     return;
                 }
-                window.location.href = `request.html?userId=${encodeURIComponent(userId)}`;
+                let url;
+                if (activePartyId) {
+                    url = `request.html?userId=${encodeURIComponent(userId)}&partyId=${encodeURIComponent(activePartyId)}`;
+                } else {
+                    url = `request.html?userId=${encodeURIComponent(userId)}`;
+                }
+                window.location.href = url;
             });
         }
             // QR code modal logic
@@ -734,11 +759,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (showQrBtn && qrModal && closeQrBtn && qrCanvas) {
                 showQrBtn.addEventListener('click', () => {
                     const userId = localStorage.getItem('userId');
-                    if (!userId) {
-                        alert('No user ID found.');
-                        return;
+                    const activePartyId = localStorage.getItem('activePartyId');
+                    let url;
+                    if (activePartyId) {
+                        url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}&partyId=${encodeURIComponent(activePartyId)}`;
+                    } else {
+                        url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
                     }
-                    const url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
                     // Generate QR code
                     const qr = new QRious({
                         element: qrCanvas,
