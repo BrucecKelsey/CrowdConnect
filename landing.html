@@ -785,13 +785,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (showQrBtn && qrModal && closeQrBtn && qrCanvas) {
                 showQrBtn.addEventListener('click', () => {
                     const userId = localStorage.getItem('userId');
-                    const activePartyId = localStorage.getItem('activePartyId');
-                    let url;
-                    if (activePartyId) {
-                        url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}&partyId=${encodeURIComponent(activePartyId)}`;
-                    } else {
-                        url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
+                    if (!userId) {
+                        alert('No user ID found.');
+                        return;
                     }
+                    const url = `${window.location.origin}/request.html?userId=${encodeURIComponent(userId)}`;
                     // Generate QR code
                     const qr = new QRious({
                         element: qrCanvas,
