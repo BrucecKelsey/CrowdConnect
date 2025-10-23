@@ -506,11 +506,37 @@
                             setActiveBtn.className = 'btn btn-secondary';
                             setActiveBtn.style.fontSize = '0.95rem';
                             setActiveBtn.style.padding = '0.4rem 1.1rem';
+                            // Highlight if this is the active event
+                            const activePartyId = localStorage.getItem('activePartyId');
+                            if (activePartyId && String(party.PartyId) === String(activePartyId)) {
+                                setActiveBtn.style.background = '#3b82f6';
+                                setActiveBtn.style.color = '#fff';
+                                setActiveBtn.textContent = 'Active';
+                            }
                             setActiveBtn.addEventListener('click', (e) => {
                                 e.stopPropagation();
-                                localStorage.setItem('activePartyId', party.PartyId);
-                                localStorage.setItem('activePartyName', party.PartyName);
-                                alert(`Active event set to: ${party.PartyName}`);
+                                const currentActive = localStorage.getItem('activePartyId');
+                                if (currentActive && String(currentActive) === String(party.PartyId)) {
+                                    // Turn off
+                                    localStorage.removeItem('activePartyId');
+                                    localStorage.removeItem('activePartyName');
+                                    setActiveBtn.style.background = '';
+                                    setActiveBtn.style.color = '';
+                                    setActiveBtn.textContent = 'Set Active';
+                                } else {
+                                    // Set as active
+                                    localStorage.setItem('activePartyId', party.PartyId);
+                                    localStorage.setItem('activePartyName', party.PartyName);
+                                    // Unhighlight all other buttons
+                                    document.querySelectorAll('.btn.btn-secondary').forEach(btn => {
+                                        btn.style.background = '';
+                                        btn.style.color = '';
+                                        btn.textContent = 'Set Active';
+                                    });
+                                    setActiveBtn.style.background = '#3b82f6';
+                                    setActiveBtn.style.color = '#fff';
+                                    setActiveBtn.textContent = 'Active';
+                                }
                             });
                             // Arrow button
                             const arrowBtn = document.createElement('button');
