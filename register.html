@@ -113,7 +113,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (!data.error && data.id && data.id > 0) {
                     msg.textContent = 'Registration successful! Redirecting to login...';
                     msg.style.color = '#22c55e';
                     setTimeout(() => {
