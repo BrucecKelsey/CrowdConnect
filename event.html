@@ -256,13 +256,18 @@
                 const resp = await fetch(`LAMPAPI/GetRequests.php?partyId=${encodeURIComponent(partyId)}${lastRequestId ? `&sinceId=${lastRequestId}` : ''}`);
                 const data = await resp.json();
                 if (data.requests && data.requests.length > 0) {
+                    // Insert new requests at the top (after header row)
                     for (const req of data.requests) {
-                        // Only append if not already present
                         if (!table.querySelector(`[data-requestid='${req.RequestId}']`)) {
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td>`;
-                            table.appendChild(tr);
+                            // Insert after header row (index 1)
+                            if (table.rows.length > 1) {
+                                table.insertBefore(tr, table.rows[1]);
+                            } else {
+                                table.appendChild(tr);
+                            }
                             requestCount++;
                             if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
                         }
