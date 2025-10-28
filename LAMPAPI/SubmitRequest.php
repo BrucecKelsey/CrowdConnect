@@ -29,7 +29,7 @@ else
         returnWithError("Song requests are currently disabled for this event.");
         exit();
     }
-    // Insert request and get DJ info for tipping
+    // Insert request (using original column names for compatibility)
     $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp) VALUES (?, ?, ?, NOW())");
     $stmt->bind_param("iss", $partyId, $songName, $requestedBy);
     if ($stmt->execute())
@@ -37,21 +37,29 @@ else
         $requestId = $stmt->insert_id;
         $stmt->close();
         
-        // Get DJ information for tipping
-        $stmt = $conn->prepare("SELECT u.ID, u.FirstName, u.LastName FROM Users u JOIN Parties p ON u.ID = p.UserId WHERE p.PartyId = ?");
-        $stmt->bind_param("i", $partyId);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        // Try to get DJ information for tipping (safely handle missing columns/tables)
+        $djInfo = null;
+        try {
+            $stmt = $conn->prepare("SELECT u.ID, u.FirstName, u.LastName FROM Users u JOIN Parties p ON u.ID = p.UserId WHERE p.PartyId = ?");
+            $stmt->bind_param("i", $partyId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $djInfo = $result->fetch_assoc();
+            $stmt->close();
+        } catch (Exception $e) {
+            // Silently handle missing columns or other database issues
+        }
         
-        if ($djInfo = $result->fetch_assoc()) {
+        if ($djInfo) {
             $retValue = array(
                 "error" => "", 
                 "success" => true, 
                 "requestId" => $requestId,
                 "djId" => $djInfo["ID"],
-                "djName" => $djInfo["FirstName"] . " " . $djInfo["LastName"]
+                "djName" => trim($djInfo["FirstName"] . " " . $djInfo["LastName"])
             );
         } else {
+            // Fallback response without DJ info
             $retValue = array(
                 "error" => "", 
                 "success" => true, 
