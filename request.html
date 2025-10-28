@@ -46,8 +46,55 @@
                 </button>
             </form>
             <div id="requestMsg" class="request-msg"></div>
+            
+            <!-- Tip Section (appears after successful request) -->
+            <div id="tipSection" class="tip-section" style="display:none;">
+                <div class="tip-header">
+                    <span class="tip-icon">💰</span>
+                    <span class="tip-title">Send a Tip!</span>
+                </div>
+                <div class="tip-for">Show appreciation to <span id="djName" class="dj-name">the DJ</span></div>
+                <div class="tip-buttons">
+                    <button class="tip-btn" onclick="selectTip(1)">$1</button>
+                    <button class="tip-btn" onclick="selectTip(3)">$3</button>
+                    <button class="tip-btn" onclick="selectTip(5)">$5</button>
+                    <button class="tip-btn" onclick="selectTip(10)">$10</button>
+                </div>
+                <div class="custom-tip">
+                    <input type="number" id="customTip" placeholder="Custom amount" 
+                           min="0.50" step="0.50" onchange="selectCustomTip()">
+                </div>
+                <button type="button" class="tip-send-btn" onclick="openPaymentModal();">
+                    <span class="tip-send-icon">💳</span> Send Tip
+                </button>
+            </div>
         </div>
+
+        <!-- Payment Modal -->
+        <div id="paymentModal" class="payment-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span class="modal-title">💳 Send $<span id="tipAmount">0</span> Tip</span>
+                    <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+                </div>
+                <div id="card-element" class="card-element">
+                    <!-- Stripe Elements will create form elements here -->
+                </div>
+                <button id="pay-button" class="pay-button">Send Tip</button>
+                <div id="payment-result" class="payment-result"></div>
+            </div>
+        </div>
+        <script src="https://js.stripe.com/v3/"></script>
         <script>
+        // Stripe variables
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
+        let selectedTipAmount = 0;
+        let currentRequestId = null;
+        let currentDjId = null;
+        let currentDjName = '';
+
         function getQueryParam(name) {
             const url = new URL(window.location.href);
             return url.searchParams.get(name);
@@ -74,11 +121,20 @@
                         activePartyId = data.ActivePartyId;
                     }
                     partyId = activePartyId;
-                    // Fetch party name
+                    // Fetch party name and DJ info
                     const resp2 = await fetch(`LAMPAPI/GetParties.php?djId=${encodeURIComponent(userId)}`);
                     const data2 = await resp2.json();
                     const party = (data2.parties || []).find(p => String(p.PartyId) === String(activePartyId));
                     eventNameSpan.textContent = party ? party.PartyName : 'Unknown';
+                    
+                    // Store DJ info for tipping
+                    currentDjId = userId;
+                    
+                    // Get DJ name for tip section
+                    const djResp = await fetch(`LAMPAPI/GetUser.php?userId=${encodeURIComponent(userId)}`);
+                    const djData = await djResp.json();
+                    currentDjName = `${djData.FirstName || ''} ${djData.LastName || ''}`.trim() || 'the DJ';
+                    document.getElementById('djName').textContent = currentDjName;
                 }
         loadEventName();
 
@@ -112,15 +168,159 @@
                         msgDiv.textContent = 'Error: ' + data.error;
                         msgDiv.style.color = '#f87171';
                     } else {
+                        currentRequestId = data.requestId;
                         msgDiv.textContent = 'Request sent!';
                         msgDiv.style.color = '#a78bfa';
                         e.target.reset();
+                        
+                        // Show tip section
+                        document.getElementById('tipSection').style.display = 'block';
                     }
                 } catch (err) {
                     msgDiv.textContent = 'Failed to send request.';
                     msgDiv.style.color = '#f87171';
                 }
             });
+
+            // Tip functionality
+            function selectTip(amount) {
+                selectedTipAmount = amount;
+                document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
+                event.target.classList.add('selected');
+                document.getElementById('customTip').value = '';
+            }
+
+            function selectCustomTip() {
+                let customAmount = parseFloat(document.getElementById('customTip').value);
+                if (customAmount >= 0.50) {
+                    selectedTipAmount = customAmount;
+                    document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
+                }
+            }
+
+            function openPaymentModal() {
+                if (selectedTipAmount < 0.50) {
+                    alert('Please select a tip amount of at least $0.50');
+                    return;
+                }
+                
+                document.getElementById('tipAmount').textContent = selectedTipAmount.toFixed(2);
+                document.getElementById('paymentModal').style.display = 'flex';
+                
+                if (!stripe) {
+                    initializeStripe();
+                }
+            }
+
+            function closePaymentModal() {
+                document.getElementById('paymentModal').style.display = 'none';
+            }
+
+            async function initializeStripe() {
+                try {
+                    // Get Stripe publishable key
+                    const response = await fetch('LAMPAPI/GetStripePublicKey.php');
+                    const data = await response.json();
+                    
+                    if (!data.success) {
+                        throw new Error('Failed to get Stripe key');
+                    }
+                    
+                    stripe = Stripe(data.publishableKey);
+                    elements = stripe.elements();
+                    
+                    cardElement = elements.create('card', {
+                        style: {
+                            base: {
+                                fontSize: '16px',
+                                color: '#fff',
+                                backgroundColor: '#232325',
+                                '::placeholder': {
+                                    color: '#bdbdbd',
+                                },
+                            },
+                        },
+                    });
+                    
+                    cardElement.mount('#card-element');
+                    
+                    document.getElementById('pay-button').addEventListener('click', handlePayment);
+                    
+                } catch (error) {
+                    console.error('Stripe initialization error:', error);
+                    document.getElementById('payment-result').innerHTML = 
+                        '<span style="color: #f87171;">Payment system unavailable</span>';
+                }
+            }
+
+            async function handlePayment() {
+                const payButton = document.getElementById('pay-button');
+                payButton.disabled = true;
+                payButton.textContent = 'Processing...';
+                
+                try {
+                    // Create payment intent
+                    const response = await fetch('LAMPAPI/CreatePaymentIntent.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            amount: Math.round(selectedTipAmount * 100), // Convert to cents
+                            djId: currentDjId,
+                            requestId: currentRequestId
+                        })
+                    });
+                    
+                    const paymentData = await response.json();
+                    
+                    if (!paymentData.success) {
+                        throw new Error(paymentData.error);
+                    }
+                    
+                    // Confirm payment with Stripe
+                    const { error } = await stripe.confirmCardPayment(paymentData.clientSecret, {
+                        payment_method: {
+                            card: cardElement,
+                            billing_details: {
+                                name: document.getElementById('artist').value || 'Anonymous'
+                            }
+                        }
+                    });
+                    
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+                    
+                    // Confirm payment on backend
+                    const confirmResponse = await fetch('LAMPAPI/ConfirmPayment.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            paymentIntentId: paymentData.paymentIntentId
+                        })
+                    });
+                    
+                    const confirmData = await confirmResponse.json();
+                    
+                    if (confirmData.success) {
+                        document.getElementById('payment-result').innerHTML = 
+                            '<span style="color: #a78bfa;">✅ Tip sent successfully!</span>';
+                        setTimeout(() => {
+                            closePaymentModal();
+                            document.getElementById('tipSection').style.display = 'none';
+                        }, 2000);
+                    } else {
+                        throw new Error('Payment confirmation failed');
+                    }
+                    
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    document.getElementById('payment-result').innerHTML = 
+                        '<span style="color: #f87171;">❌ ' + error.message + '</span>';
+                }
+                
+                payButton.disabled = false;
+                payButton.textContent = 'Send Tip';
+            }
         </script>
 </body>
 <style>
@@ -249,6 +449,202 @@ input[type="text"]:focus {
     text-align: center;
     margin-top: 0.7rem;
     font-size: 1.05rem;
+}
+
+/* Tip Section Styles */
+.tip-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #23232b;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tip-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    justify-content: center;
+}
+
+.tip-icon {
+    font-size: 1.6rem;
+    color: #a78bfa;
+}
+
+.tip-for {
+    text-align: center;
+    color: #bdbdbd;
+    font-size: 1rem;
+}
+
+.dj-name {
+    color: #a78bfa;
+    font-weight: 600;
+}
+
+.tip-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tip-btn {
+    background: #232325;
+    border: 2px solid #23232b;
+    color: #fff;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 60px;
+}
+
+.tip-btn:hover, .tip-btn.selected {
+    background: #a78bfa;
+    border-color: #a78bfa;
+    color: #fff;
+}
+
+.custom-tip {
+    display: flex;
+    justify-content: center;
+}
+
+.custom-tip input {
+    background: #232325;
+    border: 2px solid #23232b;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+    transition: border 0.2s;
+    width: 120px;
+    text-align: center;
+}
+
+.custom-tip input:focus {
+    border: 2px solid #a78bfa;
+}
+
+.tip-send-btn {
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+}
+
+.tip-send-btn:hover {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.tip-send-icon {
+    font-size: 1.2rem;
+}
+
+/* Payment Modal Styles */
+.payment-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #18181b;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    border: 2px solid #23232b;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #a78bfa;
+}
+
+.close-btn {
+    color: #bdbdbd;
+    font-size: 1.5rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.card-element {
+    background: #232325;
+    border: 2px solid #23232b;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    min-height: 40px;
+}
+
+.pay-button {
+    background: #a78bfa;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.8rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.pay-button:hover {
+    background: #8b5cf6;
+}
+
+.pay-button:disabled {
+    background: #4a4a4a;
+    cursor: not-allowed;
+}
+
+.payment-result {
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: 500;
 }
 </style>
 </html>
