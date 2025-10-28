@@ -57,6 +57,67 @@
             margin-top: 10px;
             text-shadow: 0 0 5px #ff00cc;
         }
+        .tip-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ff00cc;
+        }
+        .tip-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .tip-btn {
+            padding: 8px 16px;
+            border: 2px solid #fff700;
+            background: transparent;
+            color: #fff700;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Ubuntu', sans-serif;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .tip-btn:hover, .tip-btn.selected {
+            background: #fff700;
+            color: #333399;
+        }
+        #paymentModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(51,51,153,0.95);
+            padding: 30px;
+            border-radius: 25px;
+            border: 2px solid #ff00cc;
+            box-shadow: 0 0 30px #ff00cc;
+            max-width: 400px;
+            width: 90%;
+        }
+        #card-element {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .close-btn {
+            float: right;
+            color: #fff700;
+            font-size: 24px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -68,12 +129,59 @@
         <input type="text" id="requestedBy" placeholder="Your Name (optional)" />
         <button type="button" class="buttons disco-btn" onclick="submitRequest();">Submit Request</button>
         <span id="submitResult"></span>
+        
+        <div id="tipSection" class="tip-section" style="display:none;">
+            <h3 style="color: #fff700; margin-bottom: 15px;">💰 Send a Tip to the DJ!</h3>
+            <p style="color: #fff; font-size: 0.9em; margin-bottom: 15px;">
+                Show your appreciation with a tip for <span id="djName"></span>
+            </p>
+            <div class="tip-buttons">
+                <button class="tip-btn" onclick="selectTip(1)">$1</button>
+                <button class="tip-btn" onclick="selectTip(3)">$3</button>
+                <button class="tip-btn" onclick="selectTip(5)">$5</button>
+                <button class="tip-btn" onclick="selectTip(10)">$10</button>
+            </div>
+            <input type="number" id="customTip" placeholder="Custom amount" 
+                   style="width: 100px; margin: 10px; text-align: center;" 
+                   min="0.50" step="0.50" onchange="selectCustomTip()">
+            <br>
+            <button type="button" class="buttons" onclick="openPaymentModal();" 
+                    style="margin-top: 15px; background: linear-gradient(90deg, #00ff88 0%, #fff700 100%);">
+                Send Tip 💳
+            </button>
+        </div>
     </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+            <h3 style="color: #fff700; text-align: center; margin-bottom: 20px;">
+                💳 Send $<span id="tipAmount">0</span> Tip
+            </h3>
+            <div id="card-element">
+                <!-- Stripe Elements will create form elements here -->
+            </div>
+            <button id="pay-button" class="buttons" style="width: 100%; margin-top: 15px;">
+                Send Tip
+            </button>
+            <div id="payment-result" style="margin-top: 15px; text-align: center; color: #fff;"></div>
+        </div>
+    </div>
+    <script src="https://js.stripe.com/v3/"></script>
     <script>
+        let stripe = null;
+        let elements = null;
+        let cardElement = null;
+        let selectedTipAmount = 0;
+        let currentRequestId = null;
+        let currentDjId = null;
+
         function getPartyId() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('partyId');
         }
+
         function getPartyName(partyId) {
             let url = 'http://178.128.4.96/LAMPAPI/GetPartyName.php?partyId=' + partyId;
             let xhr = new XMLHttpRequest();
@@ -82,18 +190,25 @@
                 if (this.readyState == 4 && this.status == 200) {
                     let jsonObject = JSON.parse(xhr.responseText);
                     document.getElementById("partyName").textContent = jsonObject.partyName;
+                    
+                    // Store DJ info for tipping
+                    currentDjId = jsonObject.djId;
+                    document.getElementById("djName").textContent = jsonObject.djName || "the DJ";
                 }
             };
             xhr.send();
         }
+
         function submitRequest() {
             let partyId = getPartyId();
             let songName = document.getElementById("songName").value;
             let requestedBy = document.getElementById("requestedBy").value;
+            
             if (!songName) {
                 document.getElementById("submitResult").innerHTML = "Please enter a song name.";
                 return;
             }
+            
             let tmp = { partyId: partyId, songName: songName, requestedBy: requestedBy };
             let jsonPayload = JSON.stringify(tmp);
             let url = 'http://178.128.4.96/LAMPAPI/SubmitRequest.php';
@@ -106,14 +221,157 @@
                     if (jsonObject.error) {
                         document.getElementById("submitResult").innerHTML = jsonObject.error;
                     } else {
+                        currentRequestId = jsonObject.requestId;
                         document.getElementById("submitResult").innerHTML = "Request submitted successfully!";
                         document.getElementById("songName").value = "";
                         document.getElementById("requestedBy").value = "";
+                        
+                        // Show tip section
+                        document.getElementById("tipSection").style.display = "block";
                     }
                 }
             };
             xhr.send(jsonPayload);
         }
+
+        function selectTip(amount) {
+            selectedTipAmount = amount;
+            document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('customTip').value = '';
+        }
+
+        function selectCustomTip() {
+            let customAmount = parseFloat(document.getElementById('customTip').value);
+            if (customAmount >= 0.50) {
+                selectedTipAmount = customAmount;
+                document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
+            }
+        }
+
+        function openPaymentModal() {
+            if (selectedTipAmount < 0.50) {
+                alert('Please select a tip amount of at least $0.50');
+                return;
+            }
+            
+            document.getElementById('tipAmount').textContent = selectedTipAmount.toFixed(2);
+            document.getElementById('paymentModal').style.display = 'block';
+            
+            if (!stripe) {
+                initializeStripe();
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        async function initializeStripe() {
+            try {
+                // Get Stripe publishable key
+                const response = await fetch('http://localhost/CrowdConnect/LAMPAPI/GetStripePublicKey.php');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error('Failed to get Stripe key');
+                }
+                
+                stripe = Stripe(data.publishableKey);
+                elements = stripe.elements();
+                
+                cardElement = elements.create('card', {
+                    style: {
+                        base: {
+                            fontSize: '16px',
+                            color: '#333',
+                            '::placeholder': {
+                                color: '#aaa',
+                            },
+                        },
+                    },
+                });
+                
+                cardElement.mount('#card-element');
+                
+                document.getElementById('pay-button').addEventListener('click', handlePayment);
+                
+            } catch (error) {
+                console.error('Stripe initialization error:', error);
+                document.getElementById('payment-result').innerHTML = 
+                    '<span style="color: red;">Payment system unavailable</span>';
+            }
+        }
+
+        async function handlePayment() {
+            const payButton = document.getElementById('pay-button');
+            payButton.disabled = true;
+            payButton.textContent = 'Processing...';
+            
+            try {
+                // Create payment intent
+                const response = await fetch('http://localhost/CrowdConnect/LAMPAPI/CreatePaymentIntent.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        amount: Math.round(selectedTipAmount * 100), // Convert to cents
+                        djId: currentDjId,
+                        requestId: currentRequestId
+                    })
+                });
+                
+                const paymentData = await response.json();
+                
+                if (!paymentData.success) {
+                    throw new Error(paymentData.error);
+                }
+                
+                // Confirm payment with Stripe
+                const { error } = await stripe.confirmCardPayment(paymentData.clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: {
+                            name: document.getElementById('requestedBy').value || 'Anonymous'
+                        }
+                    }
+                });
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
+                
+                // Confirm payment on backend
+                const confirmResponse = await fetch('http://localhost/CrowdConnect/LAMPAPI/ConfirmPayment.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentIntentId: paymentData.paymentIntentId
+                    })
+                });
+                
+                const confirmData = await confirmResponse.json();
+                
+                if (confirmData.success) {
+                    document.getElementById('payment-result').innerHTML = 
+                        '<span style="color: #00ff88;">✅ Tip sent successfully!</span>';
+                    setTimeout(() => {
+                        closePaymentModal();
+                        document.getElementById('tipSection').style.display = 'none';
+                    }, 2000);
+                } else {
+                    throw new Error('Payment confirmation failed');
+                }
+                
+            } catch (error) {
+                console.error('Payment error:', error);
+                document.getElementById('payment-result').innerHTML = 
+                    '<span style="color: red;">❌ ' + error.message + '</span>';
+            }
+            
+            payButton.disabled = false;
+            payButton.textContent = 'Send Tip';
+        }
+
         window.onload = function() {
             let partyId = getPartyId();
             if (partyId) getPartyName(partyId);
