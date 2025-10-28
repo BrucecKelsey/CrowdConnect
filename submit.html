@@ -222,6 +222,11 @@
                         document.getElementById("submitResult").innerHTML = jsonObject.error;
                     } else {
                         currentRequestId = jsonObject.requestId;
+                        // Store DJ info if returned
+                        if (jsonObject.djId) {
+                            currentDjId = jsonObject.djId;
+                            document.getElementById("djName").textContent = jsonObject.djName || "the DJ";
+                        }
                         document.getElementById("submitResult").innerHTML = "Request submitted successfully!";
                         document.getElementById("songName").value = "";
                         document.getElementById("requestedBy").value = "";
@@ -270,7 +275,7 @@
         async function initializeStripe() {
             try {
                 // Get Stripe publishable key
-                const response = await fetch('http://localhost/CrowdConnect/LAMPAPI/GetStripePublicKey.php');
+                const response = await fetch('http://178.128.4.96/LAMPAPI/GetStripePublicKey.php');
                 const data = await response.json();
                 
                 if (!data.success) {
@@ -310,7 +315,7 @@
             
             try {
                 // Create payment intent
-                const response = await fetch('http://localhost/CrowdConnect/LAMPAPI/CreatePaymentIntent.php', {
+                const response = await fetch('http://178.128.4.96/LAMPAPI/CreatePaymentIntent.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -341,7 +346,7 @@
                 }
                 
                 // Confirm payment on backend
-                const confirmResponse = await fetch('http://localhost/CrowdConnect/LAMPAPI/ConfirmPayment.php', {
+                const confirmResponse = await fetch('http://178.128.4.96/LAMPAPI/ConfirmPayment.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

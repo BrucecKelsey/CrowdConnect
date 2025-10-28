@@ -29,12 +29,36 @@ else
         returnWithError("Song requests are currently disabled for this event.");
         exit();
     }
-    // Insert request as normal
+    // Insert request and get DJ info for tipping
     $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp) VALUES (?, ?, ?, NOW())");
     $stmt->bind_param("iss", $partyId, $songName, $requestedBy);
     if ($stmt->execute())
     {
-        $retValue = array("error" => "", "success" => true, "RequestId" => $stmt->insert_id);
+        $requestId = $stmt->insert_id;
+        $stmt->close();
+        
+        // Get DJ information for tipping
+        $stmt = $conn->prepare("SELECT u.ID, u.FirstName, u.LastName FROM Users u JOIN Parties p ON u.ID = p.UserId WHERE p.PartyId = ?");
+        $stmt->bind_param("i", $partyId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($djInfo = $result->fetch_assoc()) {
+            $retValue = array(
+                "error" => "", 
+                "success" => true, 
+                "requestId" => $requestId,
+                "djId" => $djInfo["ID"],
+                "djName" => $djInfo["FirstName"] . " " . $djInfo["LastName"]
+            );
+        } else {
+            $retValue = array(
+                "error" => "", 
+                "success" => true, 
+                "requestId" => $requestId
+            );
+        }
+        
         sendResultInfoAsJson(json_encode($retValue));
     }
     else
