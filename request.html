@@ -209,19 +209,24 @@
                     currentRequestId = data.requestId;
                     
                     // Handle tip processing
+                    console.log('isTipSectionVisible:', isTipSectionVisible, 'selectedTipAmount:', selectedTipAmount);
+                    
                     if (isTipSectionVisible) {
                         if (selectedTipAmount === 0) {
+                            console.log('Processing no-tip request');
                             // No tip - just complete (TipAmount defaults to 0 in DB)
                             msgDiv.textContent = 'Request submitted successfully!';
                             msgDiv.style.color = '#a78bfa';
                             clearForm();
                         } else {
+                            console.log('Processing paid tip request, opening payment modal');
                             // Paid tip - open payment modal
                             msgDiv.textContent = 'Request created! Processing payment...';
                             msgDiv.style.color = '#bdbdbd';
                             openPaymentModal();
                         }
                     } else {
+                        console.log('Tip section not visible, completing request');
                         // No tip section visible - just complete
                         msgDiv.textContent = 'Request submitted successfully!';
                         msgDiv.style.color = '#a78bfa';
@@ -296,16 +301,22 @@
             }
 
             function openPaymentModal() {
+                console.log('openPaymentModal called with selectedTipAmount:', selectedTipAmount);
+                
                 if (selectedTipAmount < 0.50) {
                     alert('Please select a tip amount of at least $0.50');
                     return;
                 }
                 
+                console.log('Setting tip amount and showing modal');
                 document.getElementById('tipAmount').textContent = selectedTipAmount.toFixed(2);
                 document.getElementById('paymentModal').style.display = 'flex';
                 
                 if (!stripe) {
+                    console.log('Initializing Stripe...');
                     initializeStripe();
+                } else {
+                    console.log('Stripe already initialized');
                 }
             }
 
