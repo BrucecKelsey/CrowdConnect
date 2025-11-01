@@ -178,11 +178,31 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ partyId: partyId, songName: songName, requestedBy: artist })
                     });
-                    const data = await resp.json();
                     
-                    if (data.error) {
+                    console.log('Response status:', resp.status);
+                    const responseText = await resp.text();
+                    console.log('Response text:', responseText);
+                    
+                    let data;
+                    try {
+                        data = JSON.parse(responseText);
+                    } catch (parseError) {
+                        console.error('JSON parse error:', parseError);
+                        msgDiv.textContent = 'Server response error: Invalid JSON';
+                        msgDiv.style.color = '#f87171';
+                        return;
+                    }
+                    
+                    if (data.error && data.error.length > 0) {
                         msgDiv.textContent = 'Error: ' + data.error;
                         msgDiv.style.color = '#f87171';
+                        return;
+                    }
+                    
+                    if (!data.success || !data.requestId) {
+                        msgDiv.textContent = 'Error: Invalid response from server';
+                        msgDiv.style.color = '#f87171';
+                        console.error('Invalid response:', data);
                         return;
                     }
                     
@@ -209,7 +229,8 @@
                     }
                     
                 } catch (err) {
-                    msgDiv.textContent = 'Failed to send request.';
+                    console.error('Request submission error:', err);
+                    msgDiv.textContent = 'Failed to send request: ' + err.message;
                     msgDiv.style.color = '#f87171';
                 }
             }
