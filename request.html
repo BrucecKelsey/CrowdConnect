@@ -50,11 +50,11 @@
                     </div>
                     <div class="tip-for">Show appreciation to <span id="djName" class="dj-name">the DJ</span></div>
                     <div class="tip-buttons">
-                        <button class="tip-btn selected" onclick="selectTip(0)">No Tip</button>
-                        <button class="tip-btn" onclick="selectTip(1)">$1</button>
-                        <button class="tip-btn" onclick="selectTip(3)">$3</button>
-                        <button class="tip-btn" onclick="selectTip(5)">$5</button>
-                        <button class="tip-btn" onclick="selectTip(10)">$10</button>
+                        <button class="tip-btn selected" onclick="selectTip(0, this)">No Tip</button>
+                        <button class="tip-btn" onclick="selectTip(1, this)">$1</button>
+                        <button class="tip-btn" onclick="selectTip(3, this)">$3</button>
+                        <button class="tip-btn" onclick="selectTip(5, this)">$5</button>
+                        <button class="tip-btn" onclick="selectTip(10, this)">$10</button>
                     </div>
                     <div class="custom-tip">
                         <input type="number" id="customTip" placeholder="Custom amount" 
@@ -240,7 +240,7 @@
                 document.getElementById('artist').value = '';
                 document.getElementById('customTip').value = '';
                 // Reset tip selection to "No Tip"
-                selectTip(0);
+                selectTip(0, null);
             }
 
             // Check if tips are allowed for this event
@@ -266,10 +266,24 @@
             }
 
             // Tip functionality
-            function selectTip(amount) {
+            function selectTip(amount, buttonElement) {
                 selectedTipAmount = amount;
                 document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
-                event.target.classList.add('selected');
+                
+                // If buttonElement is passed, use it, otherwise find the button by amount
+                if (buttonElement) {
+                    buttonElement.classList.add('selected');
+                } else {
+                    // Find the button that matches this amount
+                    const buttons = document.querySelectorAll('.tip-btn');
+                    buttons.forEach(btn => {
+                        if ((amount === 0 && btn.textContent === 'No Tip') ||
+                            (btn.textContent === `$${amount}`)) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                }
+                
                 document.getElementById('customTip').value = '';
             }
 
