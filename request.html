@@ -173,14 +173,33 @@
                         msgDiv.style.color = '#a78bfa';
                         e.target.reset();
                         
-                        // Show tip section
-                        document.getElementById('tipSection').style.display = 'block';
+                        // Check if tips are allowed for this event before showing tip section
+                        checkAndShowTipSection();
                     }
                 } catch (err) {
                     msgDiv.textContent = 'Failed to send request.';
                     msgDiv.style.color = '#f87171';
                 }
             });
+
+            // Check if tips are allowed for this event
+            async function checkAndShowTipSection() {
+                if (!partyId) return;
+                
+                try {
+                    const response = await fetch(`LAMPAPI/UpdateTipSettings.php?partyId=${partyId}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.allowTips) {
+                        // Tips are enabled, show the tip section
+                        document.getElementById('tipSection').style.display = 'block';
+                    }
+                    // If tips are disabled, tip section stays hidden
+                } catch (e) {
+                    console.error('Failed to check tip settings:', e);
+                    // On error, don't show tip section to be safe
+                }
+            }
 
             // Tip functionality
             function selectTip(amount) {

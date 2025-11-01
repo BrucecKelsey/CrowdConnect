@@ -148,6 +148,89 @@
             display: block;
         }
         .delete-btn:hover { background: #be123c; }
+
+        /* Tip Settings Styles */
+        .tip-settings-card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .tip-setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+        
+        .tip-setting-info {
+            flex: 1;
+        }
+        
+        .tip-setting-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.3rem;
+        }
+        
+        .tip-setting-desc {
+            font-size: 0.9rem;
+            color: #bbb;
+            line-height: 1.4;
+        }
+        
+        .tip-toggle-container {
+            margin-left: 1rem;
+        }
+        
+        /* Toggle Switch Styles */
+        .tip-toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .tip-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .tip-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: 0.3s;
+            border-radius: 34px;
+        }
+        
+        .tip-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        
+        .tip-toggle input:checked + .tip-slider {
+            background-color: #a78bfa;
+        }
+        
+        .tip-toggle input:checked + .tip-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .tip-toggle input:focus + .tip-slider {
+            box-shadow: 0 0 1px #a78bfa;
+        }
     </style>
 </head>
 <body>
@@ -157,6 +240,29 @@
             Back to Events
         </a>
         <div class="event-title" id="eventTitle">Event</div>
+        
+        <!-- Tip Settings Card -->
+        <div class="card tip-settings-card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Tip Settings
+                </div>
+            </div>
+            <div class="tip-setting-row">
+                <div class="tip-setting-info">
+                    <div class="tip-setting-title">Allow Tips</div>
+                    <div class="tip-setting-desc">Enable customers to send tips to you through song requests</div>
+                </div>
+                <div class="tip-toggle-container">
+                    <label class="tip-toggle">
+                        <input type="checkbox" id="allowTipsToggle">
+                        <span class="tip-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
         <div class="card">
             <div class="card-header">
                 <div class="card-header-title">
@@ -202,6 +308,56 @@
             } catch (e) { return null; }
             return null;
         }
+
+        // Initialize tip settings
+        async function initializeTipSettings() {
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) return;
+            
+            // Load current tip setting
+            try {
+                const response = await fetch(`LAMPAPI/UpdateTipSettings.php?partyId=${partyId}`);
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('allowTipsToggle').checked = data.allowTips;
+                }
+            } catch (e) {
+                console.error('Failed to load tip settings:', e);
+            }
+        }
+
+        // Handle tip toggle change
+        document.getElementById('allowTipsToggle').addEventListener('change', async function() {
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) return;
+            
+            const allowTips = this.checked;
+            
+            try {
+                const response = await fetch('LAMPAPI/UpdateTipSettings.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        partyId: partyId,
+                        allowTips: allowTips
+                    })
+                });
+                
+                const data = await response.json();
+                if (!data.success) {
+                    // Revert toggle if update failed
+                    this.checked = !allowTips;
+                    alert('Failed to update tip setting: ' + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                // Revert toggle if request failed
+                this.checked = !allowTips;
+                alert('Failed to update tip setting: ' + e.message);
+            }
+        });
+
+        // Initialize when page loads
+        window.addEventListener('load', initializeTipSettings);
 
         document.getElementById('deleteEventBtn').addEventListener('click', async function() {
             if (!userId || !title) {
