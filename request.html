@@ -220,10 +220,13 @@
                             clearForm();
                         } else {
                             console.log('Processing paid tip request, opening payment modal');
-                            // Paid tip - open payment modal
+                            // Paid tip - open payment modal (or temporarily just save tip amount)
                             msgDiv.textContent = 'Request created! Processing payment...';
                             msgDiv.style.color = '#bdbdbd';
-                            openPaymentModal();
+                            
+                            // Temporary: Just save the tip amount without processing payment
+                            // TODO: Replace this with actual Stripe payment processing
+                            saveTipAmountToDatabase();
                         }
                     } else {
                         console.log('Tip section not visible, completing request');
@@ -322,6 +325,42 @@
 
             function closePaymentModal() {
                 document.getElementById('paymentModal').style.display = 'none';
+            }
+
+            // Temporary function to save tip amount without payment processing
+            async function saveTipAmountToDatabase() {
+                const msgDiv = document.getElementById('requestMsg');
+                
+                try {
+                    const response = await fetch('LAMPAPI/UpdateTipAmount.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            requestId: currentRequestId,
+                            tipAmount: selectedTipAmount
+                        })
+                    });
+                    
+                    const text = await response.text();
+                    console.log('UpdateTipAmount response:', text);
+                    
+                    if (text.trim()) {
+                        const data = JSON.parse(text);
+                        if (data.success) {
+                            msgDiv.textContent = `Request and $${selectedTipAmount.toFixed(2)} tip saved! (Payment processing will be added later)`;
+                            msgDiv.style.color = '#a78bfa';
+                            clearForm();
+                        } else {
+                            throw new Error(data.error || 'Failed to save tip amount');
+                        }
+                    } else {
+                        throw new Error('Empty response from server');
+                    }
+                } catch (e) {
+                    console.error('Error saving tip amount:', e);
+                    msgDiv.textContent = 'Request saved, but tip processing failed: ' + e.message;
+                    msgDiv.style.color = '#f87171';
+                }
             }
 
             async function initializeStripe() {
