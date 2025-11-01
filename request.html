@@ -188,13 +188,16 @@
                 
                 try {
                     const response = await fetch(`LAMPAPI/UpdateTipSettings.php?partyId=${partyId}`);
-                    const data = await response.json();
+                    const text = await response.text();
                     
-                    if (data.success && data.allowTips) {
-                        // Tips are enabled, show the tip section
-                        document.getElementById('tipSection').style.display = 'block';
+                    if (text.trim()) {
+                        const data = JSON.parse(text);
+                        if (data.success && data.allowTips) {
+                            // Tips are enabled, show the tip section
+                            document.getElementById('tipSection').style.display = 'block';
+                        }
+                        // If tips are disabled, tip section stays hidden
                     }
-                    // If tips are disabled, tip section stays hidden
                 } catch (e) {
                     console.error('Failed to check tip settings:', e);
                     // On error, don't show tip section to be safe

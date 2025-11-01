@@ -1,80 +1,90 @@
 <?php
-require_once 'Database.php';
-
-// Set CORS headers
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     // Get tip setting for party
     if (!isset($_GET['partyId'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing party ID']);
+        returnWithError('Missing party ID');
         exit;
     }
     
     $partyId = (int)$_GET['partyId'];
     
-    try {
-        $conn = new Database();
-        $pdo = $conn->getConnection();
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        returnWithError($conn->connect_error);
+    } else {
+        $stmt = $conn->prepare("SELECT AllowTips FROM Parties WHERE PartyId = ?");
+        $stmt->bind_param("i", $partyId);
+        $stmt->execute();
+        $result = $stmt->get_result();
         
-        $stmt = $pdo->prepare("SELECT AllowTips FROM Parties WHERE PartyId = ?");
-        $stmt->execute([$partyId]);
-        $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        if (!$result) {
-            throw new Exception('Party not found');
+        if ($row = $result->fetch_assoc()) {
+            $retValue = array(
+                'success' => true,
+                'allowTips' => (bool)$row['AllowTips']
+            );
+            sendResultInfoAsJson(json_encode($retValue));
+        } else {
+            returnWithError('Party not found');
         }
         
-        echo json_encode([
-            'success' => true,
-            'allowTips' => (bool)$result['AllowTips']
-        ]);
-        
-    } catch (Exception $e) {
-        http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
+        $stmt->close();
+        $conn->close();
     }
     
 } else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Update tip setting for party
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = getRequestInfo();
     
     if (!isset($input['partyId']) || !isset($input['allowTips'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing required fields']);
+        returnWithError('Missing required fields');
         exit;
     }
     
     $partyId = (int)$input['partyId'];
     $allowTips = (bool)$input['allowTips'];
+    $allowTipsValue = $allowTips ? 1 : 0;
     
-    try {
-        $conn = new Database();
-        $pdo = $conn->getConnection();
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        returnWithError($conn->connect_error);
+    } else {
+        $stmt = $conn->prepare("UPDATE Parties SET AllowTips = ? WHERE PartyId = ?");
+        $stmt->bind_param("ii", $allowTipsValue, $partyId);
         
-        $stmt = $pdo->prepare("UPDATE Parties SET AllowTips = ? WHERE PartyId = ?");
-        $stmt->execute([$allowTips ? 1 : 0, $partyId]);
-        
-        if ($stmt->rowCount() === 0) {
-            throw new Exception('Party not found or no changes made');
+        if ($stmt->execute()) {
+            if ($stmt->affected_rows > 0) {
+                $retValue = array(
+                    'success' => true,
+                    'message' => $allowTips ? 'Tips enabled for this event' : 'Tips disabled for this event'
+                );
+                sendResultInfoAsJson(json_encode($retValue));
+            } else {
+                returnWithError('Party not found or no changes made');
+            }
+        } else {
+            returnWithError($stmt->error);
         }
         
-        echo json_encode([
-            'success' => true,
-            'message' => $allowTips ? 'Tips enabled for this event' : 'Tips disabled for this event'
-        ]);
-        
-    } catch (Exception $e) {
-        http_response_code(400);
-        echo json_encode(['error' => $e->getMessage()]);
+        $stmt->close();
+        $conn->close();
     }
     
 } else {
-    http_response_code(405);
-    echo json_encode(['error' => 'Method not allowed']);
+    returnWithError('Method not allowed');
+}
+
+function getRequestInfo() {
+    return json_decode(file_get_contents('php://input'), true);
+}
+
+function sendResultInfoAsJson($obj) {
+    header('Content-type: application/json');
+    echo $obj;
+}
+
+function returnWithError($err) {
+    $retValue = '{"error":"' . $err . '"}';
+    sendResultInfoAsJson($retValue);
 }
 ?>
