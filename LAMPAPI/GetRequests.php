@@ -12,10 +12,10 @@ if ($conn->connect_error)
     exit();
 }
 if ($sinceId > 0) {
-    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp FROM Requests WHERE PartyId=? AND RequestId > ? ORDER BY RequestId ASC");
+    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp, TipAmount FROM Requests WHERE PartyId=? AND RequestId > ? ORDER BY RequestId ASC");
     $stmt->bind_param("ii", $partyId, $sinceId);
 } else {
-    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp FROM Requests WHERE PartyId=? ORDER BY Timestamp DESC");
+    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp, TipAmount FROM Requests WHERE PartyId=? ORDER BY Timestamp DESC");
     $stmt->bind_param("i", $partyId);
 }
 $stmt->execute();

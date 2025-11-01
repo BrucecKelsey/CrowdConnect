@@ -55,6 +55,7 @@
                 </div>
                 <div class="tip-for">Show appreciation to <span id="djName" class="dj-name">the DJ</span></div>
                 <div class="tip-buttons">
+                    <button class="tip-btn" onclick="selectTip(0)">No Tip</button>
                     <button class="tip-btn" onclick="selectTip(1)">$1</button>
                     <button class="tip-btn" onclick="selectTip(3)">$3</button>
                     <button class="tip-btn" onclick="selectTip(5)">$5</button>
@@ -64,8 +65,8 @@
                     <input type="number" id="customTip" placeholder="Custom amount" 
                            min="0.50" step="0.50" onchange="selectCustomTip()">
                 </div>
-                <button type="button" class="tip-send-btn" onclick="openPaymentModal();">
-                    <span class="tip-send-icon">💳</span> Send Tip
+                <button type="button" class="tip-send-btn" onclick="handleTipSubmission();">
+                    <span class="tip-send-icon" id="tipSendIcon">💳</span> <span id="tipSendText">Send Tip</span>
                 </button>
             </div>
         </div>
@@ -135,6 +136,9 @@
                     const djData = await djResp.json();
                     currentDjName = `${djData.FirstName || ''} ${djData.LastName || ''}`.trim() || 'the DJ';
                     document.getElementById('djName').textContent = currentDjName;
+                    
+                    // Check if tips are enabled and show tip section if they are
+                    checkAndShowTipSection();
                 }
         loadEventName();
 
@@ -173,8 +177,11 @@
                         msgDiv.style.color = '#a78bfa';
                         e.target.reset();
                         
-                        // Check if tips are allowed for this event before showing tip section
-                        checkAndShowTipSection();
+                        // If tip section is visible, user needs to select a tip amount
+                        const tipSection = document.getElementById('tipSection');
+                        if (tipSection.style.display === 'block') {
+                            msgDiv.textContent = 'Request sent! Please select a tip amount below.';
+                        }
                     }
                 } catch (err) {
                     msgDiv.textContent = 'Failed to send request.';
@@ -210,13 +217,69 @@
                 document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
                 event.target.classList.add('selected');
                 document.getElementById('customTip').value = '';
+                
+                // Update button text based on selection
+                const tipSendText = document.getElementById('tipSendText');
+                const tipSendIcon = document.getElementById('tipSendIcon');
+                if (amount === 0) {
+                    tipSendText.textContent = 'Submit Request';
+                    tipSendIcon.textContent = '✅';
+                } else {
+                    tipSendText.textContent = 'Send Tip';
+                    tipSendIcon.textContent = '💳';
+                }
             }
 
             function selectCustomTip() {
                 let customAmount = parseFloat(document.getElementById('customTip').value);
-                if (customAmount >= 0.50) {
+                if (customAmount >= 0) {
                     selectedTipAmount = customAmount;
                     document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
+                    
+                    // Update button text based on selection
+                    const tipSendText = document.getElementById('tipSendText');
+                    const tipSendIcon = document.getElementById('tipSendIcon');
+                    if (customAmount === 0) {
+                        tipSendText.textContent = 'Submit Request';
+                        tipSendIcon.textContent = '✅';
+                    } else {
+                        tipSendText.textContent = 'Send Tip';
+                        tipSendIcon.textContent = '💳';
+                    }
+                }
+            }
+
+            function handleTipSubmission() {
+                if (selectedTipAmount === 0) {
+                    // Save $0 tip to database and finish
+                    saveNoTipToDatabase();
+                } else {
+                    // Open payment modal for paid tips
+                    openPaymentModal();
+                }
+            }
+
+            async function saveNoTipToDatabase() {
+                try {
+                    const response = await fetch('LAMPAPI/UpdateTipAmount.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            requestId: currentRequestId,
+                            tipAmount: 0
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        // Hide tip section and show success
+                        document.getElementById('tipSection').style.display = 'none';
+                        alert('Request submitted successfully!');
+                    } else {
+                        alert('Error saving request: ' + (data.error || 'Unknown error'));
+                    }
+                } catch (e) {
+                    alert('Error saving request: ' + e.message);
                 }
             }
 
