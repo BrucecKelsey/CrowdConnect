@@ -193,9 +193,6 @@
                         if (selectedTipAmount === 0) {
                             // No tip - save and complete
                             await saveNoTipToDatabase();
-                            msgDiv.textContent = 'Request submitted successfully!';
-                            msgDiv.style.color = '#a78bfa';
-                            clearForm();
                         } else {
                             // Paid tip - open payment modal
                             msgDiv.textContent = 'Request created! Processing payment...';
@@ -262,6 +259,8 @@
             }
 
             async function saveNoTipToDatabase() {
+                const msgDiv = document.getElementById('requestMsg');
+                
                 try {
                     const response = await fetch('LAMPAPI/UpdateTipAmount.php', {
                         method: 'POST',
@@ -273,15 +272,25 @@
                     });
                     
                     const text = await response.text();
+                    console.log('UpdateTipAmount response:', text); // Debug log
+                    
                     if (text.trim()) {
                         const data = JSON.parse(text);
-                        if (!data.success) {
+                        if (data.success) {
+                            // Show success message and reset form
+                            msgDiv.textContent = 'Request submitted successfully!';
+                            msgDiv.style.color = '#a78bfa';
+                            clearForm();
+                        } else {
                             throw new Error(data.error || 'Failed to save tip amount');
                         }
+                    } else {
+                        throw new Error('Empty response from server');
                     }
                 } catch (e) {
                     console.error('Error saving tip amount:', e);
-                    // Don't show error to user for $0 tips, just log it
+                    msgDiv.textContent = 'Error: ' + e.message;
+                    msgDiv.style.color = '#f87171';
                 }
             }
 
