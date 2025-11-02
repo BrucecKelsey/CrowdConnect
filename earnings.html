@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings & Billing - CrowdConnect</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            background: #232323;
+            color: #fff;
+            font-family: 'Poppins', 'PT Sans', 'Ubuntu', sans-serif;
+            margin: 0;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 0 1.5rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .back-link {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.2rem;
+            transition: color 0.3s;
+        }
+        .back-link:hover {
+            color: #007FFF;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, #007FFF, #00FF7F);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .earnings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .earnings-card {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid #444;
+            transition: all 0.3s;
+        }
+        .earnings-card:hover {
+            transform: translateY(-5px);
+            border-color: #007FFF;
+            box-shadow: 0 10px 30px rgba(0, 127, 255, 0.3);
+        }
+        .card-title {
+            font-size: 1.1rem;
+            color: #ccc;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #00FF7F;
+            margin-bottom: 0.5rem;
+        }
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: #999;
+        }
+        .period-earnings {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+            border: 1px solid #444;
+        }
+        .period-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        .period-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+        .period-item {
+            text-align: center;
+            padding: 1rem;
+            background: #333;
+            border-radius: 10px;
+        }
+        .period-label {
+            font-size: 0.9rem;
+            color: #ccc;
+            margin-bottom: 0.5rem;
+        }
+        .period-amount {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #007FFF;
+        }
+        .transactions-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid #444;
+        }
+        .transactions-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #fff;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid #444;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-info {
+            flex: 1;
+        }
+        .transaction-song {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.2rem;
+        }
+        .transaction-details {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        .transaction-amount {
+            font-weight: 600;
+            color: #00FF7F;
+            font-size: 1.1rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #ccc;
+        }
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #ff6b6b;
+        }
+        .payout-section {
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            border: 1px solid #444;
+        }
+        .payout-button {
+            background: linear-gradient(135deg, #007FFF, #00FF7F);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payout-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 127, 255, 0.4);
+        }
+        .payout-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-link">
+            ← Back
+        </a>
+        
+        <h1 class="page-title">💰 Earnings & Billing</h1>
+        
+        <div id="loadingState" class="loading">
+            <h3>Loading your earnings data...</h3>
+        </div>
+        
+        <div id="errorState" class="error" style="display: none;">
+            <h3>Error loading earnings data</h3>
+            <p id="errorMessage"></p>
+        </div>
+        
+        <div id="earningsContent" style="display: none;">
+            <!-- Main Earnings Cards -->
+            <div class="earnings-grid">
+                <div class="earnings-card">
+                    <div class="card-title">💳 Available Balance</div>
+                    <div class="card-value" id="availableBalance">$0.00</div>
+                    <div class="card-subtitle">Ready for payout</div>
+                </div>
+                
+                <div class="earnings-card">
+                    <div class="card-title">📊 Total Earnings</div>
+                    <div class="card-value" id="totalEarnings">$0.00</div>
+                    <div class="card-subtitle">All time</div>
+                </div>
+                
+                <div class="earnings-card">
+                    <div class="card-title">🏦 Last Payout</div>
+                    <div class="card-value" id="lastPayoutAmount">$0.00</div>
+                    <div class="card-subtitle" id="lastPayoutDate">Never</div>
+                </div>
+            </div>
+            
+            <!-- Period Earnings -->
+            <div class="period-earnings">
+                <div class="period-title">📅 Earnings Breakdown</div>
+                <div class="period-grid">
+                    <div class="period-item">
+                        <div class="period-label">Today</div>
+                        <div class="period-amount" id="todayEarnings">$0.00</div>
+                    </div>
+                    <div class="period-item">
+                        <div class="period-label">This Week</div>
+                        <div class="period-amount" id="weekEarnings">$0.00</div>
+                    </div>
+                    <div class="period-item">
+                        <div class="period-label">This Month</div>
+                        <div class="period-amount" id="monthEarnings">$0.00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions -->
+            <div class="transactions-section">
+                <div class="transactions-title">💸 Recent Transactions (Last 30 Days)</div>
+                <div id="transactionsList">
+                    <!-- Transactions will be loaded here -->
+                </div>
+            </div>
+            
+            <!-- Payout Section -->
+            <div class="payout-section">
+                <div class="period-title">💰 Request Payout</div>
+                <p style="color: #ccc; margin-bottom: 1.5rem;">
+                    Payouts are processed manually. Contact support to request a payout of your available balance.
+                </p>
+                <button class="payout-button" id="payoutButton" onclick="requestPayout()">
+                    Request Payout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserId = null;
+        
+        // Get userId from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        currentUserId = urlParams.get('userId');
+        
+        if (!currentUserId) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMessage').textContent = 'No user ID provided in URL';
+        } else {
+            loadEarnings();
+        }
+        
+        async function loadEarnings() {
+            try {
+                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${currentUserId}`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                displayEarnings(data);
+                
+            } catch (error) {
+                console.error('Error loading earnings:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+                document.getElementById('errorMessage').textContent = error.message || 'Failed to load earnings data';
+            }
+        }
+        
+        function displayEarnings(data) {
+            // Hide loading, show content
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('earningsContent').style.display = 'block';
+            
+            // Update main cards
+            document.getElementById('availableBalance').textContent = `$${(data.available_balance || 0).toFixed(2)}`;
+            document.getElementById('totalEarnings').textContent = `$${(data.total_earnings || 0).toFixed(2)}`;
+            document.getElementById('lastPayoutAmount').textContent = `$${(data.last_payout_amount || 0).toFixed(2)}`;
+            
+            if (data.last_payout_date) {
+                const payoutDate = new Date(data.last_payout_date);
+                document.getElementById('lastPayoutDate').textContent = payoutDate.toLocaleDateString();
+            }
+            
+            // Update period earnings
+            if (data.period_earnings) {
+                document.getElementById('todayEarnings').textContent = `$${(data.period_earnings.today?.earnings || 0).toFixed(2)}`;
+                document.getElementById('weekEarnings').textContent = `$${(data.period_earnings.this_week?.earnings || 0).toFixed(2)}`;
+                document.getElementById('monthEarnings').textContent = `$${(data.period_earnings.this_month?.earnings || 0).toFixed(2)}`;
+            }
+            
+            // Display transactions
+            displayTransactions(data.recent_transactions || []);
+            
+            // Update payout button
+            const payoutButton = document.getElementById('payoutButton');
+            if ((data.available_balance || 0) < 5) {
+                payoutButton.disabled = true;
+                payoutButton.textContent = 'Minimum $5.00 for payout';
+            }
+        }
+        
+        function displayTransactions(transactions) {
+            const transactionsList = document.getElementById('transactionsList');
+            
+            if (!transactions || transactions.length === 0) {
+                transactionsList.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">No transactions yet</div>';
+                return;
+            }
+            
+            transactionsList.innerHTML = transactions.map(transaction => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-song">${transaction.SongName || 'Unknown Song'}</div>
+                        <div class="transaction-details">
+                            ${transaction.RequestedBy || 'Anonymous'} • ${new Date(transaction.TransactionDate).toLocaleDateString()}
+                            ${transaction.StripeChargeId ? ` • ${transaction.StripeChargeId}` : ''}
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        +$${(transaction.NetAmount || 0).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function requestPayout() {
+            alert('Payout requested! You will be contacted within 24-48 hours to process your payout.');
+            // In a real implementation, this would send a request to the server
+        }
+    </script>
+</body>
+</html>

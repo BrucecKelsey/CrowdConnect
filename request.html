@@ -220,13 +220,11 @@
                             clearForm();
                         } else {
                             console.log('Processing paid tip request, opening payment modal');
-                            // Paid tip - open payment modal (or temporarily just save tip amount)
-                            msgDiv.textContent = 'Request created! Processing payment...';
+                            msgDiv.textContent = 'Request submitted! Please complete payment...';
                             msgDiv.style.color = '#bdbdbd';
                             
-                            // Temporary: Just save the tip amount without processing payment
-                            // TODO: Replace this with actual Stripe payment processing
-                            saveTipAmountToDatabase();
+                            // Open payment modal for real Stripe processing
+                            openPaymentModal();
                         }
                     } else {
                         console.log('Tip section not visible, completing request');
@@ -327,39 +325,86 @@
                 document.getElementById('paymentModal').style.display = 'none';
             }
 
-            // Temporary function to save tip amount without payment processing
-            async function saveTipAmountToDatabase() {
-                const msgDiv = document.getElementById('requestMsg');
+            // Real Stripe payment processing function
+            async function handlePayment() {
+                const payButton = document.getElementById('pay-button');
+                const resultDiv = document.getElementById('payment-result');
                 
                 try {
-                    const response = await fetch('LAMPAPI/UpdateTipAmount.php', {
+                    payButton.disabled = true;
+                    payButton.textContent = 'Processing...';
+                    resultDiv.innerHTML = '';
+                    
+                    // Create payment intent
+                    const intentResponse = await fetch('LAMPAPI/CreatePaymentIntent.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
+                            amount: Math.round(selectedTipAmount * 100), // Convert to cents
+                            djId: currentDjId,
                             requestId: currentRequestId,
-                            tipAmount: selectedTipAmount
+                            customerId: userId // If you have customer user ID
                         })
                     });
                     
-                    const text = await response.text();
-                    console.log('UpdateTipAmount response:', text);
+                    const intentData = await intentResponse.json();
+                    console.log('Payment intent response:', intentData);
                     
-                    if (text.trim()) {
-                        const data = JSON.parse(text);
-                        if (data.success) {
-                            msgDiv.textContent = `Request and $${selectedTipAmount.toFixed(2)} tip saved! (Payment processing will be added later)`;
-                            msgDiv.style.color = '#a78bfa';
-                            clearForm();
-                        } else {
-                            throw new Error(data.error || 'Failed to save tip amount');
-                        }
-                    } else {
-                        throw new Error('Empty response from server');
+                    if (!intentData.success) {
+                        throw new Error(intentData.error || 'Failed to create payment intent');
                     }
-                } catch (e) {
-                    console.error('Error saving tip amount:', e);
-                    msgDiv.textContent = 'Request saved, but tip processing failed: ' + e.message;
-                    msgDiv.style.color = '#f87171';
+                    
+                    // Confirm payment with Stripe
+                    const {error, paymentIntent} = await stripe.confirmCardPayment(
+                        intentData.clientSecret,
+                        {
+                            payment_method: {
+                                card: cardElement
+                            }
+                        }
+                    );
+                    
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+                    
+                    if (paymentIntent.status === 'succeeded') {
+                        // Confirm payment on server
+                        const confirmResponse = await fetch('LAMPAPI/ConfirmPayment.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                paymentIntentId: paymentIntent.id
+                            })
+                        });
+                        
+                        const confirmData = await confirmResponse.json();
+                        
+                        if (confirmData.success) {
+                            resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Thank you for your tip!</span>';
+                            
+                            // Update main page message
+                            const msgDiv = document.getElementById('requestMsg');
+                            msgDiv.textContent = `Request submitted and $${selectedTipAmount.toFixed(2)} tip processed successfully!`;
+                            msgDiv.style.color = '#a78bfa';
+                            
+                            // Close modal and clear form after delay
+                            setTimeout(() => {
+                                closePaymentModal();
+                                clearForm();
+                            }, 2000);
+                            
+                        } else {
+                            throw new Error(confirmData.error || 'Payment confirmation failed');
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    resultDiv.innerHTML = `<span style="color: #f87171;">Payment failed: ${error.message}</span>`;
+                } finally {
+                    payButton.disabled = false;
+                    payButton.textContent = 'Send Tip';
                 }
             }
 
