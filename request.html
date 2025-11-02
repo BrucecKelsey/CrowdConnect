@@ -101,6 +101,7 @@
         let currentDjId = null;
         let currentDjName = '';
         let currentPaymentIntentId = null;
+        let pendingSongRequest = null;
 
         function getQueryParam(name) {
             const url = new URL(window.location.href);
@@ -176,7 +177,24 @@
                     return;
                 }
                 
-                // Submit the song request first
+                // If tip is selected, process payment FIRST before submitting request
+                if (isTipSectionVisible && selectedTipAmount > 0) {
+                    msgDiv.textContent = 'Processing payment first...';
+                    msgDiv.style.color = '#bdbdbd';
+                    
+                    // Store the song request data for after payment
+                    pendingSongRequest = {
+                        songName: songName,
+                        artist: artist,
+                        partyId: partyId
+                    };
+                    
+                    // Open payment modal - request will be submitted after successful payment
+                    openPaymentModal();
+                    return;
+                }
+                
+                // No tip or tip amount is 0 - submit the request directly
                 msgDiv.textContent = 'Sending request...';
                 msgDiv.style.color = '#bdbdbd';
                 
@@ -216,31 +234,11 @@
                     
                     currentRequestId = data.requestId;
                     
-                    // Handle tip processing
-                    console.log('isTipSectionVisible:', isTipSectionVisible, 'selectedTipAmount:', selectedTipAmount);
-                    
-                    if (isTipSectionVisible) {
-                        if (selectedTipAmount === 0) {
-                            console.log('Processing no-tip request');
-                            // No tip - just complete (TipAmount defaults to 0 in DB)
-                            msgDiv.textContent = 'Request submitted successfully!';
-                            msgDiv.style.color = '#a78bfa';
-                            clearForm();
-                        } else {
-                            console.log('Processing paid tip request, opening payment modal');
-                            msgDiv.textContent = 'Request submitted! Please complete payment...';
-                            msgDiv.style.color = '#bdbdbd';
-                            
-                            // Open payment modal for real Stripe processing
-                            openPaymentModal();
-                        }
-                    } else {
-                        console.log('Tip section not visible, completing request');
-                        // No tip section visible - just complete
-                        msgDiv.textContent = 'Request submitted successfully!';
-                        msgDiv.style.color = '#a78bfa';
-                        clearForm();
-                    }
+                    // If we reach here, it means no tip was selected (tip amount is 0 or tip section not visible)
+                    console.log('Request submitted without payment (no tip or $0 tip)');
+                    msgDiv.textContent = 'Request submitted successfully!';
+                    msgDiv.style.color = '#a78bfa';
+                    clearForm();
                     
                 } catch (err) {
                     console.error('Request submission error:', err);
@@ -408,18 +406,46 @@
                         const confirmData = await confirmResponse.json();
                         
                         if (confirmData.success) {
-                            resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Thank you for your tip!</span>';
+                            resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Now submitting your request...</span>';
                             
-                            // Update main page message
-                            const msgDiv = document.getElementById('requestMsg');
-                            msgDiv.textContent = `Request submitted and $${selectedTipAmount.toFixed(2)} tip processed successfully!`;
-                            msgDiv.style.color = '#a78bfa';
+                            // Now submit the song request after successful payment
+                            if (pendingSongRequest) {
+                                try {
+                                    const requestResponse = await fetch('LAMPAPI/SubmitRequest.php', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            partyId: pendingSongRequest.partyId,
+                                            songName: pendingSongRequest.songName,
+                                            requestedBy: pendingSongRequest.artist
+                                        })
+                                    });
+                                    
+                                    const requestData = await requestResponse.json();
+                                    
+                                    if (requestData.success) {
+                                        resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Request submitted!</span>';
+                                        
+                                        // Update main page message
+                                        const msgDiv = document.getElementById('requestMsg');
+                                        msgDiv.textContent = `Request submitted and $${selectedTipAmount.toFixed(2)} tip processed successfully!`;
+                                        msgDiv.style.color = '#a78bfa';
+                                        
+                                        pendingSongRequest = null; // Clear pending request
+                                    } else {
+                                        resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but failed to submit request. Please try again.</span>';
+                                    }
+                                } catch (requestError) {
+                                    console.error('Error submitting request after payment:', requestError);
+                                    resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but failed to submit request. Please try again.</span>';
+                                }
+                            }
                             
                             // Close modal and clear form after delay
                             setTimeout(() => {
                                 closePaymentModal();
                                 clearForm();
-                            }, 2000);
+                            }, 3000);
                             
                         } else {
                             throw new Error(confirmData.error || 'Payment confirmation failed');
@@ -485,22 +511,41 @@
                     
                     paymentElement.mount('#payment-element');
                     
-                    // Check Apple Pay availability
+                    // Check payment method availability
+                    console.log('=== Payment Method Availability Check ===');
+                    console.log('Current browser:', navigator.userAgent);
+                    console.log('Platform:', navigator.platform);
+                    console.log('HTTPS:', window.location.protocol === 'https:');
+                    
+                    // Apple Pay check
                     if (window.ApplePaySession) {
-                        console.log('Apple Pay is available on this device');
+                        console.log('✅ Apple Pay API is available on this device');
                         const applePayVersion = ApplePaySession.supportsVersion(3) ? 3 : 
                                               ApplePaySession.supportsVersion(2) ? 2 : 1;
                         console.log('Apple Pay version supported:', applePayVersion);
                         
                         if (ApplePaySession.canMakePayments()) {
-                            console.log('User can make Apple Pay payments');
+                            console.log('✅ User can make Apple Pay payments');
                         } else {
-                            console.log('User cannot make Apple Pay payments (not set up)');
+                            console.log('⚠️ User cannot make Apple Pay payments (not set up)');
                         }
                     } else {
-                        console.log('Apple Pay is NOT available on this device/browser');
-                        console.log('Current browser:', navigator.userAgent);
+                        console.log('❌ Apple Pay is NOT available on this device/browser');
+                        console.log('💡 Apple Pay requires Safari on macOS/iOS');
                     }
+                    
+                    // Google Pay check (less reliable detection)
+                    if (window.google && window.google.payments) {
+                        console.log('✅ Google Pay API detected');
+                    } else {
+                        console.log('⚠️ Google Pay API not directly detectable (normal for Stripe Elements)');
+                    }
+                    
+                    // Check if we're on a mobile device
+                    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    console.log('Mobile device:', isMobile);
+                    
+                    console.log('=== Stripe Elements should auto-detect available methods ===');
                     
                     // Clear loading message
                     document.getElementById('payment-result').innerHTML = '';
