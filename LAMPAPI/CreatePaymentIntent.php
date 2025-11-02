@@ -31,13 +31,13 @@ try {
 
     $input = json_decode(file_get_contents('php://input'), true);
     
-    if (!isset($input['amount']) || !isset($input['djId']) || !isset($input['requestId'])) {
+    if (!isset($input['amount']) || !isset($input['djId'])) {
         throw new Exception('Missing required fields: ' . json_encode(array_keys($input ?: [])));
     }
     
     $amount = (int)$input['amount']; // Amount in cents
     $djId = (int)$input['djId'];
-    $requestId = (int)$input['requestId'];
+    $requestId = isset($input['requestId']) ? (int)$input['requestId'] : 0; // 0 for payment-first flow
     $customerId = isset($input['customerId']) ? (int)$input['customerId'] : null;
     
     if ($amount < 50) { // Minimum $0.50
@@ -75,9 +75,10 @@ try {
     
     $paymentIntent = $stripe->createPaymentIntent($amount, 'usd', $metadata);
     
-    // Store tip record in database
+    // Store tip record in database (RequestId will be updated later in payment-first flow)
+    $requestIdToStore = $requestId > 0 ? $requestId : null;
     $stmt = $conn->prepare("INSERT INTO Tips (RequestId, DJUserID, CustomerUserID, TipAmount, StripePaymentIntentId, Status, Timestamp) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
-    $stmt->bind_param("iiisd", $requestId, $djId, $customerId, $tipAmount, $paymentIntent['id']);
+    $stmt->bind_param("iiisd", $requestIdToStore, $djId, $customerId, $tipAmount, $paymentIntent['id']);
     $tipAmount = $amount / 100;
     $stmt->execute();
     

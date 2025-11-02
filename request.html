@@ -323,15 +323,15 @@
                     // Show loading state
                     document.getElementById('payment-result').innerHTML = '<span style="color: #ccc;">Initializing payment...</span>';
                     
-                    // Create payment intent first
+                    // Create payment intent first (without request ID since we're doing payment-first flow)
                     const intentResponse = await fetch('LAMPAPI/CreatePaymentIntent.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             amount: Math.round(selectedTipAmount * 100), // Convert to cents
                             djId: currentDjId,
-                            requestId: currentRequestId,
-                            customerId: userId
+                            requestId: 0, // Temporary - will be updated after request is created
+                            customerId: userId || 0
                         })
                     });
                     
@@ -424,6 +424,23 @@
                                     const requestData = await requestResponse.json();
                                     
                                     if (requestData.success) {
+                                        // Update the tip record with the actual request ID
+                                        currentRequestId = requestData.requestId;
+                                        
+                                        // Update tip record with request ID
+                                        try {
+                                            await fetch('LAMPAPI/UpdateTipRequestId.php', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    paymentIntentId: paymentIntent.id,
+                                                    requestId: requestData.requestId
+                                                })
+                                            });
+                                        } catch (updateError) {
+                                            console.log('Warning: Could not update tip record with request ID:', updateError);
+                                        }
+                                        
                                         resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Request submitted!</span>';
                                         
                                         // Update main page message
