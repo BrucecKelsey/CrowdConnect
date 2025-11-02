@@ -76,10 +76,18 @@
                     <span class="modal-title">💳 Send $<span id="tipAmount">0</span> Tip</span>
                     <span class="close-btn" onclick="closePaymentModal()">&times;</span>
                 </div>
-                <div id="card-element" class="card-element">
-                    <!-- Stripe Elements will create form elements here -->
+                <div class="payment-info">
+                    <p style="color: #ccc; margin-bottom: 1rem; text-align: center; font-size: 0.9rem;">
+                        💳 Credit/Debit Card • 📱 Apple Pay • 🟢 Google Pay
+                    </p>
+                    <p style="color: #999; margin-bottom: 1rem; text-align: center; font-size: 0.8rem;">
+                        Secure payment powered by Stripe
+                    </p>
                 </div>
-                <button id="pay-button" class="pay-button">Send Tip</button>
+                <div id="payment-element" class="payment-element">
+                    <!-- Stripe Payment Element will create all payment method forms here -->
+                </div>
+                <button id="pay-button" class="pay-button">💰 Complete Payment</button>
                 <div id="payment-result" class="payment-result"></div>
             </div>
         </div>
@@ -88,7 +96,6 @@
         // Stripe variables
         let stripe = null;
         let elements = null;
-        let cardElement = null;
         let selectedTipAmount = 0; // Default to no tip
         let currentRequestId = null;
         let currentDjId = null;
@@ -354,15 +361,12 @@
                         throw new Error(intentData.error || 'Failed to create payment intent');
                     }
                     
-                    // Confirm payment with Stripe
-                    const {error, paymentIntent} = await stripe.confirmCardPayment(
-                        intentData.clientSecret,
-                        {
-                            payment_method: {
-                                card: cardElement
-                            }
-                        }
-                    );
+                    // Confirm payment with Stripe (works with all payment methods)
+                    const {error, paymentIntent} = await stripe.confirmPayment({
+                        elements,
+                        clientSecret: intentData.clientSecret,
+                        redirect: 'if_required'
+                    });
                     
                     if (error) {
                         throw new Error(error.message);
@@ -404,7 +408,7 @@
                     resultDiv.innerHTML = `<span style="color: #f87171;">Payment failed: ${error.message}</span>`;
                 } finally {
                     payButton.disabled = false;
-                    payButton.textContent = 'Send Tip';
+                    payButton.textContent = '💰 Complete Payment';
                 }
             }
 
@@ -419,22 +423,32 @@
                     }
                     
                     stripe = Stripe(data.publishableKey);
-                    elements = stripe.elements();
                     
-                    cardElement = elements.create('card', {
-                        style: {
-                            base: {
-                                fontSize: '16px',
-                                color: '#fff',
-                                backgroundColor: '#232325',
-                                '::placeholder': {
-                                    color: '#bdbdbd',
-                                },
-                            },
-                        },
+                    // Create Payment Element (supports Apple Pay, Google Pay, cards, etc.)
+                    elements = stripe.elements({
+                        appearance: {
+                            theme: 'night',
+                            variables: {
+                                colorPrimary: '#a78bfa',
+                                colorBackground: '#232325',
+                                colorText: '#ffffff',
+                                colorDanger: '#f87171',
+                                borderRadius: '6px'
+                            }
+                        }
                     });
                     
-                    cardElement.mount('#card-element');
+                    // Create the Payment Element
+                    const paymentElement = elements.create('payment', {
+                        layout: 'tabs',
+                        defaultValues: {
+                            billingDetails: {
+                                name: 'Anonymous Tipper'
+                            }
+                        }
+                    });
+                    
+                    paymentElement.mount('#payment-element');
                     
                     document.getElementById('pay-button').addEventListener('click', handlePayment);
                     
@@ -790,13 +804,27 @@ input[type="text"]:focus {
     color: #fff;
 }
 
-.card-element {
+.card-element,
+.payment-element {
     background: #232325;
     border: 2px solid #23232b;
     border-radius: 6px;
     padding: 1rem;
     margin-bottom: 1.5rem;
     min-height: 40px;
+}
+
+.payment-info {
+    margin-bottom: 1rem;
+}
+
+.payment-element {
+    /* Additional styling for better mobile experience */
+    transition: border-color 0.3s ease;
+}
+
+.payment-element:focus-within {
+    border-color: #a78bfa;
 }
 
 .pay-button {
