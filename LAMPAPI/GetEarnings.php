@@ -1,17 +1,27 @@
 <?php
-require_once 'Database.php';
-
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
 
-if (!isset($_GET['userId'])) {
-    returnWithError('Missing userId parameter');
+// Handle CORS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
     exit;
 }
 
-$userId = (int)$_GET['userId'];
+// Set error handler to catch any PHP errors
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+try {
+    if (!isset($_GET['userId'])) {
+        returnWithError('Missing userId parameter');
+        exit;
+    }
+
+    $userId = (int)$_GET['userId'];
 
 $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
 if ($conn->connect_error) {
@@ -101,6 +111,17 @@ if ($conn->connect_error) {
         'period_earnings' => $periodEarnings,
         'recent_transactions' => $recentEarnings
     ]);
+    
+} catch (Exception $e) {
+    if (isset($conn)) {
+        $conn->close();
+    }
+    returnWithError('Database error: ' . $e->getMessage());
+} catch (Error $e) {
+    if (isset($conn)) {
+        $conn->close();
+    }
+    returnWithError('Fatal error: ' . $e->getMessage());
 }
 
 function returnWithError($err) {

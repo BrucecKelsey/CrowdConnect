@@ -24,6 +24,9 @@ set_error_handler(function($severity, $message, $file, $line) {
 
 try {
     // Try to load StripeConfig
+    if (!file_exists(__DIR__ . '/StripeConfig.php')) {
+        throw new Exception('StripeConfig.php file not found in ' . __DIR__);
+    }
     require_once 'StripeConfig.php';
 
     $input = json_decode(file_get_contents('php://input'), true);

@@ -71,8 +71,26 @@ class StripeConfig {
     }
     
     public static function getStripeClient() {
-        require_once 'stripe-php-simple.php';
-        return new SimpleStripe(self::getSecretKey());
+        $stripeFile = __DIR__ . '/stripe-php-simple.php';
+        if (!file_exists($stripeFile)) {
+            throw new Exception("stripe-php-simple.php not found at: " . $stripeFile);
+        }
+        
+        try {
+            require_once $stripeFile;
+        } catch (Exception $e) {
+            throw new Exception("Error loading stripe-php-simple.php: " . $e->getMessage());
+        }
+        
+        if (!class_exists('SimpleStripe')) {
+            throw new Exception("SimpleStripe class not found after including stripe-php-simple.php");
+        }
+        
+        try {
+            return new SimpleStripe(self::getSecretKey());
+        } catch (Exception $e) {
+            throw new Exception("Error creating SimpleStripe instance: " . $e->getMessage());
+        }
     }
 }
 ?>
