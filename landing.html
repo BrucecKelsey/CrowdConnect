@@ -374,6 +374,7 @@
             <button>Settings</button>
             <div class="dropdown-content">
                 <a href="profile.html">Profile</a>
+                <a href="#" id="earningsBtn">Earnings</a>
                 <a href="#" id="logoutBtn">Logout</a>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -383,6 +384,14 @@
                         e.preventDefault();
                         localStorage.clear();
                         window.location.href = 'login.html';
+                    });
+                }
+
+                const earningsBtn = document.getElementById('earningsBtn');
+                if (earningsBtn) {
+                    earningsBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        window.location.href = 'earnings.html';
                     });
                 }
             });

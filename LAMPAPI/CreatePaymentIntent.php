@@ -1,6 +1,5 @@
 <?php
 require_once 'StripeConfig.php';
-require_once 'Database.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
@@ -30,20 +29,20 @@ try {
         throw new Exception('Amount must be at least $0.50');
     }
     
-    // Get DJ Stripe account ID
-    $conn = new Database();
-    $pdo = $conn->getConnection();
+    // Get DJ information
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        throw new Exception("Database connection failed: " . $conn->connect_error);
+    }
     
-    $stmt = $pdo->prepare("SELECT StripeAccountId, FirstName, LastName FROM Users WHERE ID = ?");
-    $stmt->execute([$djId]);
-    $dj = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $conn->prepare("SELECT FirstName, LastName FROM Users WHERE ID = ?");
+    $stmt->bind_param("i", $djId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $dj = $result->fetch_assoc();
     
     if (!$dj) {
         throw new Exception('DJ not found');
-    }
-    
-    if (!$dj['StripeAccountId']) {
-        throw new Exception('DJ has not completed Stripe onboarding');
     }
     
     // Create payment intent
@@ -62,11 +61,12 @@ try {
     $paymentIntent = $stripe->createPaymentIntent($amount, 'usd', $metadata);
     
     // Store tip record in database
-    $stmt = $pdo->prepare("
-        INSERT INTO Tips (RequestID, DJUserID, CustomerUserID, Amount, StripePaymentIntentId, Status, CreatedAt) 
-        VALUES (?, ?, ?, ?, ?, 'pending', NOW())
-    ");
-    $stmt->execute([$requestId, $djId, $customerId, $amount / 100, $paymentIntent['id']]);
+    $stmt = $conn->prepare("INSERT INTO Tips (RequestId, DJUserID, CustomerUserID, TipAmount, StripePaymentIntentId, Status, Timestamp) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
+    $stmt->bind_param("iiisd", $requestId, $djId, $customerId, $tipAmount, $paymentIntent['id']);
+    $tipAmount = $amount / 100;
+    $stmt->execute();
+    
+    $conn->close();
     
     echo json_encode([
         'success' => true,
@@ -75,6 +75,9 @@ try {
     ]);
     
 } catch (Exception $e) {
+    if (isset($conn)) {
+        $conn->close();
+    }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 }
