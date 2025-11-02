@@ -100,6 +100,7 @@
         let currentRequestId = null;
         let currentDjId = null;
         let currentDjName = '';
+        let currentPaymentIntentId = null;
 
         function getQueryParam(name) {
             const url = new URL(window.location.href);
@@ -308,41 +309,23 @@
                 }
             }
 
-            function openPaymentModal() {
+            async function openPaymentModal() {
                 console.log('openPaymentModal called with selectedTipAmount:', selectedTipAmount);
                 
-                if (selectedTipAmount < 0.50) {
-                    alert('Please select a tip amount of at least $0.50');
+                if (selectedTipAmount <= 0) {
+                    console.log('No tip amount selected, not opening modal');
                     return;
                 }
                 
-                console.log('Setting tip amount and showing modal');
-                document.getElementById('tipAmount').textContent = selectedTipAmount.toFixed(2);
-                document.getElementById('paymentModal').style.display = 'flex';
-                
-                if (!stripe) {
-                    console.log('Initializing Stripe...');
-                    initializeStripe();
-                } else {
-                    console.log('Stripe already initialized');
-                }
-            }
-
-            function closePaymentModal() {
-                document.getElementById('paymentModal').style.display = 'none';
-            }
-
-            // Real Stripe payment processing function
-            async function handlePayment() {
-                const payButton = document.getElementById('pay-button');
-                const resultDiv = document.getElementById('payment-result');
-                
                 try {
-                    payButton.disabled = true;
-                    payButton.textContent = 'Processing...';
-                    resultDiv.innerHTML = '';
+                    console.log('Setting tip amount and showing modal');
+                    document.getElementById('tipAmount').textContent = selectedTipAmount.toFixed(2);
+                    document.getElementById('paymentModal').style.display = 'flex';
                     
-                    // Create payment intent
+                    // Show loading state
+                    document.getElementById('payment-result').innerHTML = '<span style="color: #ccc;">Initializing payment...</span>';
+                    
+                    // Create payment intent first
                     const intentResponse = await fetch('LAMPAPI/CreatePaymentIntent.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -350,7 +333,7 @@
                             amount: Math.round(selectedTipAmount * 100), // Convert to cents
                             djId: currentDjId,
                             requestId: currentRequestId,
-                            customerId: userId // If you have customer user ID
+                            customerId: userId
                         })
                     });
                     
@@ -361,10 +344,37 @@
                         throw new Error(intentData.error || 'Failed to create payment intent');
                     }
                     
+                    // Store payment intent ID for confirmation
+                    currentPaymentIntentId = intentData.paymentIntentId;
+                    
+                    // Now initialize Stripe with the client secret
+                    await initializeStripeWithSecret(intentData.clientSecret);
+                    
+                } catch (error) {
+                    console.error('Error opening payment modal:', error);
+                    document.getElementById('payment-result').innerHTML = 
+                        `<span style="color: #f87171;">Error: ${error.message}</span>`;
+                }
+            }
+
+            function closePaymentModal() {
+                document.getElementById('paymentModal').style.display = 'none';
+            }
+
+            // Real Stripe payment processing function
+            async function handlePayment(clientSecret) {
+                const payButton = document.getElementById('pay-button');
+                const resultDiv = document.getElementById('payment-result');
+                
+                try {
+                    payButton.disabled = true;
+                    payButton.textContent = 'Processing...';
+                    resultDiv.innerHTML = '';
+                    
                     // Confirm payment with Stripe (works with all payment methods)
                     const {error, paymentIntent} = await stripe.confirmPayment({
                         elements,
-                        clientSecret: intentData.clientSecret,
+                        clientSecret: clientSecret,
                         redirect: 'if_required'
                     });
                     
@@ -412,20 +422,23 @@
                 }
             }
 
-            async function initializeStripe() {
+            async function initializeStripeWithSecret(clientSecret) {
                 try {
-                    // Get Stripe publishable key
-                    const response = await fetch('LAMPAPI/GetStripePublicKey.php');
-                    const data = await response.json();
-                    
-                    if (!data.success) {
-                        throw new Error('Failed to get Stripe key');
+                    // Get Stripe publishable key if not already loaded
+                    if (!stripe) {
+                        const response = await fetch('LAMPAPI/GetStripePublicKey.php');
+                        const data = await response.json();
+                        
+                        if (!data.success) {
+                            throw new Error('Failed to get Stripe key');
+                        }
+                        
+                        stripe = Stripe(data.publishableKey);
                     }
                     
-                    stripe = Stripe(data.publishableKey);
-                    
-                    // Create Payment Element (supports Apple Pay, Google Pay, cards, etc.)
+                    // Create Payment Element with client secret (supports Apple Pay, Google Pay, cards, etc.)
                     elements = stripe.elements({
+                        clientSecret: clientSecret,
                         appearance: {
                             theme: 'night',
                             variables: {
@@ -450,7 +463,13 @@
                     
                     paymentElement.mount('#payment-element');
                     
-                    document.getElementById('pay-button').addEventListener('click', handlePayment);
+                    // Clear loading message
+                    document.getElementById('payment-result').innerHTML = '';
+                    
+                    // Remove existing event listener and add new one
+                    const payButton = document.getElementById('pay-button');
+                    payButton.replaceWith(payButton.cloneNode(true));
+                    document.getElementById('pay-button').addEventListener('click', () => handlePayment(clientSecret));
                     
                 } catch (error) {
                     console.error('Stripe initialization error:', error);
