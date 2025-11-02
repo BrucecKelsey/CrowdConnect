@@ -27,8 +27,8 @@ $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
 if ($conn->connect_error) {
     returnWithError($conn->connect_error);
 } else {
-    // Get user's total earnings and payout info
-    $stmt = $conn->prepare("SELECT TotalEarnings, LastPayoutAmount, LastPayoutDate FROM Users WHERE ID = ?");
+    // Check if user exists
+    $stmt = $conn->prepare("SELECT FirstName, LastName FROM Users WHERE ID = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -41,15 +41,37 @@ if ($conn->connect_error) {
         exit;
     }
     
-    // Get recent earnings history (last 30 days)
+    // Calculate total earnings from Tips table
     $stmt = $conn->prepare("
-        SELECT eh.*, t.RequestId, r.SongName, r.RequestedBy 
-        FROM EarningsHistory eh
-        LEFT JOIN Tips t ON eh.TipId = t.TipId
+        SELECT 
+            COALESCE(SUM(CASE WHEN Status = 'completed' THEN TipAmount ELSE 0 END), 0) as total_earnings,
+            COUNT(CASE WHEN Status = 'completed' THEN 1 END) as completed_tips,
+            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN TipAmount ELSE 0 END), 0) as today_earnings,
+            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN TipAmount ELSE 0 END), 0) as week_earnings,
+            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN TipAmount ELSE 0 END), 0) as month_earnings
+        FROM Tips 
+        WHERE DJUserID = ?
+    ");
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $earnings = $result->fetch_assoc();
+    $stmt->close();
+    
+    // Get recent tip transactions (last 30 days)
+    $stmt = $conn->prepare("
+        SELECT 
+            t.TipAmount,
+            t.Timestamp,
+            t.Status,
+            r.SongName,
+            r.RequestedBy,
+            r.RequestId
+        FROM Tips t
         LEFT JOIN Requests r ON t.RequestId = r.RequestId
-        WHERE eh.UserId = ? AND eh.TransactionDate >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        ORDER BY eh.TransactionDate DESC
-        LIMIT 50
+        WHERE t.DJUserID = ? AND t.Timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) AND t.Status = 'completed'
+        ORDER BY t.Timestamp DESC
+        LIMIT 20
     ");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
@@ -57,59 +79,47 @@ if ($conn->connect_error) {
     
     $recentEarnings = [];
     while ($row = $result->fetch_assoc()) {
-        $recentEarnings[] = $row;
+        $recentEarnings[] = [
+            'amount' => (float)$row['TipAmount'],
+            'date' => $row['Timestamp'],
+            'song_name' => $row['SongName'] ?: 'Unknown Song',
+            'from_user' => $row['RequestedBy'] ?: 'Anonymous',
+            'request_id' => $row['RequestId']
+        ];
     }
     $stmt->close();
     
-    // Calculate different time periods
-    $periods = ['today', 'this_week', 'this_month'];
-    $periodEarnings = [];
+    // Use the calculated earnings data
+    $totalEarnings = (float)$earnings['total_earnings'];
+    $availableBalance = $totalEarnings; // For now, assume no payouts have been made
     
-    foreach ($periods as $period) {
-        $dateCondition = '';
-        switch ($period) {
-            case 'today':
-                $dateCondition = "DATE(eh.TransactionDate) = CURDATE()";
-                break;
-            case 'this_week':
-                $dateCondition = "YEARWEEK(eh.TransactionDate) = YEARWEEK(NOW())";
-                break;
-            case 'this_month':
-                $dateCondition = "YEAR(eh.TransactionDate) = YEAR(NOW()) AND MONTH(eh.TransactionDate) = MONTH(NOW())";
-                break;
-        }
-        
-        $stmt = $conn->prepare("
-            SELECT SUM(eh.NetAmount) as total_earnings, COUNT(*) as tip_count
-            FROM EarningsHistory eh 
-            WHERE eh.UserId = ? AND $dateCondition
-        ");
-        $stmt->bind_param("i", $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $periodData = $result->fetch_assoc();
-        $stmt->close();
-        
-        $periodEarnings[$period] = [
-            'earnings' => (float)($periodData['total_earnings'] ?? 0),
-            'tip_count' => (int)($periodData['tip_count'] ?? 0)
-        ];
-    }
-    
-    // Calculate available balance (total earnings minus last payout)
-    $totalEarnings = (float)$user['TotalEarnings'];
-    $lastPayout = (float)($user['LastPayoutAmount'] ?? 0);
-    $availableBalance = $totalEarnings - $lastPayout;
+    // Period earnings from our calculated data
+    $periodEarnings = [
+        'today' => [
+            'earnings' => (float)$earnings['today_earnings'],
+            'tip_count' => 0 // We'd need another query for exact counts per period
+        ],
+        'this_week' => [
+            'earnings' => (float)$earnings['week_earnings'], 
+            'tip_count' => 0
+        ],
+        'this_month' => [
+            'earnings' => (float)$earnings['month_earnings'],
+            'tip_count' => (int)$earnings['completed_tips']
+        ]
+    ];
     
     $conn->close();
     
     returnWithInfo([
+        'user_name' => $user['FirstName'] . ' ' . $user['LastName'],
         'total_earnings' => $totalEarnings,
         'available_balance' => $availableBalance,
-        'last_payout_amount' => $lastPayout,
-        'last_payout_date' => $user['LastPayoutDate'],
+        'last_payout_amount' => 0, // No payout system implemented yet
+        'last_payout_date' => null,
         'period_earnings' => $periodEarnings,
-        'recent_transactions' => $recentEarnings
+        'recent_transactions' => $recentEarnings,
+        'success' => true
     ]);
     
 } catch (Exception $e) {

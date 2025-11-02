@@ -98,9 +98,13 @@ class SimpleStripe {
         $data = [
             'amount' => $amount,
             'currency' => $currency,
-            'automatic_payment_methods' => json_encode(['enabled' => true]),
-            'metadata' => $metadata
+            'automatic_payment_methods[enabled]' => 'true'
         ];
+        
+        // Add metadata with proper Stripe format
+        foreach ($metadata as $key => $value) {
+            $data["metadata[$key]"] = $value;
+        }
         
         return $this->makeRequest('payment_intents', $data);
     }
