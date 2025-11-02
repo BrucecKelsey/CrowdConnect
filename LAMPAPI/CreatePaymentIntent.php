@@ -77,10 +77,17 @@ try {
     
     // Store tip record in database (RequestId will be updated later in payment-first flow)
     $requestIdToStore = $requestId > 0 ? $requestId : null;
+    $tipAmount = $amount / 100; // Convert cents to dollars
+    
     $stmt = $conn->prepare("INSERT INTO Tips (RequestId, DJUserID, CustomerUserID, TipAmount, StripePaymentIntentId, Status, Timestamp) VALUES (?, ?, ?, ?, ?, 'pending', NOW())");
     $stmt->bind_param("iiisd", $requestIdToStore, $djId, $customerId, $tipAmount, $paymentIntent['id']);
-    $tipAmount = $amount / 100;
-    $stmt->execute();
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to insert tip record: " . $stmt->error);
+    }
+    
+    $tipId = $conn->insert_id;
+    error_log("Tip record created with ID: " . $tipId . " for PaymentIntent: " . $paymentIntent['id']);
     
     $conn->close();
     

@@ -17,6 +17,7 @@ $inData = getRequestInfo();
 $partyId = intval($inData["partyId"]);
 $songName = $inData["songName"];
 $requestedBy = isset($inData["requestedBy"]) ? $inData["requestedBy"] : "";
+$paymentIntentId = isset($inData["paymentIntentId"]) ? $inData["paymentIntentId"] : null;
 
 $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
 if ($conn->connect_error)
@@ -49,6 +50,16 @@ else
     {
         $requestId = $stmt->insert_id;
         $stmt->close();
+        
+        // Update Tips table with RequestId if paymentIntentId provided (for payment-first flow)
+        if ($paymentIntentId) {
+            $tipStmt = $conn->prepare("UPDATE Tips SET RequestId = ? WHERE StripePaymentIntentId = ? AND RequestId IS NULL");
+            $tipStmt->bind_param("is", $requestId, $paymentIntentId);
+            $tipStmt->execute();
+            $rowsUpdated = $tipStmt->affected_rows;
+            error_log("SubmitRequest: Linked RequestId " . $requestId . " to PaymentIntent " . $paymentIntentId . ", updated " . $rowsUpdated . " tip records");
+            $tipStmt->close();
+        }
         
         // Try to get DJ information for tipping (safely handle missing columns/tables)
         $djInfo = null;

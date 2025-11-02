@@ -12,10 +12,10 @@ if ($conn->connect_error)
     exit();
 }
 if ($sinceId > 0) {
-    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp, TipAmount FROM Requests WHERE PartyId=? AND RequestId > ? ORDER BY RequestId ASC");
+    $stmt = $conn->prepare("SELECT r.RequestId, r.SongName, r.RequestedBy, r.Timestamp, COALESCE(t.TipAmount, 0) as TipAmount FROM Requests r LEFT JOIN Tips t ON r.RequestId = t.RequestId WHERE r.PartyId=? AND r.RequestId > ? ORDER BY r.RequestId ASC");
     $stmt->bind_param("ii", $partyId, $sinceId);
 } else {
-    $stmt = $conn->prepare("SELECT RequestId, SongName, RequestedBy, Timestamp, TipAmount FROM Requests WHERE PartyId=? ORDER BY Timestamp DESC");
+    $stmt = $conn->prepare("SELECT r.RequestId, r.SongName, r.RequestedBy, r.Timestamp, COALESCE(t.TipAmount, 0) as TipAmount FROM Requests r LEFT JOIN Tips t ON r.RequestId = t.RequestId WHERE r.PartyId=? ORDER BY r.Timestamp DESC");
     $stmt->bind_param("i", $partyId);
 }
 $stmt->execute();

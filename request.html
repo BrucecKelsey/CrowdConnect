@@ -437,7 +437,8 @@
                                         body: JSON.stringify({
                                             partyId: pendingSongRequest.partyId,
                                             songName: pendingSongRequest.songName,
-                                            requestedBy: pendingSongRequest.artist
+                                            requestedBy: pendingSongRequest.artist,
+                                            paymentIntentId: paymentIntent.id
                                         })
                                     });
                                     

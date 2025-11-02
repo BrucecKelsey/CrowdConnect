@@ -44,6 +44,9 @@ try {
     $stmt->bind_param("ss", $status, $paymentIntentId);
     $stmt->execute();
     
+    $rowsAffected = $stmt->affected_rows;
+    error_log("ConfirmPayment: Updated " . $rowsAffected . " tip records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
+    
     if ($status === 'completed') {
         echo json_encode([
             'success' => true,
