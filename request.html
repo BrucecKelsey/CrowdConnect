@@ -382,7 +382,14 @@
                     payButton.textContent = 'Processing...';
                     resultDiv.innerHTML = '';
                     
-                    // Confirm payment with Stripe (works with all payment methods)
+                    // Step 1: Submit the elements form (required by Stripe Payment Element API)
+                    const {error: submitError} = await elements.submit();
+                    
+                    if (submitError) {
+                        throw new Error(submitError.message);
+                    }
+                    
+                    // Step 2: Confirm payment with Stripe (works with all payment methods)
                     const {error, paymentIntent} = await stripe.confirmPayment({
                         elements,
                         clientSecret: clientSecret,
