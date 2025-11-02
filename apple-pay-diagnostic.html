@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Pay Diagnostic</title>
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <h1>Apple Pay Diagnostic Tool</h1>
+    <div id="results"></div>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        async function runDiagnostics() {
+            let html = '<h2>Apple Pay Diagnostic Results:</h2>';
+            
+            // Basic device checks
+            html += '<h3>Device & Browser:</h3>';
+            html += `<p><strong>User Agent:</strong> ${navigator.userAgent}</p>`;
+            html += `<p><strong>Platform:</strong> ${navigator.platform}</p>`;
+            html += `<p><strong>Is iOS:</strong> ${/iPhone|iPad|iPod/.test(navigator.userAgent)}</p>`;
+            html += `<p><strong>Is Safari:</strong> ${/Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent)}</p>`;
+            html += `<p><strong>HTTPS:</strong> ${window.location.protocol === 'https:'}</p>`;
+            
+            // Apple Pay API checks
+            html += '<h3>Apple Pay API:</h3>';
+            if (window.ApplePaySession) {
+                html += '<p><strong>✅ ApplePaySession Available:</strong> Yes</p>';
+                html += `<p><strong>Supports Version 3:</strong> ${ApplePaySession.supportsVersion(3)}</p>`;
+                html += `<p><strong>Supports Version 4:</strong> ${ApplePaySession.supportsVersion(4)}</p>`;
+                html += `<p><strong>Can Make Payments:</strong> ${ApplePaySession.canMakePayments()}</p>`;
+                
+                // Check with networks
+                try {
+                    const canMakePaymentsWithActiveCard = await ApplePaySession.canMakePaymentsWithActiveCard('merchant.com.crowdconnect');
+                    html += `<p><strong>Can Make Payments (with card):</strong> ${canMakePaymentsWithActiveCard}</p>`;
+                } catch (e) {
+                    html += `<p><strong>Can Make Payments (with card):</strong> Error - ${e.message}</p>`;
+                }
+            } else {
+                html += '<p><strong>❌ ApplePaySession Available:</strong> No</p>';
+            }
+            
+            // Get Stripe publishable key and test
+            html += '<h3>Stripe Configuration:</h3>';
+            try {
+                const keyResponse = await fetch('/LAMPAPI/GetStripePublishableKey.php');
+                const keyData = await keyResponse.json();
+                
+                if (keyData.success) {
+                    html += '<p><strong>✅ Stripe Key Retrieved:</strong> Yes</p>';
+                    
+                    const stripe = Stripe(keyData.publishableKey);
+                    html += '<p><strong>✅ Stripe Initialized:</strong> Yes</p>';
+                    
+                    // Try to create elements
+                    try {
+                        const elements = stripe.elements({
+                            mode: 'payment',
+                            amount: 100,
+                            currency: 'usd',
+                            appearance: { theme: 'night' }
+                        });
+                        
+                        html += '<p><strong>✅ Stripe Elements Created:</strong> Yes</p>';
+                        
+                        // Check payment methods
+                        const paymentElement = elements.create('payment', {
+                            paymentMethodOrder: ['apple_pay', 'card']
+                        });
+                        
+                        html += '<p><strong>✅ Payment Element Created:</strong> Yes</p>';
+                        
+                        // Mount temporarily to see what methods are available
+                        const container = document.createElement('div');
+                        container.style.display = 'none';
+                        document.body.appendChild(container);
+                        paymentElement.mount(container);
+                        
+                        html += '<p><strong>Payment Element Mounted:</strong> Check network tab for any errors</p>';
+                        
+                    } catch (elementsError) {
+                        html += `<p><strong>❌ Stripe Elements Error:</strong> ${elementsError.message}</p>`;
+                    }
+                } else {
+                    html += `<p><strong>❌ Stripe Key Error:</strong> ${keyData.error}</p>`;
+                }
+            } catch (error) {
+                html += `<p><strong>❌ Stripe Error:</strong> ${error.message}</p>`;
+            }
+            
+            // Domain verification check
+            html += '<h3>Domain Verification:</h3>';
+            try {
+                const domainCheck = await fetch('/.well-known/apple-developer-merchantid-domain-association');
+                if (domainCheck.ok) {
+                    html += '<p><strong>✅ Apple Domain File:</strong> Present</p>';
+                } else {
+                    html += '<p><strong>❌ Apple Domain File:</strong> Missing (404)</p>';
+                }
+            } catch (e) {
+                html += '<p><strong>❌ Apple Domain File:</strong> Error checking</p>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Run diagnostics when page loads
+        runDiagnostics();
+    </script>
+</body>
+</html>
