@@ -127,19 +127,8 @@
 			document.getElementById('settingsName').textContent = name;
 		}
 		function goToBilling() {
-			// Get the current user ID from localStorage or URL
-			let userId = localStorage.getItem('userId');
-			if (!userId) {
-				// Try to get from URL if not in localStorage
-				const urlParams = new URLSearchParams(window.location.search);
-				userId = urlParams.get('userId');
-			}
-			
-			if (userId) {
-				window.location.href = `earnings.html?userId=${userId}`;
-			} else {
-				alert('User ID not found. Please log in again.');
-			}
+			// Since earnings.html now gets user ID from localStorage, we can navigate directly
+			window.location.href = 'earnings.html';
 		}
 		
 		function signOut() {

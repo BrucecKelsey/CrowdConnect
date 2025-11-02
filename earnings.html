@@ -271,14 +271,27 @@
     <script>
         let currentUserId = null;
         
-        // Get userId from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        currentUserId = urlParams.get('userId');
+        // Get userId from localStorage (like other pages do)
+        const savedUserInfo = localStorage.getItem('user');
+        if (savedUserInfo) {
+            try {
+                const userInfo = JSON.parse(savedUserInfo);
+                currentUserId = userInfo.id || userInfo.ID;
+            } catch (e) {
+                console.error('Error parsing user info:', e);
+            }
+        }
+        
+        // Fallback to URL parameters if localStorage doesn't work
+        if (!currentUserId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentUserId = urlParams.get('userId');
+        }
         
         if (!currentUserId) {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('errorState').style.display = 'block';
-            document.getElementById('errorMessage').textContent = 'No user ID provided in URL';
+            document.getElementById('errorMessage').textContent = 'No user session found. Please log in again.';
         } else {
             loadEarnings();
         }

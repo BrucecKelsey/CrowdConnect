@@ -1,11 +1,15 @@
 <?php
-require_once 'StripeConfig.php';
-
-// Set CORS headers
+// Set CORS headers first
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
+
+// Handle OPTIONS request for CORS
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -13,11 +17,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+// Initialize error handling
+set_error_handler(function($severity, $message, $file, $line) {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
 try {
+    // Try to load StripeConfig
+    require_once 'StripeConfig.php';
+
     $input = json_decode(file_get_contents('php://input'), true);
     
     if (!isset($input['amount']) || !isset($input['djId']) || !isset($input['requestId'])) {
-        throw new Exception('Missing required fields');
+        throw new Exception('Missing required fields: ' . json_encode(array_keys($input ?: [])));
     }
     
     $amount = (int)$input['amount']; // Amount in cents
@@ -79,6 +91,21 @@ try {
         $conn->close();
     }
     http_response_code(400);
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+        'trace' => $e->getTraceAsString()
+    ]);
+} catch (Error $e) {
+    if (isset($conn)) {
+        $conn->close();
+    }
+    http_response_code(500);
+    echo json_encode([
+        'error' => 'Fatal error: ' . $e->getMessage(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
+    ]);
 }
 ?>

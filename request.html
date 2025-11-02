@@ -337,7 +337,20 @@
                         })
                     });
                     
-                    const intentData = await intentResponse.json();
+                    console.log('Response status:', intentResponse.status);
+                    console.log('Response headers:', [...intentResponse.headers.entries()]);
+                    
+                    // Get the raw text first to help debug JSON issues
+                    const responseText = await intentResponse.text();
+                    console.log('Raw response text:', responseText);
+                    
+                    let intentData;
+                    try {
+                        intentData = JSON.parse(responseText);
+                    } catch (parseError) {
+                        throw new Error(`Invalid JSON response from server: ${responseText.substring(0, 200)}...`);
+                    }
+                    
                     console.log('Payment intent response:', intentData);
                     
                     if (!intentData.success) {
