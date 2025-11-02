@@ -16,7 +16,14 @@ class StripeConfig {
         self::$webhookSecret = self::getEnvVar('STRIPE_WEBHOOK_SECRET');
         
         if (!self::$secretKey || !self::$publishableKey) {
-            throw new Exception('Stripe API keys not configured. Please set environment variables.');
+            // Debug information for troubleshooting
+            $debugInfo = [
+                'env_file_exists' => file_exists(__DIR__ . '/../.env'),
+                'env_file_path' => __DIR__ . '/../.env',
+                'secret_key_loaded' => !empty(self::$secretKey),
+                'publishable_key_loaded' => !empty(self::$publishableKey)
+            ];
+            throw new Exception('Stripe API keys not configured. Debug: ' . json_encode($debugInfo));
         }
     }
     
