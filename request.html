@@ -464,17 +464,43 @@
                         }
                     });
                     
-                    // Create the Payment Element
+                    // Create the Payment Element with explicit Apple Pay configuration
                     const paymentElement = elements.create('payment', {
                         layout: 'tabs',
                         defaultValues: {
                             billingDetails: {
                                 name: 'Anonymous Tipper'
                             }
+                        },
+                        paymentMethodOrder: ['apple_pay', 'google_pay', 'card'],
+                        fields: {
+                            billingDetails: 'auto'
+                        },
+                        terms: {
+                            applePay: 'auto',
+                            googlePay: 'auto',
+                            card: 'auto'
                         }
                     });
                     
                     paymentElement.mount('#payment-element');
+                    
+                    // Check Apple Pay availability
+                    if (window.ApplePaySession) {
+                        console.log('Apple Pay is available on this device');
+                        const applePayVersion = ApplePaySession.supportsVersion(3) ? 3 : 
+                                              ApplePaySession.supportsVersion(2) ? 2 : 1;
+                        console.log('Apple Pay version supported:', applePayVersion);
+                        
+                        if (ApplePaySession.canMakePayments()) {
+                            console.log('User can make Apple Pay payments');
+                        } else {
+                            console.log('User cannot make Apple Pay payments (not set up)');
+                        }
+                    } else {
+                        console.log('Apple Pay is NOT available on this device/browser');
+                        console.log('Current browser:', navigator.userAgent);
+                    }
                     
                     // Clear loading message
                     document.getElementById('payment-result').innerHTML = '';

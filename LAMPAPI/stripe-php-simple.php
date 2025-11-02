@@ -98,7 +98,11 @@ class SimpleStripe {
         $data = [
             'amount' => $amount,
             'currency' => $currency,
-            'automatic_payment_methods[enabled]' => 'true'
+            'automatic_payment_methods[enabled]' => 'true',
+            'automatic_payment_methods[allow_redirects]' => 'always',
+            'payment_method_types[]' => 'card',
+            'payment_method_types[]' => 'apple_pay',
+            'payment_method_types[]' => 'google_pay'
         ];
         
         // Add metadata with proper Stripe format
