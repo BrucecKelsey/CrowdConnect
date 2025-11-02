@@ -22,10 +22,7 @@ try {
         throw new Exception('Stripe publishable key not configured');
     }
     
-    // Validate key format
-    if (!preg_match('/^pk_(test_|live_)[a-zA-Z0-9]+$/', $publishableKey)) {
-        throw new Exception('Invalid Stripe publishable key format');
-    }
+    // No need to validate format - Stripe will validate when used
     
     echo json_encode([
         'success' => true,

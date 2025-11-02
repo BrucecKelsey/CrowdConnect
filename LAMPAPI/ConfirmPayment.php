@@ -1,12 +1,17 @@
 <?php
 require_once 'StripeConfig.php';
-require_once 'Database.php';
 
 // Set CORS headers
 header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json');
+
+// Handle CORS preflight
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -28,38 +33,22 @@ try {
     $paymentIntent = $stripe->retrievePaymentIntent($paymentIntentId);
     
     // Update tip record in database
-    $conn = new Database();
-    $pdo = $conn->getConnection();
+    $conn = new mysqli("localhost", "TheBeast", "WeLoveCOP4331", "COP4331");
+    if ($conn->connect_error) {
+        throw new Exception("Database connection failed: " . $conn->connect_error);
+    }
     
     $status = $paymentIntent['status'] === 'succeeded' ? 'completed' : 'failed';
     
-    $stmt = $pdo->prepare("
-        UPDATE Tips 
-        SET Status = ?, CompletedAt = NOW(), StripeChargeId = ?
-        WHERE StripePaymentIntentId = ?
-    ");
-    $stmt->execute([$status, $paymentIntent['latest_charge'] ?? null, $paymentIntentId]);
+    $stmt = $conn->prepare("UPDATE Tips SET Status = ?, Timestamp = NOW() WHERE StripePaymentIntentId = ?");
+    $stmt->bind_param("ss", $status, $paymentIntentId);
+    $stmt->execute();
     
     if ($status === 'completed') {
-        // Get tip details for response
-        $stmt = $pdo->prepare("
-            SELECT t.*, u.FirstName, u.LastName, r.SongName 
-            FROM Tips t 
-            JOIN Users u ON t.DJUserID = u.ID 
-            JOIN Requests r ON t.RequestID = r.ID 
-            WHERE t.StripePaymentIntentId = ?
-        ");
-        $stmt->execute([$paymentIntentId]);
-        $tip = $stmt->fetch(PDO::FETCH_ASSOC);
-        
         echo json_encode([
             'success' => true,
             'status' => 'completed',
-            'tip' => [
-                'amount' => $tip['Amount'],
-                'djName' => $tip['FirstName'] . ' ' . $tip['LastName'],
-                'songName' => $tip['SongName']
-            ]
+            'message' => 'Payment confirmed successfully'
         ]);
     } else {
         echo json_encode([
@@ -69,7 +58,12 @@ try {
         ]);
     }
     
+    $conn->close();
+    
 } catch (Exception $e) {
+    if (isset($conn)) {
+        $conn->close();
+    }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()]);
 }

@@ -189,6 +189,10 @@
                         partyId: partyId
                     };
                     
+                    console.log('=== PAYMENT-FIRST FLOW ===');
+                    console.log('Stored pendingSongRequest:', pendingSongRequest);
+                    console.log('Opening payment modal...');
+                    
                     // Open payment modal - request will be submitted after successful payment
                     openPaymentModal();
                     return;
@@ -415,8 +419,17 @@
                         if (confirmData.success) {
                             resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Now submitting your request...</span>';
                             
+                            // Debug: Check if we have pending request data
+                            console.log('=== POST-PAYMENT SONG REQUEST SUBMISSION ===');
+                            console.log('pendingSongRequest:', pendingSongRequest);
+                            
                             // Now submit the song request after successful payment
                             if (pendingSongRequest) {
+                                console.log('Submitting song request with data:', {
+                                    partyId: pendingSongRequest.partyId,
+                                    songName: pendingSongRequest.songName,
+                                    requestedBy: pendingSongRequest.artist
+                                });
                                 try {
                                     const requestResponse = await fetch('LAMPAPI/SubmitRequest.php', {
                                         method: 'POST',
@@ -428,7 +441,20 @@
                                         })
                                     });
                                     
-                                    const requestData = await requestResponse.json();
+                                    console.log('SubmitRequest response status:', requestResponse.status);
+                                    
+                                    // Get raw text first for debugging
+                                    const responseText = await requestResponse.text();
+                                    console.log('SubmitRequest raw response:', responseText);
+                                    
+                                    let requestData;
+                                    try {
+                                        requestData = JSON.parse(responseText);
+                                    } catch (parseError) {
+                                        throw new Error(`Invalid JSON from SubmitRequest: ${responseText}`);
+                                    }
+                                    
+                                    console.log('SubmitRequest parsed data:', requestData);
                                     
                                     if (requestData.success) {
                                         // Update the tip record with the actual request ID
@@ -463,6 +489,10 @@
                                     console.error('Error submitting request after payment:', requestError);
                                     resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but failed to submit request. Please try again.</span>';
                                 }
+                            } else {
+                                console.error('ERROR: No pendingSongRequest data found after payment!');
+                                console.log('This means the song data was lost between payment modal open and payment success');
+                                resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but song request data was lost. Please try submitting your request again.</span>';
                             }
                             
                             // Close modal and clear form after delay
