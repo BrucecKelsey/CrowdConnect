@@ -586,76 +586,7 @@
                 }
             }
 
-            async function handlePayment() {
-                const payButton = document.getElementById('pay-button');
-                payButton.disabled = true;
-                payButton.textContent = 'Processing...';
-                
-                try {
-                    // Create payment intent
-                    const response = await fetch('LAMPAPI/CreatePaymentIntent.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            amount: Math.round(selectedTipAmount * 100), // Convert to cents
-                            djId: currentDjId,
-                            requestId: currentRequestId
-                        })
-                    });
-                    
-                    const paymentData = await response.json();
-                    
-                    if (!paymentData.success) {
-                        throw new Error(paymentData.error);
-                    }
-                    
-                    // Confirm payment with Stripe
-                    const { error } = await stripe.confirmCardPayment(paymentData.clientSecret, {
-                        payment_method: {
-                            card: cardElement,
-                            billing_details: {
-                                name: document.getElementById('artist').value || 'Anonymous'
-                            }
-                        }
-                    });
-                    
-                    if (error) {
-                        throw new Error(error.message);
-                    }
-                    
-                    // Confirm payment on backend
-                    const confirmResponse = await fetch('LAMPAPI/ConfirmPayment.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            paymentIntentId: paymentData.paymentIntentId
-                        })
-                    });
-                    
-                    const confirmData = await confirmResponse.json();
-                    
-                    if (confirmData.success) {
-                        document.getElementById('payment-result').innerHTML = 
-                            '<span style="color: #a78bfa;">✅ Tip sent successfully!</span>';
-                        setTimeout(() => {
-                            closePaymentModal();
-                            document.getElementById('requestMsg').textContent = 'Request and tip submitted successfully!';
-                            document.getElementById('requestMsg').style.color = '#a78bfa';
-                            clearForm();
-                        }, 2000);
-                    } else {
-                        throw new Error('Payment confirmation failed');
-                    }
-                    
-                } catch (error) {
-                    console.error('Payment error:', error);
-                    document.getElementById('payment-result').innerHTML = 
-                        '<span style="color: #f87171;">❌ ' + error.message + '</span>';
-                }
-                
-                payButton.disabled = false;
-                payButton.textContent = 'Send Tip';
-            }
+
         </script>
 </body>
 <style>
