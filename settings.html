@@ -80,6 +80,15 @@
 			transform: scale(1.05);
 			box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
 		}
+		.earnings-btn {
+			background: linear-gradient(90deg, #00FF7F 0%, #007FFF 100%) !important;
+			color: #fff !important;
+		}
+		.earnings-btn:hover {
+			background: linear-gradient(90deg, #00FF7F 0%, #007FFF 100%) !important;
+			transform: scale(1.05);
+			box-shadow: 0 0 20px rgba(0, 255, 127, 0.4);
+		}
 	</style>
 </head>
 <body>
@@ -90,11 +99,26 @@
 		<div class="settings-value" id="settingsUsername">Loading...</div>
 		<div class="settings-label">Name</div>
 		<div class="settings-value" id="settingsName">Loading...</div>
+		
+		<div style="margin: 30px 0;">
+			<div class="settings-label">💰 Earnings & Billing</div>
+			<button class="settings-btn earnings-btn" onclick="goToBilling();" style="margin-bottom: 10px;">
+				💰 View Earnings Dashboard
+			</button>
+		</div>
+		
 		<button class="settings-btn" onclick="signOut();">Sign Out</button>
 	</div>
 	<script>
 		// Simulate fetching user info from localStorage or backend
 		function getUserInfo() {
+			// Check if userId is in URL and store it
+			const urlParams = new URLSearchParams(window.location.search);
+			const userId = urlParams.get('userId');
+			if (userId) {
+				localStorage.setItem('userId', userId);
+			}
+			
 			// In a real app, fetch from backend or localStorage
 			// Here, just use placeholders or values from localStorage if set
 			let username = localStorage.getItem('username') || 'demoUser';
@@ -102,6 +126,22 @@
 			document.getElementById('settingsUsername').textContent = username;
 			document.getElementById('settingsName').textContent = name;
 		}
+		function goToBilling() {
+			// Get the current user ID from localStorage or URL
+			let userId = localStorage.getItem('userId');
+			if (!userId) {
+				// Try to get from URL if not in localStorage
+				const urlParams = new URLSearchParams(window.location.search);
+				userId = urlParams.get('userId');
+			}
+			
+			if (userId) {
+				window.location.href = `earnings.html?userId=${userId}`;
+			} else {
+				alert('User ID not found. Please log in again.');
+			}
+		}
+		
 		function signOut() {
 			// Clear localStorage and redirect to login
 			localStorage.clear();
