@@ -204,6 +204,9 @@
         <div id="errorState" class="error" style="display: none;">
             <h3>Error loading earnings data</h3>
             <p id="errorMessage"></p>
+            <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin-top: 15px; cursor: pointer;">
+                Set Test User Session (For Testing)
+            </button>
         </div>
         
         <div id="earningsContent" style="display: none;">
@@ -271,28 +274,52 @@
     <script>
         let currentUserId = null;
         
+        // Debug: Check what's in localStorage
+        console.log('All localStorage items:');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            console.log(`${key}: ${localStorage.getItem(key)}`);
+        }
+        
         // Get userId from localStorage (like other pages do)
         const savedUserInfo = localStorage.getItem('user');
+        console.log('savedUserInfo:', savedUserInfo);
+        
         if (savedUserInfo) {
             try {
                 const userInfo = JSON.parse(savedUserInfo);
+                console.log('parsed userInfo:', userInfo);
                 currentUserId = userInfo.id || userInfo.ID;
+                console.log('extracted currentUserId:', currentUserId);
             } catch (e) {
                 console.error('Error parsing user info:', e);
             }
+        }
+        
+        // Also try other common localStorage keys
+        if (!currentUserId) {
+            currentUserId = localStorage.getItem('userId') || localStorage.getItem('userID') || localStorage.getItem('id');
+            console.log('Fallback userId from direct keys:', currentUserId);
         }
         
         // Fallback to URL parameters if localStorage doesn't work
         if (!currentUserId) {
             const urlParams = new URLSearchParams(window.location.search);
             currentUserId = urlParams.get('userId');
+            console.log('userId from URL params:', currentUserId);
         }
         
         if (!currentUserId) {
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('errorState').style.display = 'block';
-            document.getElementById('errorMessage').textContent = 'No user session found. Please log in again.';
+            document.getElementById('errorMessage').innerHTML = `
+                No user session found. Please log in again.<br>
+                <small style="color: #888; margin-top: 10px; display: block;">
+                Check browser console for localStorage debug info.
+                </small>
+            `;
         } else {
+            console.log('Loading earnings for user ID:', currentUserId);
             loadEarnings();
         }
         
@@ -375,6 +402,25 @@
         function requestPayout() {
             alert('Payout requested! You will be contacted within 24-48 hours to process your payout.');
             // In a real implementation, this would send a request to the server
+        }
+        
+        function setTestUserSession() {
+            // Set test user data in localStorage for testing
+            const testUser = {
+                id: 1,
+                ID: 1,
+                username: 'testdj',
+                firstName: 'Test',
+                lastName: 'DJ'
+            };
+            
+            localStorage.setItem('user', JSON.stringify(testUser));
+            localStorage.setItem('userId', '1');
+            localStorage.setItem('username', 'testdj');
+            localStorage.setItem('name', 'Test DJ');
+            
+            alert('Test user session created! Refreshing page...');
+            window.location.reload();
         }
     </script>
 </body>
