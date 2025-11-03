@@ -38,6 +38,7 @@ try {
         returnWithError('Database connection failed: ' . $conn->connect_error);
         exit;
     }
+    
     // Check if user exists
     $stmt = $conn->prepare("SELECT FirstName, LastName FROM Users WHERE ID = ?");
     $stmt->bind_param("i", $userId);
@@ -93,7 +94,7 @@ try {
         $recentEarnings[] = [
             'amount' => (float)$row['TipAmount'],
             'date' => $row['Timestamp'],
-            'song_name' => $row['SongName'] ?: 'Unknown Song',
+            'song_name' => $row['SongName'] ?: 'Direct Tip',
             'from_user' => $row['RequestedBy'] ?: 'Anonymous',
             'request_id' => $row['RequestId']
         ];
@@ -119,8 +120,6 @@ try {
             'tip_count' => (int)$earnings['completed_tips']
         ]
     ];
-    
-    $conn->close();
     
     $conn->close();
     

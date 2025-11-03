@@ -331,11 +331,32 @@
         
         async function loadEarnings() {
             try {
-                const response = await fetch(`LAMPAPI/GetEarningsV2.php?userId=${currentUserId}`);
-                const data = await response.json();
+                console.log('Fetching earnings for user:', currentUserId);
+                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${currentUserId}`);
+                console.log('Response status:', response.status);
                 
-                if (data.error || !data.success) {
-                    throw new Error(data.error || 'Failed to load earnings data');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const text = await response.text();
+                console.log('Raw response:', text);
+                
+                if (!text.trim()) {
+                    throw new Error('Empty response from server');
+                }
+                
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    console.error('Response text:', text);
+                    throw new Error('Invalid JSON response from server');
+                }
+                
+                if (data.error) {
+                    throw new Error(data.error);
                 }
                 
                 displayEarnings(data);
@@ -344,7 +365,12 @@
                 console.error('Error loading earnings:', error);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('errorState').style.display = 'block';
-                document.getElementById('errorMessage').textContent = error.message || 'Failed to load earnings data';
+                document.getElementById('errorMessage').innerHTML = `
+                    ${error.message || 'Failed to load earnings data'}<br>
+                    <small style="color: #666; margin-top: 10px; display: block;">
+                        Check browser console for detailed error information.
+                    </small>
+                `;
             }
         }
         
@@ -353,25 +379,22 @@
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('earningsContent').style.display = 'block';
             
-            // Update main cards with improved data
+            // Update main cards
             document.getElementById('availableBalance').textContent = `$${(data.available_balance || 0).toFixed(2)}`;
-            document.getElementById('totalEarnings').textContent = `$${(data.total_net_earnings || 0).toFixed(2)}`;
+            document.getElementById('totalEarnings').textContent = `$${(data.total_earnings || 0).toFixed(2)}`;
             document.getElementById('lastPayoutAmount').textContent = `$${(data.last_payout_amount || 0).toFixed(2)}`;
-            
-            // Add gross earnings info in subtitle if available
-            if (data.total_gross_earnings && data.total_stripe_fees) {
-                const totalEarningsCard = document.getElementById('totalEarnings').parentElement;
-                const subtitle = totalEarningsCard.querySelector('.card-subtitle');
-                subtitle.innerHTML = `Net after fees<br><small style="color: #888;">Gross: $${data.total_gross_earnings.toFixed(2)} | Fees: $${data.total_stripe_fees.toFixed(2)}</small>`;
-            }
             
             if (data.last_payout_date) {
                 const payoutDate = new Date(data.last_payout_date);
                 document.getElementById('lastPayoutDate').textContent = payoutDate.toLocaleDateString();
             }
             
-            // Update total transactions count
-            document.getElementById('totalTransactions').textContent = data.total_transactions || 0;
+            // Update total transactions count if available
+            if (data.period_earnings && data.period_earnings.this_month) {
+                document.getElementById('totalTransactions').textContent = data.period_earnings.this_month.tip_count || 0;
+            } else {
+                document.getElementById('totalTransactions').textContent = '0';
+            }
             
             // Update period earnings
             if (data.period_earnings) {
@@ -402,19 +425,13 @@
             transactionsList.innerHTML = transactions.map(transaction => `
                 <div class="transaction-item">
                     <div class="transaction-info">
-                        <div class="transaction-song">${transaction.song_name || 'Direct Tip'}</div>
+                        <div class="transaction-song">${transaction.song_name || transaction.SongName || 'Direct Tip'}</div>
                         <div class="transaction-details">
-                            ${transaction.from_user || 'Anonymous'} • ${new Date(transaction.date).toLocaleDateString()}
-                            <br><small style="color: #666;">
-                                Gross: $${(transaction.gross_amount || 0).toFixed(2)} | 
-                                Fee: $${(transaction.stripe_fee || 0).toFixed(2)} | 
-                                ${transaction.stripe_charge_id ? `Charge: ${transaction.stripe_charge_id.substring(0, 12)}...` : 'Processing...'}
-                            </small>
+                            ${transaction.from_user || transaction.RequestedBy || 'Anonymous'} • ${new Date(transaction.date || transaction.Timestamp).toLocaleDateString()}
                         </div>
                     </div>
                     <div class="transaction-amount">
-                        +$${(transaction.net_amount || 0).toFixed(2)}
-                        <div style="font-size: 0.8rem; color: #888; margin-top: 2px;">net</div>
+                        +$${(transaction.amount || transaction.TipAmount || 0).toFixed(2)}
                     </div>
                 </div>
             `).join('');
@@ -435,10 +452,21 @@
                 lastName: 'DJ'
             };
             
+            localStorage.clear(); // Clear any existing data
             localStorage.setItem('user', JSON.stringify(testUser));
             localStorage.setItem('userId', '1');
+            localStorage.setItem('userID', '1'); // Alternative key
+            localStorage.setItem('id', '1'); // Another alternative
             localStorage.setItem('username', 'testdj');
             localStorage.setItem('name', 'Test DJ');
+            
+            console.log('Test user session created:', testUser);
+            console.log('localStorage now contains:', {
+                user: localStorage.getItem('user'),
+                userId: localStorage.getItem('userId'),
+                userID: localStorage.getItem('userID'),
+                id: localStorage.getItem('id')
+            });
             
             alert('Test user session created! Refreshing page...');
             window.location.reload();

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Earnings API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #2a2a2a; color: white; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .debug-section { background: #333; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .info { color: #74c0fc; }
+        pre { background: #1a1a1a; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        button { background: #007FFF; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; border-radius: 4px; border: 1px solid #555; background: #444; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 CrowdConnect Earnings Debug</h1>
+        
+        <div class="debug-section">
+            <h3>Current Session Info</h3>
+            <div id="sessionInfo"></div>
+            <button onclick="setTestUser()">Set Test User (ID: 1)</button>
+            <button onclick="clearSession()">Clear Session</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Test Earnings API</h3>
+            <label>User ID: <input type="number" id="testUserId" value="1" min="1"></label>
+            <br>
+            <button onclick="testEarningsAPI()">Test GetEarnings.php</button>
+            <button onclick="testEarningsV2API()">Test GetEarningsV2.php</button>
+        </div>
+        
+        <div class="debug-section">
+            <h3>API Response</h3>
+            <div id="apiResults"></div>
+        </div>
+        
+        <div class="debug-section">
+            <h3>Actions</h3>
+            <button onclick="populateEarnings()">Populate EarningsHistory</button>
+            <button onclick="window.open('earnings.html', '_blank')">Open Real Earnings Page</button>
+        </div>
+    </div>
+
+    <script>
+        function updateSessionInfo() {
+            const sessionData = {
+                user: localStorage.getItem('user'),
+                userId: localStorage.getItem('userId'),
+                userID: localStorage.getItem('userID'),
+                id: localStorage.getItem('id'),
+                username: localStorage.getItem('username'),
+                name: localStorage.getItem('name')
+            };
+            
+            let html = '<pre>' + JSON.stringify(sessionData, null, 2) + '</pre>';
+            
+            // Try to parse user object if it exists
+            if (sessionData.user) {
+                try {
+                    const userObj = JSON.parse(sessionData.user);
+                    html += '<p class="info">Parsed user object:</p>';
+                    html += '<pre>' + JSON.stringify(userObj, null, 2) + '</pre>';
+                } catch (e) {
+                    html += '<p class="error">Failed to parse user object: ' + e.message + '</p>';
+                }
+            }
+            
+            document.getElementById('sessionInfo').innerHTML = html;
+        }
+        
+        function setTestUser() {
+            const testUser = {
+                id: 1,
+                ID: 1,
+                username: 'testdj',
+                firstName: 'Test',
+                lastName: 'DJ'
+            };
+            
+            localStorage.clear();
+            localStorage.setItem('user', JSON.stringify(testUser));
+            localStorage.setItem('userId', '1');
+            localStorage.setItem('userID', '1');
+            localStorage.setItem('id', '1');
+            localStorage.setItem('username', 'testdj');
+            localStorage.setItem('name', 'Test DJ');
+            
+            updateSessionInfo();
+            showResult('Test user session created successfully!', 'success');
+        }
+        
+        function clearSession() {
+            localStorage.clear();
+            updateSessionInfo();
+            showResult('Session cleared!', 'info');
+        }
+        
+        async function testEarningsAPI() {
+            const userId = document.getElementById('testUserId').value;
+            showResult('Testing GetEarnings.php...', 'info');
+            
+            try {
+                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${userId}`);
+                
+                showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const text = await response.text();
+                showResult('Raw Response: ' + text, 'info');
+                
+                if (text.trim()) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('Parsed JSON:', 'success');
+                        showResult(JSON.stringify(data, null, 2), 'info');
+                    } catch (parseError) {
+                        showResult('JSON Parse Error: ' + parseError.message, 'error');
+                    }
+                } else {
+                    showResult('Empty response received!', 'error');
+                }
+                
+            } catch (error) {
+                showResult('Network Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function testEarningsV2API() {
+            const userId = document.getElementById('testUserId').value;
+            showResult('Testing GetEarningsV2.php...', 'info');
+            
+            try {
+                const response = await fetch(`LAMPAPI/GetEarningsV2.php?userId=${userId}`);
+                
+                showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const text = await response.text();
+                showResult('Raw Response: ' + text, 'info');
+                
+                if (text.trim()) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('Parsed JSON:', 'success');
+                        showResult(JSON.stringify(data, null, 2), 'info');
+                    } catch (parseError) {
+                        showResult('JSON Parse Error: ' + parseError.message, 'error');
+                    }
+                } else {
+                    showResult('Empty response received!', 'error');
+                }
+                
+            } catch (error) {
+                showResult('Network Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function populateEarnings() {
+            showResult('Running PopulateEarningsHistory.php...', 'info');
+            
+            try {
+                const response = await fetch('LAMPAPI/PopulateEarningsHistory.php');
+                const text = await response.text();
+                showResult('Population Script Output:', 'info');
+                showResult(text, 'info');
+            } catch (error) {
+                showResult('Error running population script: ' + error.message, 'error');
+            }
+        }
+        
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('apiResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const resultHtml = `
+                <div class="${type}" style="margin: 5px 0; padding: 5px;">
+                    [${timestamp}] ${typeof message === 'string' ? message : '<pre>' + message + '</pre>'}
+                </div>
+            `;
+            resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+        }
+        
+        // Initialize on load
+        updateSessionInfo();
+    </script>
+</body>
+</html>
