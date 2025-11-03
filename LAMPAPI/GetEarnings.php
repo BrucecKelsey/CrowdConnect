@@ -122,8 +122,6 @@ try {
     
     $conn->close();
     
-    $conn->close();
-    
     returnWithInfo([
         'user_name' => $user['FirstName'] . ' ' . $user['LastName'],
         'total_earnings' => $totalEarnings,

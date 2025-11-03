@@ -30,6 +30,8 @@
             <h3>Test Earnings API</h3>
             <label>User ID: <input type="number" id="testUserId" value="1" min="1"></label>
             <br>
+            <button onclick="testConnection()">Test Database Connection</button>
+            <button onclick="testEarningsSimple()">Test GetEarningsSimple.php</button>
             <button onclick="testEarningsAPI()">Test GetEarnings.php</button>
             <button onclick="testEarningsV2API()">Test GetEarningsV2.php</button>
         </div>
@@ -98,6 +100,63 @@
             localStorage.clear();
             updateSessionInfo();
             showResult('Session cleared!', 'info');
+        }
+        
+        async function testConnection() {
+            showResult('Testing database connection...', 'info');
+            
+            try {
+                const response = await fetch('LAMPAPI/TestConnection.php');
+                
+                showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const text = await response.text();
+                showResult('Raw Response: ' + text, 'info');
+                
+                if (text.trim()) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('Connection Test Results:', 'success');
+                        showResult(JSON.stringify(data, null, 2), 'info');
+                    } catch (parseError) {
+                        showResult('JSON Parse Error: ' + parseError.message, 'error');
+                    }
+                } else {
+                    showResult('Empty response received!', 'error');
+                }
+                
+            } catch (error) {
+                showResult('Network Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function testEarningsSimple() {
+            const userId = document.getElementById('testUserId').value;
+            showResult('Testing GetEarningsSimple.php...', 'info');
+            
+            try {
+                const response = await fetch(`LAMPAPI/GetEarningsSimple.php?userId=${userId}`);
+                
+                showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const text = await response.text();
+                showResult('Raw Response: ' + text, 'info');
+                
+                if (text.trim()) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('Parsed JSON:', 'success');
+                        showResult(JSON.stringify(data, null, 2), 'info');
+                    } catch (parseError) {
+                        showResult('JSON Parse Error: ' + parseError.message, 'error');
+                    }
+                } else {
+                    showResult('Empty response received!', 'error');
+                }
+                
+            } catch (error) {
+                showResult('Network Error: ' + error.message, 'error');
+            }
         }
         
         async function testEarningsAPI() {
