@@ -204,9 +204,6 @@
         <div id="errorState" class="error" style="display: none;">
             <h3>Error loading earnings data</h3>
             <p id="errorMessage"></p>
-            <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin-top: 15px; cursor: pointer;">
-                Set Test User Session (For Testing)
-            </button>
         </div>
         
         <div id="earningsContent" style="display: none;">
@@ -287,7 +284,15 @@
             console.log(`${key}: ${localStorage.getItem(key)}`);
         }
         
-        // Get userId from localStorage (like other pages do)
+        // Get userId from localStorage (comprehensive search for logged-in user)
+        console.log('=== DEBUG: All localStorage items ===');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            console.log(`${key}: ${localStorage.getItem(key)}`);
+        }
+        console.log('=== END DEBUG ===');
+        
+        // Try to get user ID from user object first
         const savedUserInfo = localStorage.getItem('user');
         console.log('savedUserInfo:', savedUserInfo);
         
@@ -295,23 +300,36 @@
             try {
                 const userInfo = JSON.parse(savedUserInfo);
                 console.log('parsed userInfo:', userInfo);
-                currentUserId = userInfo.id || userInfo.ID;
-                console.log('extracted currentUserId:', currentUserId);
+                currentUserId = userInfo.id || userInfo.ID || userInfo.userId;
+                console.log('extracted currentUserId from user object:', currentUserId);
             } catch (e) {
                 console.error('Error parsing user info:', e);
             }
         }
         
-        // Also try other common localStorage keys
+        // Try other common localStorage keys used by login systems
         if (!currentUserId) {
-            currentUserId = localStorage.getItem('userId') || localStorage.getItem('userID') || localStorage.getItem('id');
+            currentUserId = localStorage.getItem('userId') || 
+                           localStorage.getItem('userID') || 
+                           localStorage.getItem('id') ||
+                           localStorage.getItem('currentUserId') ||
+                           localStorage.getItem('loggedInUserId') ||
+                           localStorage.getItem('activeUser');
             console.log('Fallback userId from direct keys:', currentUserId);
+        }
+        
+        // Try sessionStorage as well
+        if (!currentUserId) {
+            currentUserId = sessionStorage.getItem('userId') || 
+                           sessionStorage.getItem('userID') || 
+                           sessionStorage.getItem('id');
+            console.log('userId from sessionStorage:', currentUserId);
         }
         
         // Fallback to URL parameters if localStorage doesn't work
         if (!currentUserId) {
             const urlParams = new URLSearchParams(window.location.search);
-            currentUserId = urlParams.get('userId');
+            currentUserId = urlParams.get('userId') || urlParams.get('userID') || urlParams.get('id');
             console.log('userId from URL params:', currentUserId);
         }
         
@@ -321,8 +339,18 @@
             document.getElementById('errorMessage').innerHTML = `
                 No user session found. Please log in again.<br>
                 <small style="color: #888; margin-top: 10px; display: block;">
-                Check browser console for localStorage debug info.
+                Check browser console for localStorage debug info.<br>
+                Current page expects to find logged-in user ID in localStorage.
                 </small>
+                <div style="margin-top: 15px;">
+                    <strong>For Testing Only:</strong><br>
+                    <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
+                        Set Test User (Reese Kelsey - ID: 5)
+                    </button>
+                    <button onclick="window.location.href='login.html'" style="background: #007FFF; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
+                        Go to Login Page
+                    </button>
+                </div>
             `;
         } else {
             console.log('Loading earnings for user ID:', currentUserId);
@@ -447,22 +475,22 @@
         }
         
         function setTestUserSession() {
-            // Set test user data in localStorage for testing
+            // Set test user data in localStorage for testing ONLY
             const testUser = {
-                id: 1,
-                ID: 1,
-                username: 'testdj',
-                firstName: 'Test',
-                lastName: 'DJ'
+                id: 5,
+                ID: 5,
+                username: 'rkelsey12',
+                firstName: 'Reese',
+                lastName: 'Kelsey'
             };
             
             localStorage.clear(); // Clear any existing data
             localStorage.setItem('user', JSON.stringify(testUser));
-            localStorage.setItem('userId', '1');
-            localStorage.setItem('userID', '1'); // Alternative key
-            localStorage.setItem('id', '1'); // Another alternative
-            localStorage.setItem('username', 'testdj');
-            localStorage.setItem('name', 'Test DJ');
+            localStorage.setItem('userId', '5');
+            localStorage.setItem('userID', '5'); // Alternative key
+            localStorage.setItem('id', '5'); // Another alternative
+            localStorage.setItem('username', 'rkelsey12');
+            localStorage.setItem('name', 'Reese Kelsey');
             
             console.log('Test user session created:', testUser);
             console.log('localStorage now contains:', {

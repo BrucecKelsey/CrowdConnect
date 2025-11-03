@@ -28,7 +28,7 @@
         
         <div class="debug-section">
             <h3>Test Earnings API</h3>
-            <label>User ID: <input type="number" id="testUserId" value="1" min="1"></label>
+            <label>User ID: <input type="number" id="testUserId" value="5" min="1"></label>
             <br>
             <button onclick="testConnection()">Test Database Connection</button>
             <button onclick="testEarningsSimple()">Test GetEarningsSimple.php</button>
@@ -78,20 +78,20 @@
         
         function setTestUser() {
             const testUser = {
-                id: 1,
-                ID: 1,
-                username: 'testdj',
-                firstName: 'Test',
-                lastName: 'DJ'
+                id: 5,
+                ID: 5,
+                username: 'rkelsey12',
+                firstName: 'Reese',
+                lastName: 'Kelsey'
             };
             
             localStorage.clear();
             localStorage.setItem('user', JSON.stringify(testUser));
-            localStorage.setItem('userId', '1');
-            localStorage.setItem('userID', '1');
-            localStorage.setItem('id', '1');
-            localStorage.setItem('username', 'testdj');
-            localStorage.setItem('name', 'Test DJ');
+            localStorage.setItem('userId', '5');
+            localStorage.setItem('userID', '5');
+            localStorage.setItem('id', '5');
+            localStorage.setItem('username', 'rkelsey12');
+            localStorage.setItem('name', 'Reese Kelsey');
             
             updateSessionInfo();
             showResult('Test user session created successfully!', 'success');
