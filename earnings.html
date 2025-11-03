@@ -347,6 +347,9 @@
                     <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
                         Set Test User (Reese Kelsey - ID: 5)
                     </button>
+                    <button onclick="testDisplayFunction()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
+                        Test Display ($22 Data)
+                    </button>
                     <button onclick="window.location.href='login.html'" style="background: #007FFF; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
                         Go to Login Page
                     </button>
@@ -403,14 +406,28 @@
         }
         
         function displayEarnings(data) {
+            console.log('=== DISPLAYING EARNINGS DATA ===');
+            console.log('Full data object:', data);
+            console.log('Available balance:', data.available_balance);
+            console.log('Total earnings:', data.total_earnings);
+            console.log('Total tips:', data.total_tips);
+            console.log('=== END DISPLAY DEBUG ===');
+            
             // Hide loading, show content
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('earningsContent').style.display = 'block';
             
-            // Update main cards
-            document.getElementById('availableBalance').textContent = `$${(data.available_balance || 0).toFixed(2)}`;
-            document.getElementById('totalEarnings').textContent = `$${(data.total_earnings || 0).toFixed(2)}`;
-            document.getElementById('lastPayoutAmount').textContent = `$${(data.last_payout_amount || 0).toFixed(2)}`;
+            // Update main cards with extra debugging
+            const availableBalance = (data.available_balance || 0).toFixed(2);
+            const totalEarnings = (data.total_earnings || 0).toFixed(2);
+            const lastPayoutAmount = (data.last_payout_amount || 0).toFixed(2);
+            
+            console.log('Setting availableBalance to:', availableBalance);
+            console.log('Setting totalEarnings to:', totalEarnings);
+            
+            document.getElementById('availableBalance').textContent = `$${availableBalance}`;
+            document.getElementById('totalEarnings').textContent = `$${totalEarnings}`;
+            document.getElementById('lastPayoutAmount').textContent = `$${lastPayoutAmount}`;
             
             if (data.last_payout_date) {
                 const payoutDate = new Date(data.last_payout_date);
@@ -472,6 +489,28 @@
         function requestPayout() {
             alert('Payout requested! You will be contacted within 24-48 hours to process your payout.');
             // In a real implementation, this would send a request to the server
+        }
+        
+        function testDisplayFunction() {
+            // Test the display with the exact data from your API response
+            const testData = {
+                "user_name": "Reese Kelsey",
+                "total_earnings": 22,
+                "available_balance": 22,
+                "total_tips": 23,
+                "last_payout_amount": 0,
+                "last_payout_date": null,
+                "period_earnings": {
+                    "today": {"earnings": 0, "tip_count": 0},
+                    "this_week": {"earnings": 0, "tip_count": 0},
+                    "this_month": {"earnings": 22, "tip_count": 23}
+                },
+                "recent_transactions": [],
+                "success": true
+            };
+            
+            console.log('Testing display function with data:', testData);
+            displayEarnings(testData);
         }
         
         function setTestUserSession() {
