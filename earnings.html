@@ -197,24 +197,22 @@
         
         <h1 class="page-title">💰 Earnings & Billing</h1>
         
-        <!-- Debug Panel (always visible for testing) -->
-        <div style="background: #444; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #666;">
-            <h4 style="margin: 0 0 10px 0; color: #fff;">🔧 Debug Panel</h4>
-            <button onclick="testDisplayFunction()" style="background: #28a745; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
-                Test Display ($22 Data)
+        <!-- Debug Panel (only shown in development mode) -->
+        <div id="debugPanel" style="background: #444; padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #666; display: none;">
+            <button onclick="toggleDebugPanel()" style="background: transparent; color: #ccc; border: none; cursor: pointer; font-size: 12px; width: 100%; text-align: left;">
+                🔧 Debug Panel (Click to expand)
             </button>
-            <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
-                Set Test User (ID: 5)
-            </button>
-            <button onclick="showDebugInfo()" style="background: #ffc107; color: black; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
-                Show LocalStorage
-            </button>
-            <button onclick="manualLoadEarnings()" style="background: #007FFF; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
-                Load Earnings (API)
-            </button>
-            <button onclick="window.location.reload()" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
-                Reload Page
-            </button>
+            <div id="debugButtons" style="display: none; margin-top: 10px;">
+                <button onclick="manualLoadEarnings()" style="background: #007FFF; color: white; padding: 6px 12px; border: none; border-radius: 4px; margin: 3px; cursor: pointer; font-size: 12px;">
+                    Reload Data
+                </button>
+                <button onclick="showDebugInfo()" style="background: #ffc107; color: black; padding: 6px 12px; border: none; border-radius: 4px; margin: 3px; cursor: pointer; font-size: 12px;">
+                    Show Session
+                </button>
+                <button onclick="testDisplayFunction()" style="background: #28a745; color: white; padding: 6px 12px; border: none; border-radius: 4px; margin: 3px; cursor: pointer; font-size: 12px;">
+                    Test Display
+                </button>
+            </div>
         </div>
         
         <div id="loadingState" class="loading">
@@ -297,20 +295,26 @@
     <script>
         let currentUserId = null;
         
-        // Debug: Check what's in localStorage
-        console.log('All localStorage items:');
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            console.log(`${key}: ${localStorage.getItem(key)}`);
+        // Debug mode - enable by adding ?debug=true to URL or setting localStorage.debug=true
+        const debugMode = new URLSearchParams(window.location.search).get('debug') === 'true' || 
+                         localStorage.getItem('debug') === 'true';
+        
+        if (debugMode) {
+            document.getElementById('debugPanel').style.display = 'block';
+            console.log('🔧 Debug mode enabled');
         }
         
+        // Debug: Check what's in localStorage
+        console.log('All localStorage items:');
         // Get userId from localStorage (comprehensive search for logged-in user)
-        console.log('=== DEBUG: All localStorage items ===');
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            console.log(`${key}: ${localStorage.getItem(key)}`);
+        if (debugMode) {
+            console.log('=== EARNINGS PAGE: Searching for user session ===');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                console.log(`${key}: ${localStorage.getItem(key)}`);
+            }
+            console.log('=== END SESSION SEARCH ===');
         }
-        console.log('=== END DEBUG ===');
         
         // Try to get user ID from user object first
         const savedUserInfo = localStorage.getItem('user');
@@ -365,10 +369,10 @@
                 <div style="margin-top: 15px;">
                     <strong>For Testing Only:</strong><br>
                     <button onclick="setTestUserSession()" style="background: #a78bfa; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
-                        Set Test User (Reese Kelsey - ID: 5)
+                        Test Session (Dev Only)
                     </button>
                     <button onclick="testDisplayFunction()" style="background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
-                        Test Display ($22 Data)
+                        Test Display (Sample Data)
                     </button>
                     <button onclick="window.location.href='login.html'" style="background: #007FFF; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin: 5px; cursor: pointer;">
                         Go to Login Page
@@ -376,8 +380,17 @@
                 </div>
             `;
         } else {
-            console.log('Loading earnings for user ID:', currentUserId);
-            loadEarnings();
+            console.log('✅ User session found! Loading earnings for user ID:', currentUserId);
+            
+            // Ensure loading state is visible
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('earningsContent').style.display = 'none';
+            
+            // Add a small delay to ensure DOM is ready
+            setTimeout(() => {
+                loadEarnings();
+            }, 100);
         }
         
         async function loadEarnings() {
@@ -530,6 +543,15 @@
             // In a real implementation, this would send a request to the server
         }
         
+        function toggleDebugPanel() {
+            const buttons = document.getElementById('debugButtons');
+            const isVisible = buttons.style.display !== 'none';
+            buttons.style.display = isVisible ? 'none' : 'block';
+            
+            const toggle = document.querySelector('#debugPanel button');
+            toggle.textContent = isVisible ? '🔧 Debug Panel (Click to expand)' : '🔧 Debug Panel (Click to collapse)';
+        }
+        
         function manualLoadEarnings() {
             console.log('🔧 Manual load earnings triggered');
             console.log('🔧 Current user ID:', currentUserId);
@@ -571,55 +593,61 @@
         }
         
         function testDisplayFunction() {
-            // Test the display with the exact data from your API response
+            // Test the display with sample data structure
             const testData = {
-                "user_name": "Reese Kelsey",
-                "total_earnings": 22,
-                "available_balance": 22,
-                "total_tips": 23,
+                "user_name": "Sample User",
+                "total_earnings": 15.50,
+                "available_balance": 15.50,
+                "total_tips": 5,
                 "last_payout_amount": 0,
                 "last_payout_date": null,
                 "period_earnings": {
-                    "today": {"earnings": 0, "tip_count": 0},
-                    "this_week": {"earnings": 0, "tip_count": 0},
-                    "this_month": {"earnings": 22, "tip_count": 23}
+                    "today": {"earnings": 2.50, "tip_count": 1},
+                    "this_week": {"earnings": 8.00, "tip_count": 3},
+                    "this_month": {"earnings": 15.50, "tip_count": 5}
                 },
-                "recent_transactions": [],
+                "recent_transactions": [
+                    {
+                        "amount": 2.50,
+                        "date": "2025-11-03 10:00:00",
+                        "song_name": "Sample Song",
+                        "from_user": "Sample Tipper",
+                        "request_id": 123
+                    }
+                ],
                 "success": true
             };
             
-            console.log('Testing display function with data:', testData);
+            console.log('Testing display function with sample data:', testData);
             displayEarnings(testData);
         }
         
         function setTestUserSession() {
-            // Set test user data in localStorage for testing ONLY
-            const testUser = {
-                id: 5,
-                ID: 5,
-                username: 'rkelsey12',
-                firstName: 'Reese',
-                lastName: 'Kelsey'
-            };
+            // This function is for development/testing only - not for production use
+            console.warn('setTestUserSession() should only be used for testing purposes');
             
-            localStorage.clear(); // Clear any existing data
-            localStorage.setItem('user', JSON.stringify(testUser));
-            localStorage.setItem('userId', '5');
-            localStorage.setItem('userID', '5'); // Alternative key
-            localStorage.setItem('id', '5'); // Another alternative
-            localStorage.setItem('username', 'rkelsey12');
-            localStorage.setItem('name', 'Reese Kelsey');
-            
-            console.log('Test user session created:', testUser);
-            console.log('localStorage now contains:', {
-                user: localStorage.getItem('user'),
-                userId: localStorage.getItem('userId'),
-                userID: localStorage.getItem('userID'),
-                id: localStorage.getItem('id')
-            });
-            
-            alert('Test user session created! Refreshing page...');
-            window.location.reload();
+            // In production, users should be redirected to login instead
+            if (confirm('This is a test function. In production, users should log in properly. Continue with test session?')) {
+                const testUser = {
+                    id: 5,
+                    ID: 5,
+                    username: 'testuser',
+                    firstName: 'Test',
+                    lastName: 'User'
+                };
+                
+                localStorage.clear(); // Clear any existing data
+                localStorage.setItem('user', JSON.stringify(testUser));
+                localStorage.setItem('userId', '5');
+                localStorage.setItem('userID', '5');
+                localStorage.setItem('id', '5');
+                
+                alert('Test session created. Page will reload.');
+                window.location.reload();
+            } else {
+                // Redirect to login page instead
+                window.location.href = 'login.html';
+            }
         }
     </script>
 </body>
