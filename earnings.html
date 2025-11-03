@@ -209,6 +209,9 @@
             <button onclick="showDebugInfo()" style="background: #ffc107; color: black; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
                 Show LocalStorage
             </button>
+            <button onclick="manualLoadEarnings()" style="background: #007FFF; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
+                Load Earnings (API)
+            </button>
             <button onclick="window.location.reload()" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 5px; margin: 5px; cursor: pointer; font-size: 14px;">
                 Reload Page
             </button>
@@ -379,16 +382,26 @@
         
         async function loadEarnings() {
             try {
-                console.log('Fetching earnings for user:', currentUserId);
-                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${currentUserId}`);
-                console.log('Response status:', response.status);
+                console.log('🔄 Starting loadEarnings for user:', currentUserId);
+                
+                if (!currentUserId) {
+                    throw new Error('No user ID provided to loadEarnings function');
+                }
+                
+                const apiUrl = `LAMPAPI/GetEarnings.php?userId=${currentUserId}`;
+                console.log('📡 Fetching from URL:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                console.log('📊 Response status:', response.status, response.statusText);
+                console.log('📊 Response headers:', response.headers);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
                 const text = await response.text();
-                console.log('Raw response:', text);
+                console.log('📄 Raw response length:', text.length);
+                console.log('📄 Raw response:', text.substring(0, 500) + (text.length > 500 ? '...' : ''));
                 
                 if (!text.trim()) {
                     throw new Error('Empty response from server');
@@ -397,16 +410,25 @@
                 let data;
                 try {
                     data = JSON.parse(text);
+                    console.log('✅ JSON parsed successfully');
+                    console.log('📋 Parsed data:', data);
                 } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    console.error('Response text:', text);
-                    throw new Error('Invalid JSON response from server');
+                    console.error('❌ JSON parse error:', parseError);
+                    console.error('❌ Response text that failed to parse:', text);
+                    throw new Error(`Invalid JSON response: ${parseError.message}`);
                 }
                 
                 if (data.error) {
+                    console.error('❌ API returned error:', data.error);
                     throw new Error(data.error);
                 }
                 
+                if (!data.success) {
+                    console.error('❌ API success flag is false:', data);
+                    throw new Error('API call was not successful');
+                }
+                
+                console.log('🎉 About to display earnings data:', data);
                 displayEarnings(data);
                 
             } catch (error) {
@@ -506,6 +528,25 @@
         function requestPayout() {
             alert('Payout requested! You will be contacted within 24-48 hours to process your payout.');
             // In a real implementation, this would send a request to the server
+        }
+        
+        function manualLoadEarnings() {
+            console.log('🔧 Manual load earnings triggered');
+            console.log('🔧 Current user ID:', currentUserId);
+            
+            if (!currentUserId) {
+                console.error('❌ No user ID available for manual load');
+                alert('No user ID found! Click "Set Test User" first.');
+                return;
+            }
+            
+            // Show loading state
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('earningsContent').style.display = 'none';
+            
+            // Call the loadEarnings function
+            loadEarnings();
         }
         
         function showDebugInfo() {
