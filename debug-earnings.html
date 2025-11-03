@@ -34,6 +34,7 @@
             <button onclick="testEarningsSimple()">Test GetEarningsSimple.php</button>
             <button onclick="testEarningsAPI()">Test GetEarnings.php</button>
             <button onclick="testEarningsV2API()">Test GetEarningsV2.php</button>
+            <button onclick="testEarningsV2Safe()">Test GetEarningsV2Safe.php</button>
         </div>
         
         <div class="debug-section">
@@ -194,6 +195,35 @@
             
             try {
                 const response = await fetch(`LAMPAPI/GetEarningsV2.php?userId=${userId}`);
+                
+                showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
+                
+                const text = await response.text();
+                showResult('Raw Response: ' + text, 'info');
+                
+                if (text.trim()) {
+                    try {
+                        const data = JSON.parse(text);
+                        showResult('Parsed JSON:', 'success');
+                        showResult(JSON.stringify(data, null, 2), 'info');
+                    } catch (parseError) {
+                        showResult('JSON Parse Error: ' + parseError.message, 'error');
+                    }
+                } else {
+                    showResult('Empty response received!', 'error');
+                }
+                
+            } catch (error) {
+                showResult('Network Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function testEarningsV2Safe() {
+            const userId = document.getElementById('testUserId').value;
+            showResult('Testing GetEarningsV2Safe.php...', 'info');
+            
+            try {
+                const response = await fetch(`LAMPAPI/GetEarningsV2Safe.php?userId=${userId}`);
                 
                 showResult(`Response Status: ${response.status} ${response.statusText}`, response.ok ? 'success' : 'error');
                 
