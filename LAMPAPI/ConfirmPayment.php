@@ -47,7 +47,7 @@ try {
     $rowsAffected = $stmt->affected_rows;
     error_log("ConfirmPayment: Updated " . $rowsAffected . " tip records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
     
-    // If payment succeeded, create earnings history record
+    // If payment succeeded, update Users.TotalEarnings and create earnings history record
     if ($status === 'completed' && $rowsAffected > 0) {
         // Get the tip details for earnings history
         $tipStmt = $conn->prepare("SELECT TipId, DJUserID, TipAmount FROM Tips WHERE StripePaymentIntentId = ?");
@@ -76,6 +76,17 @@ try {
                 error_log("ConfirmPayment: Failed to create earnings history: " . $earningsStmt->error);
             }
             $earningsStmt->close();
+            
+            // Update Users.TotalEarnings
+            $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ? WHERE ID = ?");
+            $userUpdateStmt->bind_param("di", $grossAmount, $tip['DJUserID']);
+            
+            if ($userUpdateStmt->execute()) {
+                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $grossAmount . ")");
+            } else {
+                error_log("ConfirmPayment: Failed to update TotalEarnings: " . $userUpdateStmt->error);
+            }
+            $userUpdateStmt->close();
         }
         $tipStmt->close();
     }
