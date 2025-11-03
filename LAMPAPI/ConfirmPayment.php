@@ -47,6 +47,39 @@ try {
     $rowsAffected = $stmt->affected_rows;
     error_log("ConfirmPayment: Updated " . $rowsAffected . " tip records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
     
+    // If payment succeeded, create earnings history record
+    if ($status === 'completed' && $rowsAffected > 0) {
+        // Get the tip details for earnings history
+        $tipStmt = $conn->prepare("SELECT TipId, DJUserID, TipAmount FROM Tips WHERE StripePaymentIntentId = ?");
+        $tipStmt->bind_param("s", $paymentIntentId);
+        $tipStmt->execute();
+        $tipResult = $tipStmt->get_result();
+        
+        if ($tip = $tipResult->fetch_assoc()) {
+            $grossAmount = $tip['TipAmount'];
+            $stripeFeeAmount = round(($grossAmount * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
+            $netAmount = $grossAmount - $stripeFeeAmount;
+            
+            // Get the charge ID from Stripe payment intent
+            $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
+            
+            // Insert into EarningsHistory
+            $earningsStmt = $conn->prepare("
+                INSERT INTO EarningsHistory (UserId, TipId, GrossAmount, StripeFeeAmount, NetAmount, StripeChargeId, Status) 
+                VALUES (?, ?, ?, ?, ?, ?, 'completed')
+            ");
+            $earningsStmt->bind_param("iiddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $stripeFeeAmount, $netAmount, $chargeId);
+            
+            if ($earningsStmt->execute()) {
+                error_log("ConfirmPayment: Created earnings history record for TipId: " . $tip['TipId']);
+            } else {
+                error_log("ConfirmPayment: Failed to create earnings history: " . $earningsStmt->error);
+            }
+            $earningsStmt->close();
+        }
+        $tipStmt->close();
+    }
+    
     if ($status === 'completed') {
         echo json_encode([
             'success' => true,

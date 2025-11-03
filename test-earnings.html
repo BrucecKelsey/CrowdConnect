@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Earnings API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .api-test { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .error { color: red; }
+        .success { color: green; }
+        pre { background: #333; color: #fff; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CrowdConnect Earnings API Test</h1>
+        
+        <div class="api-test">
+            <h3>Test User ID: <input type="number" id="testUserId" value="1" min="1"></h3>
+            <button onclick="testOldAPI()">Test Old API (GetEarnings.php)</button>
+            <button onclick="testNewAPI()">Test New API (GetEarningsV2.php)</button>
+            <button onclick="populateEarnings()">Populate EarningsHistory</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function testOldAPI() {
+            const userId = document.getElementById('testUserId').value;
+            try {
+                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${userId}`);
+                const data = await response.json();
+                displayResult('Old API Results', data);
+            } catch (error) {
+                displayResult('Old API Error', { error: error.message });
+            }
+        }
+        
+        async function testNewAPI() {
+            const userId = document.getElementById('testUserId').value;
+            try {
+                const response = await fetch(`LAMPAPI/GetEarningsV2.php?userId=${userId}`);
+                const data = await response.json();
+                displayResult('New API Results', data);
+            } catch (error) {
+                displayResult('New API Error', { error: error.message });
+            }
+        }
+        
+        async function populateEarnings() {
+            try {
+                const response = await fetch('LAMPAPI/PopulateEarningsHistory.php');
+                const text = await response.text();
+                displayResult('Population Results', text, true);
+            } catch (error) {
+                displayResult('Population Error', { error: error.message });
+            }
+        }
+        
+        function displayResult(title, data, isText = false) {
+            const resultsDiv = document.getElementById('results');
+            const resultHtml = `
+                <div class="api-test">
+                    <h3>${title}</h3>
+                    <pre>${isText ? data : JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            resultsDiv.innerHTML = resultHtml + resultsDiv.innerHTML;
+        }
+    </script>
+</body>
+</html>

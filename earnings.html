@@ -229,6 +229,12 @@
                     <div class="card-value" id="lastPayoutAmount">$0.00</div>
                     <div class="card-subtitle" id="lastPayoutDate">Never</div>
                 </div>
+                
+                <div class="earnings-card">
+                    <div class="card-title">🎵 Total Tips</div>
+                    <div class="card-value" id="totalTransactions">0</div>
+                    <div class="card-subtitle">Transactions received</div>
+                </div>
             </div>
             
             <!-- Period Earnings -->
@@ -325,11 +331,11 @@
         
         async function loadEarnings() {
             try {
-                const response = await fetch(`LAMPAPI/GetEarnings.php?userId=${currentUserId}`);
+                const response = await fetch(`LAMPAPI/GetEarningsV2.php?userId=${currentUserId}`);
                 const data = await response.json();
                 
-                if (data.error) {
-                    throw new Error(data.error);
+                if (data.error || !data.success) {
+                    throw new Error(data.error || 'Failed to load earnings data');
                 }
                 
                 displayEarnings(data);
@@ -347,15 +353,25 @@
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('earningsContent').style.display = 'block';
             
-            // Update main cards
+            // Update main cards with improved data
             document.getElementById('availableBalance').textContent = `$${(data.available_balance || 0).toFixed(2)}`;
-            document.getElementById('totalEarnings').textContent = `$${(data.total_earnings || 0).toFixed(2)}`;
+            document.getElementById('totalEarnings').textContent = `$${(data.total_net_earnings || 0).toFixed(2)}`;
             document.getElementById('lastPayoutAmount').textContent = `$${(data.last_payout_amount || 0).toFixed(2)}`;
+            
+            // Add gross earnings info in subtitle if available
+            if (data.total_gross_earnings && data.total_stripe_fees) {
+                const totalEarningsCard = document.getElementById('totalEarnings').parentElement;
+                const subtitle = totalEarningsCard.querySelector('.card-subtitle');
+                subtitle.innerHTML = `Net after fees<br><small style="color: #888;">Gross: $${data.total_gross_earnings.toFixed(2)} | Fees: $${data.total_stripe_fees.toFixed(2)}</small>`;
+            }
             
             if (data.last_payout_date) {
                 const payoutDate = new Date(data.last_payout_date);
                 document.getElementById('lastPayoutDate').textContent = payoutDate.toLocaleDateString();
             }
+            
+            // Update total transactions count
+            document.getElementById('totalTransactions').textContent = data.total_transactions || 0;
             
             // Update period earnings
             if (data.period_earnings) {
@@ -386,14 +402,19 @@
             transactionsList.innerHTML = transactions.map(transaction => `
                 <div class="transaction-item">
                     <div class="transaction-info">
-                        <div class="transaction-song">${transaction.SongName || 'Unknown Song'}</div>
+                        <div class="transaction-song">${transaction.song_name || 'Direct Tip'}</div>
                         <div class="transaction-details">
-                            ${transaction.RequestedBy || 'Anonymous'} • ${new Date(transaction.TransactionDate).toLocaleDateString()}
-                            ${transaction.StripeChargeId ? ` • ${transaction.StripeChargeId}` : ''}
+                            ${transaction.from_user || 'Anonymous'} • ${new Date(transaction.date).toLocaleDateString()}
+                            <br><small style="color: #666;">
+                                Gross: $${(transaction.gross_amount || 0).toFixed(2)} | 
+                                Fee: $${(transaction.stripe_fee || 0).toFixed(2)} | 
+                                ${transaction.stripe_charge_id ? `Charge: ${transaction.stripe_charge_id.substring(0, 12)}...` : 'Processing...'}
+                            </small>
                         </div>
                     </div>
                     <div class="transaction-amount">
-                        +$${(transaction.NetAmount || 0).toFixed(2)}
+                        +$${(transaction.net_amount || 0).toFixed(2)}
+                        <div style="font-size: 0.8rem; color: #888; margin-top: 2px;">net</div>
                     </div>
                 </div>
             `).join('');
