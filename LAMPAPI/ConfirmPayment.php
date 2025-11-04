@@ -58,7 +58,8 @@ try {
         if ($tip = $tipResult->fetch_assoc()) {
             $grossAmount = $tip['TipAmount'];
             $stripeFeeAmount = round(($grossAmount * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
-            $netAmount = $grossAmount - $stripeFeeAmount;
+            $platformFeeAmount = round($grossAmount * 0.10, 2); // Platform fee: 10%
+            $netAmount = $grossAmount - $stripeFeeAmount - $platformFeeAmount;
             
             // Get the charge ID from Stripe payment intent
             $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
@@ -77,12 +78,12 @@ try {
             }
             $earningsStmt->close();
             
-            // Update Users.TotalEarnings
+            // Update Users.TotalEarnings (net amount after all fees)
             $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ? WHERE ID = ?");
-            $userUpdateStmt->bind_param("di", $grossAmount, $tip['DJUserID']);
+            $userUpdateStmt->bind_param("di", $netAmount, $tip['DJUserID']);
             
             if ($userUpdateStmt->execute()) {
-                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $grossAmount . ")");
+                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $netAmount . " net after fees - Gross: $" . $grossAmount . ", Stripe: $" . $stripeFeeAmount . ", Platform: $" . $platformFeeAmount . ")");
             } else {
                 error_log("ConfirmPayment: Failed to update TotalEarnings: " . $userUpdateStmt->error);
             }

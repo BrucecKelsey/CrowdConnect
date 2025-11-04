@@ -52,14 +52,26 @@ try {
         exit;
     }
     
-    // Calculate total earnings from Tips table
+    // Calculate net earnings from Tips table (after Stripe 2.9% + $0.30 and Platform 10% fees)
     $stmt = $conn->prepare("
         SELECT 
-            COALESCE(SUM(CASE WHEN Status = 'completed' THEN TipAmount ELSE 0 END), 0) as total_earnings,
+            COALESCE(SUM(CASE 
+                WHEN Status = 'completed' THEN 
+                    TipAmount - (TipAmount * 0.029 + 0.30) - (TipAmount * 0.10)
+                ELSE 0 END), 0) as total_earnings,
             COUNT(CASE WHEN Status = 'completed' THEN 1 END) as completed_tips,
-            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN TipAmount ELSE 0 END), 0) as today_earnings,
-            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN TipAmount ELSE 0 END), 0) as week_earnings,
-            COALESCE(SUM(CASE WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN TipAmount ELSE 0 END), 0) as month_earnings
+            COALESCE(SUM(CASE 
+                WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN 
+                    TipAmount - (TipAmount * 0.029 + 0.30) - (TipAmount * 0.10)
+                ELSE 0 END), 0) as today_earnings,
+            COALESCE(SUM(CASE 
+                WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 
+                    TipAmount - (TipAmount * 0.029 + 0.30) - (TipAmount * 0.10)
+                ELSE 0 END), 0) as week_earnings,
+            COALESCE(SUM(CASE 
+                WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 
+                    TipAmount - (TipAmount * 0.029 + 0.30) - (TipAmount * 0.10)
+                ELSE 0 END), 0) as month_earnings
         FROM Tips 
         WHERE DJUserID = ?
     ");
@@ -90,8 +102,16 @@ try {
     
     $recentEarnings = [];
     while ($row = $result->fetch_assoc()) {
+        $grossAmount = (float)$row['TipAmount'];
+        $stripeFee = round(($grossAmount * 0.029) + 0.30, 2);
+        $platformFee = round($grossAmount * 0.10, 2);
+        $netAmount = $grossAmount - $stripeFee - $platformFee;
+        
         $recentEarnings[] = [
-            'amount' => (float)$row['TipAmount'],
+            'amount' => $netAmount,
+            'gross_amount' => $grossAmount,
+            'stripe_fee' => $stripeFee,
+            'platform_fee' => $platformFee,
             'date' => $row['Timestamp'],
             'song_name' => $row['SongName'] ?: 'Unknown Song',
             'from_user' => $row['RequestedBy'] ?: 'Anonymous',
