@@ -283,6 +283,38 @@
             </div>
         </div>
         
+        <!-- Request Fee Settings Card -->
+        <div class="card tip-settings-card">
+            <div class="card-header">
+                <div class="card-header-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                    Request Fee Settings
+                </div>
+            </div>
+            <div class="tip-setting-row">
+                <div class="tip-setting-info">
+                    <div class="tip-setting-title">Enable Request Fees</div>
+                    <div class="tip-setting-desc">Require payment for song requests (charged separately from tips)</div>
+                </div>
+                <div class="tip-toggle-container">
+                    <label class="tip-toggle">
+                        <input type="checkbox" id="allowRequestFeesToggle">
+                        <span class="tip-slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="tip-setting-row" id="requestFeeAmountRow" style="display: none;">
+                <div class="tip-setting-info">
+                    <div class="tip-setting-title">Request Fee Amount</div>
+                    <div class="tip-setting-desc">Price per song request ($0.50 - $100.00)</div>
+                </div>
+                <div class="tip-toggle-container">
+                    <input type="number" id="requestFeeAmount" min="0.50" max="100.00" step="0.50" value="1.00" 
+                           style="width: 80px; padding: 8px; border-radius: 6px; border: 1px solid #35353b; background: #29292d; color: #fff; text-align: center;">
+                </div>
+            </div>
+        </div>
+        
         <button id="deleteEventBtn" class="delete-btn">Delete Event</button>
     </div>
     <script>
@@ -372,8 +404,126 @@
             }
         });
 
+        // Load request fee settings
+        async function initializeRequestFeeSettings() {
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) return;
+            
+            try {
+                const response = await fetch(`LAMPAPI/UpdateRequestFeeSettings.php?partyId=${partyId}`);
+                const text = await response.text();
+                console.log('Request fee settings response:', text); // Debug log
+                
+                if (text.trim()) {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        document.getElementById('allowRequestFeesToggle').checked = data.allowRequestFees;
+                        document.getElementById('requestFeeAmount').value = data.requestFeeAmount || 1.00;
+                        
+                        // Show/hide fee amount input based on toggle
+                        const feeAmountRow = document.getElementById('requestFeeAmountRow');
+                        feeAmountRow.style.display = data.allowRequestFees ? 'flex' : 'none';
+                    } else {
+                        console.error('Error loading request fee settings:', data.error);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load request fee settings:', e);
+            }
+        }
+
+        // Handle request fee toggle change
+        document.getElementById('allowRequestFeesToggle').addEventListener('change', async function() {
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) return;
+            
+            const allowRequestFees = this.checked;
+            const requestFeeAmount = parseFloat(document.getElementById('requestFeeAmount').value) || 1.00;
+            
+            // Show/hide fee amount input
+            const feeAmountRow = document.getElementById('requestFeeAmountRow');
+            feeAmountRow.style.display = allowRequestFees ? 'flex' : 'none';
+            
+            try {
+                const response = await fetch('LAMPAPI/UpdateRequestFeeSettings.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        partyId: partyId,
+                        allowRequestFees: allowRequestFees,
+                        requestFeeAmount: requestFeeAmount
+                    })
+                });
+                
+                const text = await response.text();
+                console.log('Update request fee response:', text); // Debug log
+                
+                if (text.trim()) {
+                    const data = JSON.parse(text);
+                    if (!data.success) {
+                        // Revert toggle if update failed
+                        this.checked = !allowRequestFees;
+                        feeAmountRow.style.display = !allowRequestFees ? 'flex' : 'none';
+                        alert('Failed to update request fee setting: ' + (data.error || 'Unknown error'));
+                    }
+                } else {
+                    // Empty response, revert toggle
+                    this.checked = !allowRequestFees;
+                    feeAmountRow.style.display = !allowRequestFees ? 'flex' : 'none';
+                    alert('Failed to update request fee setting: Empty response from server');
+                }
+            } catch (e) {
+                // Revert toggle if request failed
+                this.checked = !allowRequestFees;
+                feeAmountRow.style.display = !allowRequestFees ? 'flex' : 'none';
+                alert('Failed to update request fee setting: ' + e.message);
+            }
+        });
+
+        // Handle fee amount change
+        document.getElementById('requestFeeAmount').addEventListener('change', async function() {
+            if (!document.getElementById('allowRequestFeesToggle').checked) return; // Only save if enabled
+            
+            if (!partyId) partyId = await getPartyId();
+            if (!partyId) return;
+            
+            const requestFeeAmount = parseFloat(this.value);
+            
+            // Validate amount
+            if (requestFeeAmount < 0.50 || requestFeeAmount > 100.00) {
+                alert('Request fee must be between $0.50 and $100.00');
+                this.value = 1.00;
+                return;
+            }
+            
+            try {
+                const response = await fetch('LAMPAPI/UpdateRequestFeeSettings.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        partyId: partyId,
+                        allowRequestFees: true,
+                        requestFeeAmount: requestFeeAmount
+                    })
+                });
+                
+                const text = await response.text();
+                if (text.trim()) {
+                    const data = JSON.parse(text);
+                    if (!data.success) {
+                        alert('Failed to update request fee amount: ' + (data.error || 'Unknown error'));
+                        this.value = 1.00; // Reset to default
+                    }
+                }
+            } catch (e) {
+                alert('Failed to update request fee amount: ' + e.message);
+                this.value = 1.00; // Reset to default
+            }
+        });
+
         // Initialize when page loads
         window.addEventListener('load', initializeTipSettings);
+        window.addEventListener('load', initializeRequestFeeSettings);
 
         document.getElementById('deleteEventBtn').addEventListener('click', async function() {
             if (!userId || !title) {

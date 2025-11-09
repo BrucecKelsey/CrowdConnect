@@ -9,7 +9,7 @@ if ($conn->connect_error)
     echo json_encode($retValue);
     exit();
 }
-$stmt = $conn->prepare("SELECT PartyId, PartyName FROM Parties WHERE DJId=?");
+$stmt = $conn->prepare("SELECT PartyId, PartyName, AllowTips, AllowRequestFees, RequestFeeAmount FROM Parties WHERE DJId=?");
 $stmt->bind_param("i", $djId);
 $stmt->execute();
 $result = $stmt->get_result();
