@@ -592,7 +592,7 @@
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             const tipDisplay = req.TipAmount && parseFloat(req.TipAmount) > 0 ? `$${parseFloat(req.TipAmount).toFixed(2)}` : '';
-                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '';
+                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '-';
                             tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#22c55e;font-weight:700;'>${totalDisplay}</td>`;
                             table.appendChild(tr);
                             requestCount++;
@@ -607,7 +607,7 @@
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             const tipDisplay = req.TipAmount && parseFloat(req.TipAmount) > 0 ? `$${parseFloat(req.TipAmount).toFixed(2)}` : '';
-                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '';
+                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '-';
                             tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#22c55e;font-weight:700;'>${totalDisplay}</td>`;
                             table.insertBefore(tr, table.rows[1]);
                             requestCount++;

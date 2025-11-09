@@ -32,26 +32,42 @@ if ($sinceId > 0) {
 $stmt->execute();
 $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
-    // Calculate the total amount the DJ receives (as requested: price + tip - fees)
+    // Calculate the total amount the DJ receives (only if there was actually a payment)
     $tipAmount = (float)$row['TipAmount'];
-    $grossAmount = $requestFeeAmount + $tipAmount;
-    
-    // Calculate what the DJ receives from the total payment
     $djTotal = 0;
-    if ($grossAmount > 0) {
-        // Calculate fees on the total amount
-        $stripeFee = round(($grossAmount * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
-        $platformFee = round($grossAmount * 0.10, 2); // Platform fee: 10%
-        $djTotal = $grossAmount - $stripeFee - $platformFee;
+    
+    // Only calculate earnings if there was actually a tip payment
+    // Request fees without tips don't contribute to DJ earnings in this model
+    if ($tipAmount > 0) {
+        // If request fees are enabled, the total payment includes both fee + tip
+        // But DJ only gets portion after all fees are deducted
+        $grossPayment = $requestFeeAmount + $tipAmount;
+        
+        // Calculate fees on the total payment amount
+        $stripeFee = round(($grossPayment * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
+        $platformFee = round($grossPayment * 0.10, 2); // Platform fee: 10%
+        
+        // DJ gets the net amount after all fees
+        $djTotal = $grossPayment - $stripeFee - $platformFee;
         
         // Ensure DJ total is never negative
         $djTotal = max(0, $djTotal);
     }
     
+    // If there's only a request fee (no tip), DJ gets $0
+    // Request fees go entirely to the platform
+    
     // Add the calculated total to the row
     $row['DJTotal'] = $djTotal;
     $row['RequestFeeAmount'] = $requestFeeAmount;
-    $row['GrossAmount'] = $grossAmount;
+    
+    // Add debug info (can be removed later)
+    $row['DebugInfo'] = [
+        'TipAmount' => $tipAmount,
+        'RequestFee' => $requestFeeAmount,
+        'HasPayment' => $tipAmount > 0,
+        'CalculatedTotal' => $djTotal
+    ];
     
     $retValue["requests"][] = $row;
 }
