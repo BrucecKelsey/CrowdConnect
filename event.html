@@ -562,7 +562,7 @@
         function renderTableHeaderIfNeeded(box) {
             if (!box._table) {
                 let html = '<div style="width:100%;overflow-y:auto;"><table id="requestsTable" style="width:100%;border-collapse:collapse;margin-top:0.5rem;">';
-                html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th><th style="text-align:left;padding:0.5rem 0.7rem;">Tip</th></tr>';
+                html += '<tr style="color:#a78bfa;font-weight:600;"><th style="text-align:left;padding:0.5rem 0.7rem;">Song</th><th style="text-align:left;padding:0.5rem 0.7rem;">Artist</th><th style="text-align:left;padding:0.5rem 0.7rem;">Time</th><th style="text-align:left;padding:0.5rem 0.7rem;">Tip</th><th style="text-align:left;padding:0.5rem 0.7rem;">Total</th></tr>';
                 html += '</table></div>';
                 box.innerHTML = html;
                 box._table = document.getElementById('requestsTable');
@@ -592,7 +592,8 @@
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             const tipDisplay = req.TipAmount && parseFloat(req.TipAmount) > 0 ? `$${parseFloat(req.TipAmount).toFixed(2)}` : '';
-                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td>`;
+                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '';
+                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#22c55e;font-weight:700;'>${totalDisplay}</td>`;
                             table.appendChild(tr);
                             requestCount++;
                             if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
@@ -606,7 +607,8 @@
                             const tr = document.createElement('tr');
                             tr.setAttribute('data-requestid', req.RequestId);
                             const tipDisplay = req.TipAmount && parseFloat(req.TipAmount) > 0 ? `$${parseFloat(req.TipAmount).toFixed(2)}` : '';
-                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td>`;
+                            const totalDisplay = req.DJTotal && parseFloat(req.DJTotal) > 0 ? `$${parseFloat(req.DJTotal).toFixed(2)}` : '';
+                            tr.innerHTML = `<td style='padding:0.5rem 0.7rem;'>${req.SongName}</td><td style='padding:0.5rem 0.7rem;'>${req.RequestedBy}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#bdbdbd;'>${req.Timestamp ? req.Timestamp.replace('T',' ').slice(0,16) : ''}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#4ade80;font-weight:600;'>${tipDisplay}</td><td style='padding:0.5rem 0.7rem;font-size:0.97em;color:#22c55e;font-weight:700;'>${totalDisplay}</td>`;
                             table.insertBefore(tr, table.rows[1]);
                             requestCount++;
                             if (!lastRequestId || req.RequestId > lastRequestId) lastRequestId = req.RequestId;
