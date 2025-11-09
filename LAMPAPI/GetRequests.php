@@ -44,11 +44,10 @@ while ($row = $result->fetch_assoc()) {
         $grossPayment = $requestFeeAmount + $tipAmount;
         
         // Calculate fees on the total payment amount
-        $stripeFee = round(($grossPayment * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
-        $platformFee = round($grossPayment * 0.10, 2); // Platform fee: 10%
+        $processingFee = round(($grossPayment * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30 (charged to customer)
         
-        // DJ gets the net amount after all fees
-        $djTotal = $grossPayment - $stripeFee - $platformFee;
+        // DJ gets the net amount after processing fees (no separate platform fee)
+        $djTotal = $grossPayment - $processingFee;
         
         // Ensure DJ total is never negative
         $djTotal = max(0, $djTotal);
@@ -65,6 +64,8 @@ while ($row = $result->fetch_assoc()) {
     $row['DebugInfo'] = [
         'TipAmount' => $tipAmount,
         'RequestFee' => $requestFeeAmount,
+        'GrossPayment' => ($tipAmount > 0) ? $requestFeeAmount + $tipAmount : 0,
+        'ProcessingFee' => ($tipAmount > 0) ? round((($requestFeeAmount + $tipAmount) * 0.075) + 0.30, 2) : 0,
         'HasPayment' => $tipAmount > 0,
         'CalculatedTotal' => $djTotal
     ];

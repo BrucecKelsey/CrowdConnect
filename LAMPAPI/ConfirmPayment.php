@@ -57,9 +57,8 @@ try {
         
         if ($tip = $tipResult->fetch_assoc()) {
             $grossAmount = $tip['TipAmount'];
-            $stripeFeeAmount = round(($grossAmount * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30
-            $platformFeeAmount = round($grossAmount * 0.10, 2); // Platform fee: 10%
-            $netAmount = $grossAmount - $stripeFeeAmount - $platformFeeAmount;
+            $processingFeeAmount = round(($grossAmount * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30 (charged to customer)
+            $netAmount = $grossAmount - $processingFeeAmount;
             
             // Get the charge ID from Stripe payment intent
             $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
@@ -69,7 +68,7 @@ try {
                 INSERT INTO EarningsHistory (UserId, TipId, GrossAmount, StripeFeeAmount, NetAmount, StripeChargeId, Status) 
                 VALUES (?, ?, ?, ?, ?, ?, 'completed')
             ");
-            $earningsStmt->bind_param("iiddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $stripeFeeAmount, $netAmount, $chargeId);
+            $earningsStmt->bind_param("iiddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $processingFeeAmount, $netAmount, $chargeId);
             
             if ($earningsStmt->execute()) {
                 error_log("ConfirmPayment: Created earnings history record for TipId: " . $tip['TipId']);
@@ -83,7 +82,7 @@ try {
             $userUpdateStmt->bind_param("di", $netAmount, $tip['DJUserID']);
             
             if ($userUpdateStmt->execute()) {
-                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $netAmount . " net after fees - Gross: $" . $grossAmount . ", Stripe: $" . $stripeFeeAmount . ", Platform: $" . $platformFeeAmount . ")");
+                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $netAmount . " net after fees - Gross: $" . $grossAmount . ", Processing: $" . $processingFeeAmount . ")");
             } else {
                 error_log("ConfirmPayment: Failed to update TotalEarnings: " . $userUpdateStmt->error);
             }
