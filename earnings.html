@@ -891,14 +891,14 @@
             currentAvailableBalance = parseFloat(availableBalance.replace('$', ''));
             document.getElementById('modalAvailableBalance').textContent = availableBalance.replace('$', '');
             
-            // Enable/disable button based on balance
-            const payoutBtn = document.getElementById('requestPayoutBtn');
+            // Enable/disable submit button based on balance
+            const submitBtn = document.getElementById('submitPayoutBtn');
             if (currentAvailableBalance <= 0) {
-                payoutBtn.disabled = true;
-                payoutBtn.textContent = 'No Balance Available';
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'No Balance Available';
             } else {
-                payoutBtn.disabled = false;
-                payoutBtn.textContent = 'Request Payout';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Request Payout';
             }
             
             document.getElementById('payoutModal').style.display = 'block';
@@ -1045,8 +1045,14 @@
                 
                 if (data.error) {
                     alert('Error: ' + data.error);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
                     return;
                 }
+                
+                // Reset button before closing modal
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
                 
                 alert('Payout request submitted successfully! You will be contacted within 24-48 hours to process your payout.');
                 closePayoutModal();
@@ -1057,9 +1063,11 @@
             } catch (error) {
                 console.error('Error submitting payout request:', error);
                 alert('Error submitting payout request. Please try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                // Reset button on error
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
             }
         }
         
