@@ -779,10 +779,13 @@
             displayTransactions(data.recent_transactions || []);
             
             // Update payout button
-            const payoutButton = document.getElementById('payoutButton');
-            if ((data.available_balance || 0) < 5) {
+            const payoutButton = document.getElementById('requestPayoutBtn');
+            if (payoutButton && (data.available_balance || 0) < 5) {
                 payoutButton.disabled = true;
                 payoutButton.textContent = 'Minimum $5.00 for payout';
+            } else if (payoutButton) {
+                payoutButton.disabled = false;
+                payoutButton.textContent = '💰 Request Payout';
             }
         }
         
