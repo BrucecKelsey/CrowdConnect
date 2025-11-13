@@ -230,13 +230,7 @@
                 <div class="earnings-card">
                     <div class="card-title">💳 Available Balance</div>
                     <div class="card-value" id="availableBalance">$0.00</div>
-                    <div class="card-subtitle">Ready for payout</div>
-                </div>
-                
-                <div class="earnings-card">
-                    <div class="card-title">📊 Total Earnings</div>
-                    <div class="card-value" id="totalEarnings">$0.00</div>
-                    <div class="card-subtitle">All time</div>
+                    <div class="card-subtitle">Net earnings after 7.5% + $0.30 processing fee</div>
                 </div>
                 
                 <div class="earnings-card">
@@ -461,7 +455,6 @@
             console.log('=== DISPLAYING EARNINGS DATA ===');
             console.log('Full data object:', data);
             console.log('Available balance:', data.available_balance);
-            console.log('Total earnings:', data.total_earnings);
             console.log('Total tips:', data.total_tips);
             console.log('=== END DISPLAY DEBUG ===');
             
@@ -471,14 +464,11 @@
             
             // Update main cards with extra debugging
             const availableBalance = (data.available_balance || 0).toFixed(2);
-            const totalEarnings = (data.total_earnings || 0).toFixed(2);
             const lastPayoutAmount = (data.last_payout_amount || 0).toFixed(2);
             
             console.log('Setting availableBalance to:', availableBalance);
-            console.log('Setting totalEarnings to:', totalEarnings);
             
             document.getElementById('availableBalance').textContent = `$${availableBalance}`;
-            document.getElementById('totalEarnings').textContent = `$${totalEarnings}`;
             document.getElementById('lastPayoutAmount').textContent = `$${lastPayoutAmount}`;
             
             if (data.last_payout_date) {
@@ -596,7 +586,6 @@
             // Test the display with sample data structure
             const testData = {
                 "user_name": "Sample User",
-                "total_earnings": 15.50,
                 "available_balance": 15.50,
                 "total_tips": 5,
                 "last_payout_amount": 0,

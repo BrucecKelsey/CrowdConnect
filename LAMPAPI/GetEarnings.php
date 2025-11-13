@@ -120,7 +120,6 @@ try {
     
     // Use AvailableFunds from Users table for accurate balance
     $availableBalance = (float)$user['AvailableFunds'];
-    $totalEarnings = (float)$earnings['total_earnings']; // Keep for historical calculations
     
     // Period earnings from our calculated data
     $periodEarnings = [
@@ -142,7 +141,6 @@ try {
     
     returnWithInfo([
         'user_name' => $user['FirstName'] . ' ' . $user['LastName'],
-        'total_earnings' => $totalEarnings,
         'available_balance' => $availableBalance,
         'last_payout_amount' => 0, // No payout system implemented yet
         'last_payout_date' => null,
