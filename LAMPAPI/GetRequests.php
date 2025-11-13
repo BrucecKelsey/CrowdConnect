@@ -37,17 +37,13 @@ while ($row = $result->fetch_assoc()) {
     $djTotal = 0;
     
     // Only calculate earnings if there was actually a tip payment
-    // Request fees without tips don't contribute to DJ earnings in this model
+    // DJ only gets the tip portion minus fees (request fees go to platform)
     if ($tipAmount > 0) {
-        // If request fees are enabled, the total payment includes both fee + tip
-        // But DJ only gets portion after all fees are deducted
-        $grossPayment = $requestFeeAmount + $tipAmount;
+        // Calculate fees only on the tip amount (not the request fee)
+        $processingFee = round(($tipAmount * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30
         
-        // Calculate fees on the total payment amount
-        $processingFee = round(($grossPayment * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30 (charged to customer)
-        
-        // DJ gets the net amount after processing fees (no separate platform fee)
-        $djTotal = $grossPayment - $processingFee;
+        // DJ gets only the tip amount minus processing fees
+        $djTotal = $tipAmount - $processingFee;
         
         // Ensure DJ total is never negative
         $djTotal = max(0, $djTotal);

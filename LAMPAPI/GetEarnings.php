@@ -38,8 +38,8 @@ try {
         returnWithError('Database connection failed: ' . $conn->connect_error);
         exit;
     }
-    // Check if user exists
-    $stmt = $conn->prepare("SELECT FirstName, LastName FROM Users WHERE ID = ?");
+    // Check if user exists and get available funds
+    $stmt = $conn->prepare("SELECT FirstName, LastName, AvailableFunds FROM Users WHERE ID = ?");
     $stmt->bind_param("i", $userId);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -118,9 +118,9 @@ try {
     }
     $stmt->close();
     
-    // Use the calculated earnings data
-    $totalEarnings = (float)$earnings['total_earnings'];
-    $availableBalance = $totalEarnings; // For now, assume no payouts have been made
+    // Use AvailableFunds from Users table for accurate balance
+    $availableBalance = (float)$user['AvailableFunds'];
+    $totalEarnings = (float)$earnings['total_earnings']; // Keep for historical calculations
     
     // Period earnings from our calculated data
     $periodEarnings = [

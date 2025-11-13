@@ -77,14 +77,14 @@ try {
             }
             $earningsStmt->close();
             
-            // Update Users.TotalEarnings (net amount after all fees)
-            $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ? WHERE ID = ?");
-            $userUpdateStmt->bind_param("di", $netAmount, $tip['DJUserID']);
+            // Update Users.TotalEarnings (gross tip amount) and AvailableFunds (net amount after fees)
+            $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ?, AvailableFunds = AvailableFunds + ? WHERE ID = ?");
+            $userUpdateStmt->bind_param("ddi", $grossAmount, $netAmount, $tip['DJUserID']);
             
             if ($userUpdateStmt->execute()) {
-                error_log("ConfirmPayment: Updated TotalEarnings for User ID: " . $tip['DJUserID'] . " (+$" . $netAmount . " net after fees - Gross: $" . $grossAmount . ", Processing: $" . $processingFeeAmount . ")");
+                error_log("ConfirmPayment: Updated TotalEarnings (+$" . $grossAmount . " gross) and AvailableFunds (+$" . $netAmount . " net) for User ID: " . $tip['DJUserID'] . " - Processing fee: $" . $processingFeeAmount . "");
             } else {
-                error_log("ConfirmPayment: Failed to update TotalEarnings: " . $userUpdateStmt->error);
+                error_log("ConfirmPayment: Failed to update user earnings: " . $userUpdateStmt->error);
             }
             $userUpdateStmt->close();
         }
