@@ -173,15 +173,15 @@
         .form-group input, .form-group select {
             width: 100%;
             padding: 0.8rem 1rem;
-            padding-left: 2.5rem;
             background: #333;
             border: 1px solid #555;
             border-radius: 8px;
             color: #fff;
             font-size: 1rem;
+            box-sizing: border-box;
         }
-        .form-group select {
-            padding-left: 1rem;
+        .form-group input[type="number"] {
+            padding-left: 2.5rem;
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
@@ -405,7 +405,7 @@
                 <div class="earnings-card">
                     <div class="card-title">💳 Available Balance</div>
                     <div class="card-value" id="availableBalance">$0.00</div>
-                    <div class="card-subtitle">Net earnings after 7.5% + $0.30 processing fee</div>
+                    <div class="card-subtitle">Available for payout (7.5% + $0.30 deducted from tips)</div>
                     <button class="payout-button" id="requestPayoutBtn" onclick="openPayoutModal()">
                         💰 Request Payout
                     </button>
@@ -506,17 +506,9 @@
                     
                     <div class="form-group">
                         <div class="payout-summary">
-                            <div class="summary-row">
-                                <span>Requested Amount:</span>
-                                <span id="summaryAmount">$0.00</span>
-                            </div>
-                            <div class="summary-row">
-                                <span>Processing Fee:</span>
-                                <span id="summaryFee">$0.00</span>
-                            </div>
                             <div class="summary-row total">
-                                <span>You'll Receive:</span>
-                                <span id="summaryNet">$0.00</span>
+                                <span>Amount to Receive:</span>
+                                <span id="summaryAmount">$0.00</span>
                             </div>
                         </div>
                     </div>
@@ -935,14 +927,7 @@
         
         function updatePayoutSummary() {
             const amount = parseFloat(document.getElementById('payoutAmount').value) || 0;
-            
-            // Calculate processing fee (example: $2 flat fee + 2% of amount)
-            const processingFee = Math.max(2.00, amount * 0.02);
-            const netAmount = Math.max(0, amount - processingFee);
-            
             document.getElementById('summaryAmount').textContent = `$${amount.toFixed(2)}`;
-            document.getElementById('summaryFee').textContent = `$${processingFee.toFixed(2)}`;
-            document.getElementById('summaryNet').textContent = `$${netAmount.toFixed(2)}`;
         }
         
         // Event listeners for the modal

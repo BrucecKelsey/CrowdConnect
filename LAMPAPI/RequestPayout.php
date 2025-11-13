@@ -84,13 +84,9 @@ try {
             throw new Exception('Insufficient available balance. Available: $' . number_format($availableBalance, 2));
         }
         
-        // Calculate processing fees (example: $2 flat fee + 2% of amount)
-        $processingFee = max(2.00, $amount * 0.02);
-        $netAmount = $amount - $processingFee;
-        
-        if ($netAmount <= 0) {
-            throw new Exception('Amount too small after processing fees');
-        }
+        // No processing fees - full amount goes to user
+        $processingFee = 0.00;
+        $netAmount = $amount;
         
         // Prepare payment details JSON (sanitize sensitive info)
         $paymentDetailsData = [
