@@ -78,6 +78,181 @@
             font-size: 0.9rem;
             color: #999;
         }
+        .payout-button {
+            width: 100%;
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, #007FFF, #00FF7F);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .payout-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 127, 255, 0.4);
+        }
+        .payout-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #2a2a2a;
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid #444;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #444;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+        .close {
+            color: #ccc;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: #007FFF;
+        }
+        .modal-body {
+            padding: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #fff;
+            font-weight: 600;
+        }
+        .amount-input {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .currency {
+            position: absolute;
+            left: 1rem;
+            color: #ccc;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            padding-left: 2.5rem;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        .form-group select {
+            padding-left: 1rem;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007FFF;
+            box-shadow: 0 0 0 2px rgba(0, 127, 255, 0.2);
+        }
+        .available-balance-info {
+            margin-top: 0.5rem;
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+        .payment-help {
+            margin-top: 0.5rem;
+            color: #999;
+            font-size: 0.85rem;
+        }
+        .payout-summary {
+            background: #333;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            color: #ccc;
+        }
+        .summary-row.total {
+            border-top: 1px solid #555;
+            padding-top: 0.5rem;
+            font-weight: 600;
+            color: #00FF7F;
+            font-size: 1.1rem;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+        .btn-cancel, .btn-submit {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-cancel {
+            background: #666;
+            color: #fff;
+        }
+        .btn-cancel:hover {
+            background: #777;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #007FFF, #00FF7F);
+            color: #fff;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 127, 255, 0.4);
+        }
+        .btn-submit:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .period-earnings {
             background: #2a2a2a;
             border-radius: 15px;
@@ -231,6 +406,9 @@
                     <div class="card-title">💳 Available Balance</div>
                     <div class="card-value" id="availableBalance">$0.00</div>
                     <div class="card-subtitle">Net earnings after 7.5% + $0.30 processing fee</div>
+                    <button class="payout-button" id="requestPayoutBtn" onclick="openPayoutModal()">
+                        💰 Request Payout
+                    </button>
                 </div>
                 
                 <div class="earnings-card">
@@ -273,15 +451,81 @@
                 </div>
             </div>
             
-            <!-- Payout Section -->
-            <div class="payout-section">
-                <div class="period-title">💰 Request Payout</div>
-                <p style="color: #ccc; margin-bottom: 1.5rem;">
-                    Payouts are processed manually. Contact support to request a payout of your available balance.
-                </p>
-                <button class="payout-button" id="payoutButton" onclick="requestPayout()">
-                    Request Payout
-                </button>
+            <!-- Payout Requests -->
+            <div class="transactions-section">
+                <div class="transactions-title">💰 Payout Requests</div>
+                <div id="payoutRequestsList">
+                    <!-- Payout requests will be loaded here -->
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Payout Request Modal -->
+    <div id="payoutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💰 Request Payout</h2>
+                <span class="close" onclick="closePayoutModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="payoutForm">
+                    <div class="form-group">
+                        <label for="payoutAmount">Amount to Request:</label>
+                        <div class="amount-input">
+                            <span class="currency">$</span>
+                            <input type="number" id="payoutAmount" name="amount" min="0.01" step="0.01" placeholder="0.00" required>
+                        </div>
+                        <div class="available-balance-info">
+                            Available: $<span id="modalAvailableBalance">0.00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="paymentMethod">Payment Method:</label>
+                        <select id="paymentMethod" name="paymentMethod" required>
+                            <option value="">Select Payment Method</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="cashapp">Cash App</option>
+                            <option value="venmo">Venmo</option>
+                            <option value="zelle">Zelle</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                            <option value="apple_pay">Apple Pay</option>
+                            <option value="google_pay">Google Pay</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" id="paymentDetailsGroup">
+                        <label for="paymentDetails" id="paymentDetailsLabel">Payment Details:</label>
+                        <input type="text" id="paymentDetails" name="paymentDetails" placeholder="Enter your payment details" required>
+                        <div class="payment-help" id="paymentHelp">
+                            <!-- Dynamic help text based on selected method -->
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="payout-summary">
+                            <div class="summary-row">
+                                <span>Requested Amount:</span>
+                                <span id="summaryAmount">$0.00</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Processing Fee:</span>
+                                <span id="summaryFee">$0.00</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>You'll Receive:</span>
+                                <span id="summaryNet">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-cancel" onclick="closePayoutModal()">Cancel</button>
+                        <button type="submit" class="btn-submit" id="submitPayoutBtn">Request Payout</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -438,6 +682,9 @@
                 console.log('🎉 About to display earnings data:', data);
                 displayEarnings(data);
                 
+                // Load payout requests
+                loadPayoutRequests();
+                
             } catch (error) {
                 console.error('Error loading earnings:', error);
                 document.getElementById('loadingState').style.display = 'none';
@@ -528,9 +775,265 @@
             `).join('');
         }
         
-        function requestPayout() {
-            alert('Payout requested! You will be contacted within 24-48 hours to process your payout.');
-            // In a real implementation, this would send a request to the server
+        // Payout Requests Functions
+        async function loadPayoutRequests() {
+            try {
+                console.log('Loading payout requests for user:', currentUserId);
+                
+                const response = await fetch(`LAMPAPI/GetPayoutRequests.php?userId=${currentUserId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error loading payout requests:', data.error);
+                    return;
+                }
+                
+                displayPayoutRequests(data.payout_requests || []);
+                
+            } catch (error) {
+                console.error('Error loading payout requests:', error);
+                const payoutRequestsList = document.getElementById('payoutRequestsList');
+                payoutRequestsList.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">Failed to load payout requests</div>';
+            }
+        }
+        
+        function displayPayoutRequests(payoutRequests) {
+            const payoutRequestsList = document.getElementById('payoutRequestsList');
+            
+            if (!payoutRequests || payoutRequests.length === 0) {
+                payoutRequestsList.innerHTML = '<div style="text-align: center; color: #999; padding: 2rem;">No payout requests yet</div>';
+                return;
+            }
+            
+            payoutRequestsList.innerHTML = payoutRequests.map(request => {
+                const statusColors = {
+                    pending: '#FFA500',
+                    processing: '#007FFF', 
+                    completed: '#00FF7F',
+                    failed: '#FF6B6B',
+                    cancelled: '#999'
+                };
+                
+                const statusColor = statusColors[request.status] || '#999';
+                const requestDate = new Date(request.requested_at).toLocaleDateString();
+                const completedDate = request.completed_at ? new Date(request.completed_at).toLocaleDateString() : null;
+                
+                return `
+                    <div class="transaction-item">
+                        <div class="transaction-info">
+                            <div class="transaction-song">
+                                ${request.payment_method.charAt(0).toUpperCase() + request.payment_method.slice(1).replace('_', ' ')} Payout
+                            </div>
+                            <div class="transaction-details">
+                                ${request.payment_details_masked} • ${requestDate}
+                                ${completedDate ? ` • Completed ${completedDate}` : ''}
+                                ${request.failure_reason ? ` • ${request.failure_reason}` : ''}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="transaction-amount">
+                                $${request.amount.toFixed(2)}
+                            </div>
+                            <div style="font-size: 0.8rem; color: ${statusColor}; font-weight: 600; margin-top: 0.2rem;">
+                                ${request.status.toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Payout Modal Functions
+        let currentAvailableBalance = 0;
+        
+        function openPayoutModal() {
+            // Update available balance in modal
+            const availableBalance = document.getElementById('availableBalance').textContent;
+            currentAvailableBalance = parseFloat(availableBalance.replace('$', ''));
+            document.getElementById('modalAvailableBalance').textContent = availableBalance.replace('$', '');
+            
+            // Enable/disable button based on balance
+            const payoutBtn = document.getElementById('requestPayoutBtn');
+            if (currentAvailableBalance <= 0) {
+                payoutBtn.disabled = true;
+                payoutBtn.textContent = 'No Balance Available';
+            } else {
+                payoutBtn.disabled = false;
+                payoutBtn.textContent = 'Request Payout';
+            }
+            
+            document.getElementById('payoutModal').style.display = 'block';
+        }
+        
+        function closePayoutModal() {
+            document.getElementById('payoutModal').style.display = 'none';
+            document.getElementById('payoutForm').reset();
+            updatePaymentHelp();
+            updatePayoutSummary();
+        }
+        
+        function updatePaymentHelp() {
+            const method = document.getElementById('paymentMethod').value;
+            const helpElement = document.getElementById('paymentHelp');
+            const labelElement = document.getElementById('paymentDetailsLabel');
+            const inputElement = document.getElementById('paymentDetails');
+            
+            const helpTexts = {
+                paypal: { 
+                    label: 'PayPal Email:', 
+                    placeholder: 'your.email@example.com',
+                    help: 'Enter the email address associated with your PayPal account'
+                },
+                cashapp: { 
+                    label: 'Cash App Username:', 
+                    placeholder: '$YourUsername',
+                    help: 'Enter your Cash App username (including the $ symbol)'
+                },
+                venmo: { 
+                    label: 'Venmo Username:', 
+                    placeholder: '@YourUsername',
+                    help: 'Enter your Venmo username (including the @ symbol)'
+                },
+                zelle: { 
+                    label: 'Zelle Email/Phone:', 
+                    placeholder: 'email@example.com or (555) 123-4567',
+                    help: 'Enter the email or phone number linked to your Zelle account'
+                },
+                bank_transfer: { 
+                    label: 'Account Info:', 
+                    placeholder: 'Account and routing numbers',
+                    help: 'Enter your bank account and routing numbers (will be encrypted)'
+                },
+                apple_pay: { 
+                    label: 'Apple Pay Email:', 
+                    placeholder: 'your.email@icloud.com',
+                    help: 'Enter the email address associated with your Apple Pay account'
+                },
+                google_pay: { 
+                    label: 'Google Pay Email:', 
+                    placeholder: 'your.email@gmail.com',
+                    help: 'Enter the email address associated with your Google Pay account'
+                }
+            };
+            
+            if (method && helpTexts[method]) {
+                const config = helpTexts[method];
+                labelElement.textContent = config.label;
+                inputElement.placeholder = config.placeholder;
+                helpElement.textContent = config.help;
+            } else {
+                labelElement.textContent = 'Payment Details:';
+                inputElement.placeholder = 'Enter your payment details';
+                helpElement.textContent = '';
+            }
+        }
+        
+        function updatePayoutSummary() {
+            const amount = parseFloat(document.getElementById('payoutAmount').value) || 0;
+            
+            // Calculate processing fee (example: $2 flat fee + 2% of amount)
+            const processingFee = Math.max(2.00, amount * 0.02);
+            const netAmount = Math.max(0, amount - processingFee);
+            
+            document.getElementById('summaryAmount').textContent = `$${amount.toFixed(2)}`;
+            document.getElementById('summaryFee').textContent = `$${processingFee.toFixed(2)}`;
+            document.getElementById('summaryNet').textContent = `$${netAmount.toFixed(2)}`;
+        }
+        
+        // Event listeners for the modal
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update payment help when method changes
+            document.getElementById('paymentMethod').addEventListener('change', updatePaymentHelp);
+            
+            // Update summary when amount changes
+            document.getElementById('payoutAmount').addEventListener('input', function() {
+                const amount = parseFloat(this.value) || 0;
+                const maxAmount = currentAvailableBalance;
+                
+                if (amount > maxAmount) {
+                    this.value = maxAmount.toFixed(2);
+                }
+                
+                updatePayoutSummary();
+            });
+            
+            // Handle form submission
+            document.getElementById('payoutForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const amount = parseFloat(document.getElementById('payoutAmount').value);
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const paymentDetails = document.getElementById('paymentDetails').value;
+                
+                if (amount <= 0 || amount > currentAvailableBalance) {
+                    alert('Please enter a valid amount within your available balance.');
+                    return;
+                }
+                
+                if (!paymentMethod || !paymentDetails) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                // Submit payout request
+                await submitPayoutRequest(amount, paymentMethod, paymentDetails);
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                const modal = document.getElementById('payoutModal');
+                if (e.target === modal) {
+                    closePayoutModal();
+                }
+            });
+        });
+        
+        async function submitPayoutRequest(amount, paymentMethod, paymentDetails) {
+            const submitBtn = document.getElementById('submitPayoutBtn');
+            const originalText = submitBtn.textContent;
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                
+                const response = await fetch('LAMPAPI/RequestPayout.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        amount: amount,
+                        paymentMethod: paymentMethod,
+                        paymentDetails: paymentDetails
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    alert('Error: ' + data.error);
+                    return;
+                }
+                
+                alert('Payout request submitted successfully! You will be contacted within 24-48 hours to process your payout.');
+                closePayoutModal();
+                
+                // Reload earnings to show updated balance
+                loadEarnings();
+                
+            } catch (error) {
+                console.error('Error submitting payout request:', error);
+                alert('Error submitting payout request. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
         
         function toggleDebugPanel() {
