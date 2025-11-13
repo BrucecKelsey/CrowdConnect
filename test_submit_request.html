@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Request Submission</title>
+</head>
+<body>
+    <h2>Test Request Submission</h2>
+    
+    <div>
+        <label>Party ID: <input type="number" id="partyId" value="1"></label><br><br>
+        <label>Song Name: <input type="text" id="songName" value="Test Song"></label><br><br>
+        <label>Requested By: <input type="text" id="requestedBy" value="Test User"></label><br><br>
+        <button onclick="testSubmit()">Submit Test Request</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; background: #f0f0f0;"></div>
+
+    <script>
+        async function testSubmit() {
+            const partyId = document.getElementById('partyId').value;
+            const songName = document.getElementById('songName').value;
+            const requestedBy = document.getElementById('requestedBy').value;
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = 'Submitting request...';
+                
+                const response = await fetch('LAMPAPI/SubmitRequest.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        partyId: parseInt(partyId),
+                        songName: songName,
+                        requestedBy: requestedBy
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: green;">Success!</h3>
+                        <p><strong>Request ID:</strong> ${data.requestId}</p>
+                        <p><strong>DJ ID:</strong> ${data.djId || 'Not provided'}</p>
+                        <p><strong>DJ Name:</strong> ${data.djName || 'Not provided'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 style="color: red;">Error!</h3>
+                        <p>${data.error}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `
+                    <h3 style="color: red;">Request Failed!</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

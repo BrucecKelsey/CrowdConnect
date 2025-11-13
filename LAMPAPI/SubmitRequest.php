@@ -43,9 +43,18 @@ else
         returnWithError("Song requests are currently disabled for this event.");
         exit();
     }
-    // Insert request (using original column names for compatibility)
-    $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp) VALUES (?, ?, ?, NOW())");
-    $stmt->bind_param("iss", $partyId, $songName, $requestedBy);
+    // Get DJ ID from Parties table for the enhanced Requests table
+    $djUserID = null;
+    $djStmt = $conn->prepare("SELECT DJId FROM Parties WHERE PartyId = ?");
+    $djStmt->bind_param("i", $partyId);
+    $djStmt->execute();
+    $djStmt->bind_result($djUserID);
+    $djStmt->fetch();
+    $djStmt->close();
+    
+    // Insert request with enhanced columns for consolidated payment system
+    $stmt = $conn->prepare("INSERT INTO Requests (PartyId, SongName, RequestedBy, Timestamp, DJUserID, PriceOfRequest, TipAmount, TotalCharged, ProcessingFee, TotalCollected, PlatformRevenue, PaymentStatus) VALUES (?, ?, ?, NOW(), ?, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 'pending')");
+    $stmt->bind_param("issi", $partyId, $songName, $requestedBy, $djUserID);
     if ($stmt->execute())
     {
         $requestId = $stmt->insert_id;
@@ -61,18 +70,22 @@ else
             $tipStmt->close();
         }
         
-        // Try to get DJ information for tipping (safely handle missing columns/tables)
+        // Get DJ information using the DJUserID we already have
         $djInfo = null;
-        try {
-            $stmt = $conn->prepare("SELECT u.ID, u.FirstName, u.LastName FROM Users u JOIN Parties p ON u.ID = p.UserId WHERE p.PartyId = ?");
-            $stmt->bind_param("i", $partyId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $djInfo = $result->fetch_assoc();
-            $stmt->close();
-        } catch (Exception $e) {
-            // Silently handle missing columns or other database issues
+        if ($djUserID) {
+            try {
+                $stmt = $conn->prepare("SELECT ID, FirstName, LastName FROM Users WHERE ID = ?");
+                $stmt->bind_param("i", $djUserID);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $djInfo = $result->fetch_assoc();
+                $stmt->close();
+            } catch (Exception $e) {
+                error_log("SubmitRequest: Error getting DJ info: " . $e->getMessage());
+            }
         }
+        
+        error_log("SubmitRequest: Successfully inserted request ID " . $requestId . " for PartyId " . $partyId . " with DJUserID " . $djUserID);
         
         if ($djInfo) {
             $retValue = array(
@@ -95,7 +108,8 @@ else
     }
     else
     {
-        returnWithError($stmt->error);
+        error_log("SubmitRequest: Database error - " . $stmt->error);
+        returnWithError("Failed to submit request: " . $stmt->error);
     }
     $stmt->close();
     $conn->close();
