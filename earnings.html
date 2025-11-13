@@ -157,6 +157,7 @@
             margin-bottom: 0.5rem;
             color: #fff;
             font-weight: 600;
+            text-align: left;
         }
         .amount-input {
             position: relative;
@@ -179,9 +180,23 @@
             color: #fff;
             font-size: 1rem;
             box-sizing: border-box;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
         }
         .form-group input[type="number"] {
             padding-left: 2.5rem;
+        }
+        .form-group select {
+            background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><path fill="%23ccc" d="M2 0L0 2h4zm0 5L0 3h4z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 12px;
+            padding-right: 3rem;
+            height: auto;
+            min-height: 48px;
+            line-height: 1.5;
+            vertical-align: top;
         }
         .form-group input:focus, .form-group select:focus {
             outline: none;
