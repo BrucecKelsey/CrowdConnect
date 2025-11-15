@@ -150,11 +150,19 @@
             color: var(--text-primary);
             font-size: 1rem;
             margin-bottom: 1rem;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .email-input:focus {
             outline: none;
             border-color: var(--primary);
+            background: #333;
+        }
+
+        .email-input::placeholder {
+            color: var(--text-secondary);
+            opacity: 0.7;
         }
     </style>
 </head>

@@ -129,7 +129,7 @@ try {
         if ($stmt->execute()) {
             $userId = $conn->insert_id;
             error_log("Register.php - User created successfully with ID: " . $userId);
-            returnWithInfo($firstName, $lastName, $userId, "Registration successful! Email verification will be implemented soon.");
+            returnWithInfo($firstName, $lastName, $userId, "Registration successful! You can now log in to your account.");
         } else {
             error_log("Register.php - Database insert error: " . $stmt->error);
             returnWithError("Registration failed: " . $stmt->error);

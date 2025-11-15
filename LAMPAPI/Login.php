@@ -45,21 +45,21 @@
 			}
 			
 			if ($passwordMatches) {
-				// Check if email is verified (only if email column exists)
-				if (isset($row['IsEmailVerified']) && !$row['IsEmailVerified']) {
-					returnWithError("Please verify your email address before logging in. Check your email for a verification link.");
-				} else {
-					$response = array(
-						"id" => $row['ID'],
-						"firstName" => $row['firstName'],
-						"lastName" => $row['lastName'],
-						"login" => $row['Login'],
-						"email" => isset($row['Email']) ? $row['Email'] : "",
-						"emailVerified" => isset($row['IsEmailVerified']) ? $row['IsEmailVerified'] : true,
-						"token" => bin2hex(random_bytes(16))
-					);
-					sendResultInfoAsJson(json_encode($response));
-				}
+				// Skip email verification for now (will be implemented later)
+				// if (isset($row['IsEmailVerified']) && !$row['IsEmailVerified']) {
+				//     returnWithError("Please verify your email address before logging in. Check your email for a verification link.");
+				// } else {
+				$response = array(
+					"id" => $row['ID'],
+					"firstName" => $row['firstName'],
+					"lastName" => $row['lastName'],
+					"login" => $row['Login'],
+					"email" => isset($row['Email']) ? $row['Email'] : "",
+					"emailVerified" => isset($row['IsEmailVerified']) ? $row['IsEmailVerified'] : true,
+					"token" => bin2hex(random_bytes(16))
+				);
+				sendResultInfoAsJson(json_encode($response));
+				// }
 			} else {
 				returnWithError("Invalid username or password");
 			}
