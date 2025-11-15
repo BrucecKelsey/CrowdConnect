@@ -193,7 +193,7 @@ try {
     
     $conn->close();
     
-) catch (Exception $e) {
+} catch (Exception $e) {
     error_log("ConfirmPayment.php ERROR: " . $e->getMessage());
     error_log("ConfirmPayment.php Stack trace: " . $e->getTraceAsString());
     if (isset($conn)) {

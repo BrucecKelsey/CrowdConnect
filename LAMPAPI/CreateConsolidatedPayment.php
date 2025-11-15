@@ -152,6 +152,17 @@ try {
         WHERE RequestId = ?
     ");
     
+    // Debug the values being bound
+    error_log("CreateConsolidatedPayment - Binding values:");
+    error_log("RequestFee: $requestFee (" . gettype($requestFee) . ")");
+    error_log("TipAmount: $tipAmount (" . gettype($tipAmount) . ")");
+    error_log("TotalCharged: $totalCharged (" . gettype($totalCharged) . ")");
+    error_log("TotalProcessingFee: $totalProcessingFee (" . gettype($totalProcessingFee) . ")");
+    error_log("DjNetEarnings: $djNetEarnings (" . gettype($djNetEarnings) . ")");
+    error_log("PlatformRevenue: $platformRevenue (" . gettype($platformRevenue) . ")");
+    error_log("PaymentIntentId: " . $paymentIntent['id'] . " (" . gettype($paymentIntent['id']) . ")");
+    error_log("RequestId: $requestId (" . gettype($requestId) . ")");
+    
     $updateStmt->bind_param("ddddddsi", 
         $requestFee, 
         $tipAmount, 
@@ -164,7 +175,10 @@ try {
     );
     
     if (!$updateStmt->execute()) {
+        error_log("CreateConsolidatedPayment - UPDATE failed: " . $updateStmt->error);
         throw new Exception("Failed to update request with payment info: " . $updateStmt->error);
+    } else {
+        error_log("CreateConsolidatedPayment - UPDATE successful for RequestId: $requestId");
     }
     
     $conn->close();
@@ -185,12 +199,13 @@ try {
         ]
     ]);
     
-} catch (Exception $e) {
+) catch (Exception $e) {
     if (isset($conn)) {
         $conn->close();
     }
     http_response_code(400);
     error_log("CreateConsolidatedPayment error: " . $e->getMessage());
+    error_log("CreateConsolidatedPayment stack trace: " . $e->getTraceAsString());
     echo json_encode(['error' => $e->getMessage()]);
 }
 ?>
