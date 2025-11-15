@@ -57,7 +57,7 @@ try {
         
         if ($tip = $tipResult->fetch_assoc()) {
             $grossAmount = $tip['TipAmount'];
-            $processingFeeAmount = round(($grossAmount * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30 (charged to customer)
+            $processingFeeAmount = round(($grossAmount * 0.029) + 0.30, 2); // Stripe fee: 2.9% + $0.30 (charged to customer)
             $netAmount = $grossAmount - $processingFeeAmount;
             
             // Get the charge ID from Stripe payment intent

@@ -41,16 +41,18 @@ try {
             exit;
         }
         
-        // Calculate total earnings from EarningsHistory table (more accurate with fees)
+        // Calculate earnings from EarningsHistory table using official fee structure
+        // NetAmount = Platform Revenue (5%), DJAmount = DJ Earnings
         $stmt = $conn->prepare("
             SELECT 
                 COALESCE(SUM(GrossAmount), 0) as total_gross,
-                COALESCE(SUM(StripeFeeAmount), 0) as total_fees,
-                COALESCE(SUM(NetAmount), 0) as total_net,
+                COALESCE(SUM(StripeFeeAmount), 0) as total_stripe_fees,
+                COALESCE(SUM(DJAmount), 0) as total_dj_earnings,
+                COALESCE(SUM(NetAmount), 0) as total_platform_revenue,
                 COUNT(*) as total_transactions,
-                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN NetAmount ELSE 0 END), 0) as today_earnings,
-                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN NetAmount ELSE 0 END), 0) as week_earnings,
-                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN NetAmount ELSE 0 END), 0) as month_earnings,
+                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN DJAmount ELSE 0 END), 0) as today_earnings,
+                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN DJAmount ELSE 0 END), 0) as week_earnings,
+                COALESCE(SUM(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN DJAmount ELSE 0 END), 0) as month_earnings,
                 COUNT(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN 1 END) as today_tips,
                 COUNT(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as week_tips,
                 COUNT(CASE WHEN TransactionDate >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 END) as month_tips
@@ -68,7 +70,8 @@ try {
             SELECT 
                 eh.GrossAmount,
                 eh.StripeFeeAmount,
-                eh.NetAmount,
+                eh.DJAmount,
+                eh.NetAmount as PlatformRevenue,
                 eh.TransactionDate,
                 eh.StripeChargeId,
                 r.SongName,
@@ -91,7 +94,8 @@ try {
             $recentEarnings[] = [
                 'gross_amount' => (float)$row['GrossAmount'],
                 'stripe_fee' => (float)$row['StripeFeeAmount'],
-                'net_amount' => (float)$row['NetAmount'],
+                'dj_earnings' => (float)$row['DJAmount'],
+                'platform_revenue' => (float)$row['PlatformRevenue'],
                 'date' => $row['TransactionDate'],
                 'song_name' => $row['SongName'] ?: 'Direct Tip',
                 'from_user' => $row['RequestedBy'] ?: 'Anonymous',
@@ -102,9 +106,9 @@ try {
         }
         $stmt->close();
         
-        // Calculate available balance (net earnings minus any payouts - for future implementation)
-        $totalNetEarnings = (float)$earnings['total_net'];
-        $availableBalance = $totalNetEarnings; // For now, assume no payouts have been made
+        // Calculate available balance (DJ earnings minus any payouts)
+        $totalDJEarnings = (float)$earnings['total_dj_earnings'];
+        $availableBalance = $totalDJEarnings; // For now, assume no payouts have been made
         
         // Period earnings with accurate net amounts and tip counts
         $periodEarnings = [
@@ -127,15 +131,17 @@ try {
         returnWithInfo([
             'user_name' => $user['FirstName'] . ' ' . $user['LastName'],
             'total_gross_earnings' => (float)$earnings['total_gross'],
-            'total_stripe_fees' => (float)$earnings['total_fees'],
-            'total_net_earnings' => $totalNetEarnings,
+            'total_stripe_fees' => (float)$earnings['total_stripe_fees'],
+            'total_platform_revenue' => (float)$earnings['total_platform_revenue'],
+            'total_dj_earnings' => $totalDJEarnings,
             'available_balance' => $availableBalance,
             'total_transactions' => (int)$earnings['total_transactions'],
             'last_payout_amount' => 0, // For future implementation
             'last_payout_date' => null,
             'period_earnings' => $periodEarnings,
             'recent_transactions' => $recentEarnings,
-            'data_source' => 'EarningsHistory', // Indicates we're using the proper earnings table
+            'fee_structure' => 'Platform: 5% | Stripe: 2.9% + $0.30 | DJ: Remainder',
+            'data_source' => 'EarningsHistory', // Using official fee structure
             'success' => true
         ]);
         

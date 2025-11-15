@@ -56,23 +56,28 @@ try {
         error_log("ConfirmPayment (Requests): Updated " . $rowsAffected . " request records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
         
         if ($status === 'completed' && $rowsAffected > 0) {
-            // Handle earnings - only tips go to DJ, request fees go to platform
-            $tipAmount = $request['TipAmount'];
+            // Handle earnings using the NEW FEE STRUCTURE
+            $totalCollected = (float)$request['TotalCollected'];  // DJ's net earnings (already calculated)
+            $totalCharged = (float)$request['TotalCharged'];      // Total amount charged to customer
             
-            if ($tipAmount > 0) {
-                // Calculate DJ's net earnings from tips (processing fee already stored)
-                $processingFee = $request['ProcessingFee'];
-                $djNetAmount = $tipAmount - $processingFee;
-                
+            if ($totalCollected > 0) {
                 // Get the charge ID from Stripe payment intent
                 $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
                 
-                // Insert into EarningsHistory for the tip portion
+                // Insert into EarningsHistory with new structure
                 $earningsStmt = $conn->prepare("
-                    INSERT INTO EarningsHistory (UserId, RequestId, GrossAmount, StripeFeeAmount, NetAmount, StripeChargeId, Status) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'completed')
+                    INSERT INTO EarningsHistory (UserId, RequestId, GrossAmount, StripeFeeAmount, DJAmount, NetAmount, StripeChargeId, Status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
                 ");
-                $earningsStmt->bind_param("iiddds", $request['DJUserID'], $request['RequestId'], $tipAmount, $processingFee, $djNetAmount, $chargeId);
+                
+                $grossAmount = $totalCharged;  // Total amount customer paid
+                $platformRevenue = (float)$request['PlatformRevenue'];  // Platform's 5% cut
+                $djAmount = $totalCollected;  // DJ's earnings
+                
+                // Calculate Stripe fee (Total - DJ - Platform = Stripe fee)
+                $stripeFee = $grossAmount - $djAmount - $platformRevenue;
+                
+                $earningsStmt->bind_param("iidddds", $request['DJUserID'], $request['RequestId'], $grossAmount, $stripeFee, $djAmount, $platformRevenue, $chargeId);
                 
                 if ($earningsStmt->execute()) {
                     error_log("ConfirmPayment (Requests): Created earnings history record for RequestId: " . $request['RequestId']);
@@ -81,18 +86,19 @@ try {
                 }
                 $earningsStmt->close();
                 
-                // Update Users.TotalEarnings (gross tip) and AvailableFunds (net after fees)
+                // Update Users earnings - NEW FEE STRUCTURE
+                // TotalEarnings = cumulative gross earnings, AvailableFunds = cumulative net earnings
                 $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ?, AvailableFunds = AvailableFunds + ? WHERE ID = ?");
-                $userUpdateStmt->bind_param("ddi", $tipAmount, $djNetAmount, $request['DJUserID']);
+                $userUpdateStmt->bind_param("ddi", $totalCollected, $totalCollected, $request['DJUserID']);
                 
                 if ($userUpdateStmt->execute()) {
-                    error_log("ConfirmPayment (Requests): Updated TotalEarnings (+$" . $tipAmount . " gross) and AvailableFunds (+$" . $djNetAmount . " net) for User ID: " . $request['DJUserID'] . " - Processing fee: $" . $processingFee . "");
+                    error_log("ConfirmPayment (Requests): Updated TotalEarnings and AvailableFunds (+$" . $totalCollected . ") for User ID: " . $request['DJUserID'] . " - Customer paid: $" . $totalCharged . "");
                 } else {
                     error_log("ConfirmPayment (Requests): Failed to update user earnings: " . $userUpdateStmt->error);
                 }
                 $userUpdateStmt->close();
             } else {
-                error_log("ConfirmPayment (Requests): No tip amount for RequestId: " . $request['RequestId'] . " - request fee goes to platform");
+                error_log("ConfirmPayment (Requests): No earnings for RequestId: " . $request['RequestId'] . " - free request");
             }
         }
         
@@ -117,18 +123,26 @@ try {
             
             if ($tip = $tipDetailsResult->fetch_assoc()) {
                 $grossAmount = $tip['TipAmount'];
-                $processingFeeAmount = round(($grossAmount * 0.075) + 0.30, 2); // Processing fee: 7.5% + $0.30
-                $netAmount = $grossAmount - $processingFeeAmount;
+                
+                // OFFICIAL CROWDCONNECT FEE STRUCTURE
+                // Platform Revenue: 5% of total transaction
+                $platformRevenue = round($grossAmount * 0.05, 2);
+                
+                // Stripe Processing Fee: 2.9% + $0.30
+                $stripeFee = round(($grossAmount * 0.029) + 0.30, 2);
+                
+                // DJ Earnings: Total - Platform(5%) - Stripe(2.9% + $0.30)
+                $djAmount = $grossAmount - $platformRevenue - $stripeFee;
                 
                 // Get the charge ID from Stripe payment intent
                 $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
                 
-                // Insert into EarningsHistory
+                // Insert into EarningsHistory with official fee structure
                 $earningsStmt = $conn->prepare("
-                    INSERT INTO EarningsHistory (UserId, TipId, GrossAmount, StripeFeeAmount, NetAmount, StripeChargeId, Status) 
-                    VALUES (?, ?, ?, ?, ?, ?, 'completed')
+                    INSERT INTO EarningsHistory (UserId, TipId, GrossAmount, StripeFeeAmount, DJAmount, NetAmount, StripeChargeId, Status) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
                 ");
-                $earningsStmt->bind_param("iiddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $processingFeeAmount, $netAmount, $chargeId);
+                $earningsStmt->bind_param("iidddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $stripeFee, $djAmount, $platformRevenue, $chargeId);
                 
                 if ($earningsStmt->execute()) {
                     error_log("ConfirmPayment (Tips): Created earnings history record for TipId: " . $tip['TipId']);

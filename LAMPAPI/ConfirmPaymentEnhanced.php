@@ -75,7 +75,7 @@ try {
             
             if ($tip = $tipResult->fetch_assoc()) {
                 $grossAmount = $tip['TipAmount'];
-                $processingFeeAmount = round(($grossAmount * 0.075) + 0.30, 2);
+                $processingFeeAmount = round(($grossAmount * 0.029) + 0.30, 2);
                 $netAmount = $grossAmount - $processingFeeAmount;
                 
                 // Get charge ID from Stripe
@@ -118,7 +118,7 @@ try {
                 $totalCharged = floatval($request['TotalCharged']);
                 
                 // Calculate fees (only on tip portion, not request fee)
-                $processingFee = $tipAmount > 0 ? round(($tipAmount * 0.075) + 0.30, 2) : 0.00;
+                $processingFee = $tipAmount > 0 ? round(($tipAmount * 0.029) + 0.30, 2) : 0.00;
                 $djEarnings = $tipAmount - $processingFee; // DJ gets tip minus processing fee
                 $platformRevenue = $requestFee + $processingFee; // Platform gets request fee + processing fee profit
                 

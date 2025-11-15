@@ -4,7 +4,7 @@
 ALTER TABLE Requests ADD COLUMN PriceOfRequest DECIMAL(10,2) DEFAULT 0.00;
 ALTER TABLE Requests ADD COLUMN TipAmount DECIMAL(10,2) DEFAULT 0.00;
 ALTER TABLE Requests ADD COLUMN TotalCharged DECIMAL(10,2) DEFAULT 0.00; -- PriceOfRequest + TipAmount
-ALTER TABLE Requests ADD COLUMN ProcessingFee DECIMAL(10,2) DEFAULT 0.00; -- 7.5% + $0.30 on tip only
+ALTER TABLE Requests ADD COLUMN ProcessingFee DECIMAL(10,2) DEFAULT 0.00; -- 2.9% + $0.30 Stripe fee on tip only
 ALTER TABLE Requests ADD COLUMN TotalCollected DECIMAL(10,2) DEFAULT 0.00; -- Amount DJ receives (tip - processing fee)
 ALTER TABLE Requests ADD COLUMN PlatformRevenue DECIMAL(10,2) DEFAULT 0.00; -- Request fee + processing fee profit
 ALTER TABLE Requests ADD COLUMN PaymentStatus ENUM('pending', 'completed', 'failed', 'refunded') DEFAULT 'pending';

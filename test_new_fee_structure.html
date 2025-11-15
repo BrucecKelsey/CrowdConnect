@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test New Fee Structure</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { 
+            border: 1px solid #ccc; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+        }
+        .result { 
+            background: #f0f0f0; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 3px; 
+            font-family: monospace;
+        }
+        .error { background: #ffe6e6; color: red; }
+        .success { background: #e6ffe6; color: green; }
+    </style>
+</head>
+<body>
+    <h1>New Fee Structure Test</h1>
+    <p><strong>Fee Structure:</strong></p>
+    <ul>
+        <li>Stripe: 2.9% + $0.30 per transaction</li>
+        <li>Platform: 5% on tips only + 100% of request fees</li>
+        <li>DJ: Gets remainder after fees</li>
+    </ul>
+
+    <div class="test-case">
+        <h3>Test Case 1: $5 Request Fee + No Tip</h3>
+        <div>
+            <label>Request ID: <input type="number" id="requestId1" value="69"></label><br><br>
+            <label>Request Fee: $<input type="number" id="requestFee1" value="5.00" step="0.01"></label><br><br>
+            <label>Tip Amount: $<input type="number" id="tipAmount1" value="0.00" step="0.01"></label><br><br>
+            <button onclick="testPayment(1)">Test Payment Calculation</button>
+        </div>
+        <div id="result1" class="result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>Test Case 2: $5 Request Fee + $5 Tip</h3>
+        <div>
+            <label>Request ID: <input type="number" id="requestId2" value="70"></label><br><br>
+            <label>Request Fee: $<input type="number" id="requestFee2" value="5.00" step="0.01"></label><br><br>
+            <label>Tip Amount: $<input type="number" id="tipAmount2" value="5.00" step="0.01"></label><br><br>
+            <button onclick="testPayment(2)">Test Payment Calculation</button>
+        </div>
+        <div id="result2" class="result"></div>
+    </div>
+
+    <div class="test-case">
+        <h3>Expected Results:</h3>
+        <div class="result">
+            <strong>Case 1 ($5 + $0):</strong><br>
+            Customer Pays: $5.00<br>
+            Stripe Fee: $0.445 (2.9% + $0.30)<br>
+            DJ Gets: $4.555 ≈ $4.56<br>
+            Platform Gets: $0.445<br><br>
+            
+            <strong>Case 2 ($5 + $5):</strong><br>
+            Customer Pays: $10.00<br>
+            Stripe Fee: $0.59 (2.9% + $0.30)<br>
+            Platform Fee on Tip: $0.25 (5% of $5)<br>
+            DJ Gets: $9.16 ($10 - $0.59 - $0.25)<br>
+            Platform Gets: $0.84 ($5 request fee + $0.25 tip fee)
+        </div>
+    </div>
+
+    <script>
+        async function testPayment(testCase) {
+            const requestId = document.getElementById(`requestId${testCase}`).value;
+            const requestFee = parseFloat(document.getElementById(`requestFee${testCase}`).value);
+            const tipAmount = parseFloat(document.getElementById(`tipAmount${testCase}`).value);
+            const resultDiv = document.getElementById(`result${testCase}`);
+            
+            try {
+                resultDiv.innerHTML = 'Testing payment calculation...';
+                resultDiv.className = 'result';
+                
+                const response = await fetch('LAMPAPI/CreateConsolidatedPayment.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        requestId: parseInt(requestId),
+                        requestFee: requestFee,
+                        tipAmount: tipAmount
+                    })
+                });
+                
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error('Invalid JSON response: ' + responseText);
+                }
+                
+                if (data.success) {
+                    const calc = data.calculation;
+                    resultDiv.innerHTML = `
+                        <strong>SUCCESS!</strong><br><br>
+                        <strong>Payment Breakdown:</strong><br>
+                        Customer Pays: $${calc.totalCharged.toFixed(2)}<br>
+                        Stripe Fee: $${calc.stripeFee.toFixed(2)}<br>
+                        Platform Fee on Tip: $${calc.platformFeeOnTip.toFixed(2)}<br>
+                        Total Processing Fee: $${calc.totalProcessingFee.toFixed(2)}<br><br>
+                        
+                        <strong>Revenue Distribution:</strong><br>
+                        DJ Gets: $${calc.djNetEarnings.toFixed(2)}<br>
+                        Platform Gets: $${calc.platformRevenue.toFixed(2)}<br><br>
+                        
+                        <strong>Verification:</strong><br>
+                        DJ + Platform + Stripe = $${(calc.djNetEarnings + calc.platformRevenue + calc.stripeFee).toFixed(2)}<br>
+                        Should Equal Customer Payment: $${calc.totalCharged.toFixed(2)}<br>
+                        
+                        <strong>Payment Intent ID:</strong> ${data.paymentIntentId}
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<strong>ERROR:</strong> ${data.error}`;
+                    resultDiv.className = 'result error';
+                }
+                
+            } catch (error) {
+                console.error('Test failed:', error);
+                resultDiv.innerHTML = `<strong>REQUEST FAILED:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,4 +1,7 @@
 <?php
+// DEPRECATED: This API uses legacy fee calculations
+// Use GetEarningsV2.php for official CrowdConnect fee structure (Platform: 5%, Stripe: 2.9% + $0.30)
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -52,25 +55,25 @@ try {
         exit;
     }
     
-    // Calculate net earnings from Tips table (after Processing 7.5% + $0.30 fee only)
+    // Calculate net earnings from Tips table (after Stripe 2.9% + $0.30 fee only)
     $stmt = $conn->prepare("
         SELECT 
             COALESCE(SUM(CASE 
                 WHEN Status = 'completed' THEN 
-                    TipAmount - (TipAmount * 0.075 + 0.30)
+                    TipAmount - (TipAmount * 0.029 + 0.30)
                 ELSE 0 END), 0) as total_earnings,
             COUNT(CASE WHEN Status = 'completed' THEN 1 END) as completed_tips,
             COALESCE(SUM(CASE 
                 WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 1 DAY) THEN 
-                    TipAmount - (TipAmount * 0.075 + 0.30)
+                    TipAmount - (TipAmount * 0.029 + 0.30)
                 ELSE 0 END), 0) as today_earnings,
             COALESCE(SUM(CASE 
                 WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 
-                    TipAmount - (TipAmount * 0.075 + 0.30)
+                    TipAmount - (TipAmount * 0.029 + 0.30)
                 ELSE 0 END), 0) as week_earnings,
             COALESCE(SUM(CASE 
                 WHEN Status = 'completed' AND Timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 
-                    TipAmount - (TipAmount * 0.075 + 0.30)
+                    TipAmount - (TipAmount * 0.029 + 0.30)
                 ELSE 0 END), 0) as month_earnings
         FROM Tips 
         WHERE DJUserID = ?
@@ -103,7 +106,7 @@ try {
     $recentEarnings = [];
     while ($row = $result->fetch_assoc()) {
         $grossAmount = (float)$row['TipAmount'];
-        $processingFee = round(($grossAmount * 0.075) + 0.30, 2);
+        $processingFee = round(($grossAmount * 0.029) + 0.30, 2);
         $netAmount = $grossAmount - $processingFee;
         
         $recentEarnings[] = [
