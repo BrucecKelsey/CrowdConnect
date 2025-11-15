@@ -1,5 +1,10 @@
 <?php
 // LAMPAPI/CreateConsolidatedPayment.php - New consolidated payment system
+
+// Suppress all errors to prevent JSON corruption
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', 0);
+
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
@@ -11,6 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+// Clean any output buffer
+if (ob_get_level()) {
+    ob_end_clean();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['error' => 'Method not allowed']);
@@ -20,10 +30,32 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     require_once 'StripeConfig.php';
     
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    error_log("CreateConsolidatedPayment - Raw input: " . $rawInput);
     
-    if (!isset($input['requestId']) || !isset($input['requestFee']) || !isset($input['tipAmount'])) {
-        throw new Exception('Missing required fields: requestId, requestFee, tipAmount');
+    $input = json_decode($rawInput, true);
+    
+    if ($input === null) {
+        throw new Exception('Invalid JSON input');
+    }
+    
+    error_log("CreateConsolidatedPayment - Parsed input: " . json_encode($input));
+    
+    // Check for missing required fields
+    $missingFields = [];
+    if (!isset($input['requestId'])) $missingFields[] = 'requestId';
+    if (!isset($input['requestFee'])) $missingFields[] = 'requestFee';
+    if (!isset($input['tipAmount'])) $missingFields[] = 'tipAmount';
+    
+    // If requestId is 0, we need additional fields to create the request
+    if (isset($input['requestId']) && (int)$input['requestId'] == 0) {
+        if (!isset($input['partyId'])) $missingFields[] = 'partyId';
+        if (!isset($input['songName'])) $missingFields[] = 'songName';
+        if (!isset($input['requestedBy'])) $missingFields[] = 'requestedBy';
+    }
+    
+    if (!empty($missingFields)) {
+        throw new Exception('Missing required fields: ' . implode(', ', $missingFields));
     }
     
     $requestId = (int)$input['requestId'];
