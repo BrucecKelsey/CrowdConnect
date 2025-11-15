@@ -32,10 +32,6 @@ try {
     $customerId = isset($input['customerId']) ? (int)$input['customerId'] : null;
     
     // Validate minimum amounts
-    if ($requestFee > 0 && $requestFee < 5.00) {
-        throw new Exception('Request fee must be at least $5.00 if enabled');
-    }
-    
     if ($tipAmount < 0) {
         throw new Exception('Tip amount cannot be negative');
     }
