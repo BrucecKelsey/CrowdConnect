@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registration Test</title>
+</head>
+<body>
+    <h1>Registration Test</h1>
+    <button onclick="testRegistration()">Test Registration</button>
+    <div id="results"></div>
+
+    <script>
+        async function testRegistration() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<p>Testing registration...</p>';
+            
+            const testData = {
+                firstName: 'Test',
+                lastName: 'User',
+                email: 'test@example.com',
+                login: 'testuser' + Date.now(), // Make unique
+                password: 'testpass123'
+            };
+            
+            console.log('Sending data:', testData);
+            
+            try {
+                const response = await fetch('LAMPAPI/Register.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testData)
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                const responseText = await response.text();
+                console.log('Raw response:', responseText);
+                
+                results.innerHTML = `
+                    <h3>Response Details:</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Response:</strong></p>
+                    <pre>${responseText}</pre>
+                `;
+                
+                try {
+                    const data = JSON.parse(responseText);
+                    results.innerHTML += `
+                        <h3>Parsed JSON:</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } catch (e) {
+                    results.innerHTML += `
+                        <h3>JSON Parse Error:</h3>
+                        <p>${e.message}</p>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                results.innerHTML = `
+                    <h3>Fetch Error:</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
