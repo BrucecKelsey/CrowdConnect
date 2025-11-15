@@ -49,9 +49,9 @@ while ($row = $result->fetch_assoc()) {
     $totalCollected = (float)$row['TotalCollected'];
     $platformRevenue = (float)$row['PlatformRevenue'];
     
-    // Calculate DJ's net earnings from the stored values
-    // DJ gets: TotalCollected - PlatformRevenue (which includes processing fees + request fees)
-    $djTotal = $totalCollected - $platformRevenue;
+    // DJ's net earnings is already calculated and stored in TotalCollected
+    // TotalCollected = Total customer payment - Platform fee (5%) - Stripe fee (2.9% + $0.30)
+    $djTotal = $totalCollected;
     
     // Ensure DJ total is never negative
     $djTotal = max(0, $djTotal);
