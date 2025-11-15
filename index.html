@@ -398,6 +398,7 @@
         <div class="nav-container">
             <a href="#" class="logo">🎵 CrowdConnect</a>
             <div class="nav-buttons">
+                <a href="#" id="dashboardBtn" class="btn btn-outline" onclick="goToDashboard()">Dashboard</a>
                 <a href="./login.html" class="btn btn-outline">Login</a>
                 <a href="./register.html" class="btn btn-primary">Get Started</a>
             </div>
@@ -647,6 +648,19 @@
             });
         });
         statsObserver.observe(statsSection);
+
+        // Dashboard navigation function
+        function goToDashboard() {
+            const userId = localStorage.getItem('userId');
+            
+            if (!userId) {
+                // Not logged in - redirect to login page
+                window.location.href = './login.html';
+            } else {
+                // Logged in - go to dashboard (landing.html)
+                window.location.href = './landing.html';
+            }
+        }
     </script>
 </body>
 </html>
