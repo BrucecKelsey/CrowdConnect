@@ -14,7 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    // Initialize Stripe configuration
+    StripeConfig::init();
+    
     $publishableKey = StripeConfig::getPublishableKey();
+    
+    if (empty($publishableKey)) {
+        throw new Exception('Stripe publishable key not configured');
+    }
     
     echo json_encode([
         'success' => true,
@@ -23,6 +30,10 @@ try {
     
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Unable to retrieve Stripe public key']);
+    error_log('GetStripePublicKey error: ' . $e->getMessage());
+    echo json_encode([
+        'error' => 'Unable to retrieve Stripe public key: ' . $e->getMessage(),
+        'debug' => $e->getMessage()
+    ]);
 }
 ?>

@@ -69,18 +69,59 @@ try {
         throw new Exception("Database connection failed: " . $conn->connect_error);
     }
     
-    // Get request info and validate
-    $stmt = $conn->prepare("SELECT RequestId, DJUserID, SongName, RequestedBy FROM Requests WHERE RequestId = ?");
-    $stmt->bind_param("i", $requestId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $request = $result->fetch_assoc();
-    
-    if (!$request) {
-        throw new Exception('Request not found');
+    // Handle request creation or retrieval
+    if ($requestId == 0) {
+        // Create new request record (payment-first flow)
+        $partyId = (int)$input['partyId'];
+        $songName = $input['songName'];
+        $requestedBy = $input['requestedBy'];
+        
+        // Get DJ ID from party
+        $partyStmt = $conn->prepare("SELECT DJId FROM Parties WHERE PartyId = ?");
+        $partyStmt->bind_param("i", $partyId);
+        $partyStmt->execute();
+        $partyResult = $partyStmt->get_result();
+        $party = $partyResult->fetch_assoc();
+        
+        if (!$party) {
+            throw new Exception('Party not found');
+        }
+        
+        $djId = $party['DJId'];
+        
+        // Create the request record
+        $insertStmt = $conn->prepare("INSERT INTO Requests (PartyId, DJUserID, SongName, RequestedBy, PaymentStatus) VALUES (?, ?, ?, ?, 'pending')");
+        $insertStmt->bind_param("iiss", $partyId, $djId, $songName, $requestedBy);
+        
+        if (!$insertStmt->execute()) {
+            throw new Exception("Failed to create request record: " . $insertStmt->error);
+        }
+        
+        $requestId = $conn->insert_id;
+        $insertStmt->close();
+        $partyStmt->close();
+        
+        $request = [
+            'RequestId' => $requestId,
+            'DJUserID' => $djId,
+            'SongName' => $songName,
+            'RequestedBy' => $requestedBy
+        ];
+    } else {
+        // Get existing request info and validate
+        $stmt = $conn->prepare("SELECT RequestId, DJUserID, SongName, RequestedBy FROM Requests WHERE RequestId = ?");
+        $stmt->bind_param("i", $requestId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $request = $result->fetch_assoc();
+        
+        if (!$request) {
+            throw new Exception('Request not found');
+        }
+        
+        $djId = $request['DJUserID'];
+        $stmt->close();
     }
-    
-    $djId = $request['DJUserID'];
     
     // Create Stripe payment intent
     $stripe = StripeConfig::getStripeClient();
@@ -137,6 +178,7 @@ try {
         'success' => true,
         'clientSecret' => $paymentIntent['client_secret'],
         'paymentIntentId' => $paymentIntent['id'],
+        'requestId' => $requestId,
         'calculation' => [
             'totalCharged' => $totalCharged,
             'stripeFee' => $stripeFee,

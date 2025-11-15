@@ -22,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 try {
     $input = json_decode(file_get_contents('php://input'), true);
     
+    error_log("ConfirmPayment.php called with input: " . json_encode($input));
+    
     if (!isset($input['paymentIntentId'])) {
         throw new Exception('Missing payment intent ID');
     }
@@ -41,13 +43,15 @@ try {
     $status = $paymentIntent['status'] === 'succeeded' ? 'completed' : 'failed';
     
     // Check if this payment is in the Requests table (consolidated system) or Tips table (legacy)
-    $requestStmt = $conn->prepare("SELECT RequestId, DJUserID, PriceOfRequest, TipAmount, TotalCharged, ProcessingFee FROM Requests WHERE StripePaymentIntentId = ?");
+    $requestStmt = $conn->prepare("SELECT RequestId, DJUserID, PriceOfRequest, TipAmount, TotalCharged, ProcessingFee, TotalCollected, PlatformRevenue FROM Requests WHERE StripePaymentIntentId = ?");
     $requestStmt->bind_param("s", $paymentIntentId);
     $requestStmt->execute();
     $requestResult = $requestStmt->get_result();
     
     if ($request = $requestResult->fetch_assoc()) {
         // Handle consolidated payment system (Requests table)
+        error_log("DEBUG: Found request record: " . json_encode($request));
+        
         $updateStmt = $conn->prepare("UPDATE Requests SET PaymentStatus = ?, ProcessedAt = NOW() WHERE StripePaymentIntentId = ?");
         $updateStmt->bind_param("ss", $status, $paymentIntentId);
         $updateStmt->execute();
@@ -59,6 +63,9 @@ try {
             // Handle earnings using the NEW FEE STRUCTURE
             $totalCollected = (float)$request['TotalCollected'];  // DJ's net earnings (already calculated)
             $totalCharged = (float)$request['TotalCharged'];      // Total amount charged to customer
+            
+            error_log("DEBUG: TotalCollected = '$totalCollected', TotalCharged = '$totalCharged'");
+            error_log("DEBUG: TotalCollected > 0? " . ($totalCollected > 0 ? 'YES' : 'NO'));
             
             if ($totalCollected > 0) {
                 // Get the charge ID from Stripe payment intent
@@ -98,7 +105,7 @@ try {
                 }
                 $userUpdateStmt->close();
             } else {
-                error_log("ConfirmPayment (Requests): No earnings for RequestId: " . $request['RequestId'] . " - free request");
+                error_log("ConfirmPayment (Requests): No earnings for RequestId: " . $request['RequestId'] . " - TotalCollected=$totalCollected (should be > 0)");
             }
         }
         
@@ -186,7 +193,9 @@ try {
     
     $conn->close();
     
-} catch (Exception $e) {
+) catch (Exception $e) {
+    error_log("ConfirmPayment.php ERROR: " . $e->getMessage());
+    error_log("ConfirmPayment.php Stack trace: " . $e->getTraceAsString());
     if (isset($conn)) {
         $conn->close();
     }

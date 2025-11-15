@@ -416,17 +416,18 @@
                     // Show loading state
                     document.getElementById('payment-result').innerHTML = '<span style="color: #ccc;">Initializing payment...</span>';
                     
-                    // Create payment intent first (without request ID since we're doing payment-first flow)
-                    const intentResponse = await fetch('LAMPAPI/CreatePaymentIntent.php', {
+                    // Create consolidated payment using new system
+                    const intentResponse = await fetch('LAMPAPI/CreateConsolidatedPayment.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            amount: Math.round(totalAmount * 100), // Convert to cents
-                            djId: currentDjId,
-                            requestId: 0, // Temporary - will be updated after request is created
-                            customerId: userId || 0,
-                            requestFeeAmount: requestFee,
-                            tipAmount: tipAmount
+                            requestId: 0, // Will be created by the consolidated system
+                            partyId: partyId,
+                            songName: pendingSongRequest.songName,
+                            requestedBy: pendingSongRequest.artist,
+                            requestFee: requestFee,
+                            tipAmount: tipAmount,
+                            customerId: userId || null
                         })
                     });
                     
@@ -508,84 +509,16 @@
                         const confirmData = await confirmResponse.json();
                         
                         if (confirmData.success) {
-                            resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Now submitting your request...</span>';
+                            // With the new consolidated system, everything is handled in one go
+                            // The request was already created and linked to the payment by CreateConsolidatedPayment.php
+                            resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Request submitted!</span>';
                             
-                            // Debug: Check if we have pending request data
-                            console.log('=== POST-PAYMENT SONG REQUEST SUBMISSION ===');
-                            console.log('pendingSongRequest:', pendingSongRequest);
+                            // Update main page message
+                            const msgDiv = document.getElementById('requestMsg');
+                            msgDiv.textContent = `Request submitted and $${selectedTipAmount.toFixed(2)} tip processed successfully!`;
+                            msgDiv.style.color = '#a78bfa';
                             
-                            // Now submit the song request after successful payment
-                            if (pendingSongRequest) {
-                                console.log('Submitting song request with data:', {
-                                    partyId: pendingSongRequest.partyId,
-                                    songName: pendingSongRequest.songName,
-                                    requestedBy: pendingSongRequest.artist
-                                });
-                                try {
-                                    const requestResponse = await fetch('LAMPAPI/SubmitRequest.php', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            partyId: pendingSongRequest.partyId,
-                                            songName: pendingSongRequest.songName,
-                                            requestedBy: pendingSongRequest.artist,
-                                            paymentIntentId: paymentIntent.id
-                                        })
-                                    });
-                                    
-                                    console.log('SubmitRequest response status:', requestResponse.status);
-                                    
-                                    // Get raw text first for debugging
-                                    const responseText = await requestResponse.text();
-                                    console.log('SubmitRequest raw response:', responseText);
-                                    
-                                    let requestData;
-                                    try {
-                                        requestData = JSON.parse(responseText);
-                                    } catch (parseError) {
-                                        throw new Error(`Invalid JSON from SubmitRequest: ${responseText}`);
-                                    }
-                                    
-                                    console.log('SubmitRequest parsed data:', requestData);
-                                    
-                                    if (requestData.success) {
-                                        // Update the tip record with the actual request ID
-                                        currentRequestId = requestData.requestId;
-                                        
-                                        // Update tip record with request ID
-                                        try {
-                                            await fetch('LAMPAPI/UpdateTipRequestId.php', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    paymentIntentId: paymentIntent.id,
-                                                    requestId: requestData.requestId
-                                                })
-                                            });
-                                        } catch (updateError) {
-                                            console.log('Warning: Could not update tip record with request ID:', updateError);
-                                        }
-                                        
-                                        resultDiv.innerHTML = '<span style="color: #00FF7F;">Payment successful! Request submitted!</span>';
-                                        
-                                        // Update main page message
-                                        const msgDiv = document.getElementById('requestMsg');
-                                        msgDiv.textContent = `Request submitted and $${selectedTipAmount.toFixed(2)} tip processed successfully!`;
-                                        msgDiv.style.color = '#a78bfa';
-                                        
-                                        pendingSongRequest = null; // Clear pending request
-                                    } else {
-                                        resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but failed to submit request. Please try again.</span>';
-                                    }
-                                } catch (requestError) {
-                                    console.error('Error submitting request after payment:', requestError);
-                                    resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but failed to submit request. Please try again.</span>';
-                                }
-                            } else {
-                                console.error('ERROR: No pendingSongRequest data found after payment!');
-                                console.log('This means the song data was lost between payment modal open and payment success');
-                                resultDiv.innerHTML = '<span style="color: #f87171;">Payment successful but song request data was lost. Please try submitting your request again.</span>';
-                            }
+                            pendingSongRequest = null; // Clear pending request
                             
                             // Close modal and clear form after delay
                             setTimeout(() => {
