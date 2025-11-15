@@ -42,33 +42,42 @@
                     <input type="text" id="artist" name="artist" placeholder="Enter artist name" required />
                 </div>
                 
-                <!-- Request Fee Section (visible if request fees enabled) -->
-                <div id="requestFeeSection" class="fee-section" style="display:none;">
-                    <div class="fee-header">
-                        <span class="fee-icon">🎵</span>
-                        <span class="fee-title">Song Request</span>
+                <!-- Cost Breakdown Summary -->
+                <div id="costBreakdown" class="cost-breakdown" style="display:none;">
+                    <div class="breakdown-header">
+                        <span class="breakdown-icon">🎵</span>
+                        <span class="breakdown-title">Cost Breakdown</span>
                     </div>
-                    <div class="fee-for">Requests are <span id="requestFeeAmount" class="fee-amount">$0.00</span> each</div>
-                    <div class="fee-note">You can also add an optional tip to show extra appreciation!</div>
-                </div>
-                
-                <!-- Tip Section (visible if tips enabled) -->
-                <div id="tipSection" class="tip-section" style="display:none;">
-                    <div class="tip-header">
-                        <span class="tip-icon">💰</span>
-                        <span class="tip-title">Add a Tip?</span>
+                    
+                    <div class="cost-table">
+                        <div class="cost-row">
+                            <span class="cost-label">Song Request Fee:</span>
+                            <span class="cost-value" id="displayRequestFee">$0.00</span>
+                        </div>
+                        <div class="cost-row">
+                            <span class="cost-label">Tip Amount:</span>
+                            <span class="cost-value" id="displayTipAmount">$0.00</span>
+                        </div>
+                        <div class="cost-row total-row">
+                            <span class="cost-label"><strong>Total:</strong></span>
+                            <span class="cost-value" id="displayTotal"><strong>$0.00</strong></span>
+                        </div>
                     </div>
-                    <div class="tip-for">Show appreciation to <span id="djName" class="dj-name">the DJ</span></div>
-                    <div class="tip-buttons">
-                        <button class="tip-btn selected" onclick="selectTip(0, this)">No Tip</button>
-                        <button class="tip-btn" onclick="selectTip(1, this)">$1</button>
-                        <button class="tip-btn" onclick="selectTip(3, this)">$3</button>
-                        <button class="tip-btn" onclick="selectTip(5, this)">$5</button>
-                        <button class="tip-btn" onclick="selectTip(10, this)">$10</button>
-                    </div>
-                    <div class="custom-tip">
-                        <input type="number" id="customTip" placeholder="Custom amount" 
-                               min="0.50" step="0.50" onchange="selectCustomTip()">
+                    
+                    <!-- Tip Selection (if tips enabled) -->
+                    <div id="tipSelection" class="tip-selection" style="display:none;">
+                        <div class="tip-label">Add a tip for <span id="djName" class="dj-name">the DJ</span>:</div>
+                        <div class="tip-buttons">
+                            <button class="tip-btn selected" onclick="selectTip(0, this)">No Tip</button>
+                            <button class="tip-btn" onclick="selectTip(1, this)">$1</button>
+                            <button class="tip-btn" onclick="selectTip(3, this)">$3</button>
+                            <button class="tip-btn" onclick="selectTip(5, this)">$5</button>
+                            <button class="tip-btn" onclick="selectTip(10, this)">$10</button>
+                        </div>
+                        <div class="custom-tip">
+                            <input type="number" id="customTip" placeholder="Custom amount" 
+                                   min="0.50" step="0.50" onchange="selectCustomTip()">
+                        </div>
                     </div>
                 </div>
                 
@@ -180,23 +189,23 @@
                     return;
                 }
                 
-                // Check if tip section is visible
-                const tipSection = document.getElementById('tipSection');
-                const isTipSectionVisible = tipSection && tipSection.style.display === 'block';
+                // Check if cost breakdown is visible
+                const costBreakdown = document.getElementById('costBreakdown');
+                const isCostBreakdownVisible = costBreakdown && costBreakdown.style.display === 'block';
                 
-                // Check if request fee section is visible
-                const requestFeeSection = document.getElementById('requestFeeSection');
-                const isRequestFeeSectionVisible = requestFeeSection && requestFeeSection.style.display === 'block';
+                // Check if tip selection is visible
+                const tipSelection = document.getElementById('tipSelection');
+                const isTipSelectionVisible = tipSelection && tipSelection.style.display === 'block';
                 const requestFee = window.requestFeeAmount || 0;
                 
-                if (isTipSectionVisible && selectedTipAmount === undefined) {
+                if (isTipSelectionVisible && selectedTipAmount === undefined) {
                     msgDiv.textContent = 'Please select a tip amount.';
                     msgDiv.style.color = '#f87171';
                     return;
                 }
                 
                 // If request fee is enabled OR tip is selected, process payment FIRST before submitting request
-                if (isRequestFeeSectionVisible || (isTipSectionVisible && selectedTipAmount > 0)) {
+                if (requestFee > 0 || (isTipSelectionVisible && selectedTipAmount > 0)) {
                     const totalPayment = requestFee + (selectedTipAmount || 0);
                     msgDiv.textContent = `Processing payment ($${totalPayment.toFixed(2)}) first...`;
                     msgDiv.style.color = '#bdbdbd';
@@ -289,14 +298,14 @@
                     if (text.trim()) {
                         const data = JSON.parse(text);
                         if (data.success && data.allowTips) {
-                            // Tips are enabled, show the tip section
-                            document.getElementById('tipSection').style.display = 'block';
+                            // Tips are enabled, show the tip selection
+                            document.getElementById('tipSelection').style.display = 'block';
+                            window.tipsEnabled = true;
                         }
-                        // If tips are disabled, tip section stays hidden
+                        updateCostBreakdown();
                     }
                 } catch (e) {
                     console.error('Failed to check tip settings:', e);
-                    // On error, don't show tip section to be safe
                 }
             }
 
@@ -311,22 +320,35 @@
                     if (text.trim()) {
                         const data = JSON.parse(text);
                         if (data.success && data.allowRequestFees && data.requestFeeAmount > 0) {
-                            // Request fees are enabled, show the fee section
-                            document.getElementById('requestFeeSection').style.display = 'block';
-                            document.getElementById('requestFeeAmount').textContent = `$${data.requestFeeAmount.toFixed(2)}`;
-                            
                             // Store the fee amount globally for payment processing
                             window.requestFeeAmount = data.requestFeeAmount;
-                            
-                            // Update button text to reflect payment requirement
-                            updateSubmitButtonText();
+                        } else {
+                            window.requestFeeAmount = 0;
                         }
-                        // If request fees are disabled, fee section stays hidden
+                        updateCostBreakdown();
                     }
                 } catch (e) {
                     console.error('Failed to check request fee settings:', e);
-                    // On error, don't show fee section to be safe
+                    window.requestFeeAmount = 0;
+                    updateCostBreakdown();
                 }
+            }
+
+            // Update the cost breakdown display
+            function updateCostBreakdown() {
+                const requestFee = window.requestFeeAmount || 0;
+                const tipAmount = selectedTipAmount || 0;
+                const total = requestFee + tipAmount;
+                
+                // Show cost breakdown if there are any fees or the user is allowed to tip
+                if (requestFee > 0 || window.tipsEnabled) {
+                    document.getElementById('costBreakdown').style.display = 'block';
+                    document.getElementById('displayRequestFee').textContent = `$${requestFee.toFixed(2)}`;
+                    document.getElementById('displayTipAmount').textContent = `$${tipAmount.toFixed(2)}`;
+                    document.getElementById('displayTotal').textContent = `$${total.toFixed(2)}`;
+                }
+                
+                updateSubmitButtonText();
             }
 
             // Update submit button text based on payment requirements
@@ -373,7 +395,7 @@
                 }
                 
                 document.getElementById('customTip').value = '';
-                updateSubmitButtonText();
+                updateCostBreakdown();
             }
 
             function selectCustomTip() {
@@ -381,7 +403,7 @@
                 if (customAmount >= 0) {
                     selectedTipAmount = customAmount;
                     document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('selected'));
-                    updateSubmitButtonText();
+                    updateCostBreakdown();
                 }
             }
 
@@ -871,54 +893,78 @@ input[type="text"]:focus {
     border: 2px solid #a78bfa;
 }
 
-/* Request Fee Section Styles */
-.fee-section {
-    padding: 1.5rem 0;
+/* Cost Breakdown Styles */
+.cost-breakdown {
+    padding: 1.5rem;
     border-top: 2px solid #23232b;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
     margin-bottom: 1rem;
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
-    border-left: 4px solid #ef4444;
-    padding-left: 1.2rem;
-    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1), rgba(167, 139, 250, 0.05));
+    border-left: 4px solid #a78bfa;
+    border-radius: 8px;
 }
 
-.fee-header {
+.breakdown-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 1.4rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: #fff;
     justify-content: center;
+    margin-bottom: 1rem;
 }
 
-.fee-icon {
-    font-size: 1.5rem;
-    color: #ef4444;
+.breakdown-icon {
+    font-size: 1.3rem;
+    color: #a78bfa;
 }
 
-.fee-for {
-    text-align: center;
-    color: #bdbdbd;
-    font-size: 1rem;
-    line-height: 1.4;
+.cost-table {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
 }
 
-.fee-amount {
-    color: #ef4444;
-    font-weight: 700;
+.cost-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cost-row:last-child {
+    border-bottom: none;
+}
+
+.cost-row.total-row {
+    border-top: 2px solid #a78bfa;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
     font-size: 1.1rem;
 }
 
-.fee-note {
+.cost-label {
+    color: #bdbdbd;
+    font-size: 0.95rem;
+}
+
+.cost-value {
+    color: #fff;
+    font-weight: 600;
+}
+
+.tip-selection {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1rem;
+}
+
+.tip-label {
     text-align: center;
-    color: #9ca3af;
+    color: #bdbdbd;
     font-size: 0.9rem;
-    font-style: italic;
-    opacity: 0.8;
+    margin-bottom: 0.75rem;
 }
 
 /* Payment Modal Styles */
