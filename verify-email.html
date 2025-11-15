@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email - CrowdConnect</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --background: #0a0a0a;
+            --surface: #1a1a1a;
+            --surface-light: #2a2a2a;
+            --text-primary: #ffffff;
+            --text-secondary: #a3a3a3;
+            --border: #404040;
+        }
+
+        body {
+            font-family: 'Inter', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #1a1a2e 50%, #16213e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: var(--surface);
+            padding: 3rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success { color: var(--success); }
+        .error { color: var(--error); }
+        .warning { color: var(--warning); }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .message {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .resend-section {
+            display: none;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .resend-text {
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .email-input {
+            width: 100%;
+            padding: 1rem;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎵 CrowdConnect</div>
+        
+        <div id="verifyingSection">
+            <div class="loading" style="display: flex;">
+                <div class="spinner"></div>
+                <span>Verifying your email...</span>
+            </div>
+        </div>
+        
+        <div id="resultSection" style="display: none;">
+            <div id="resultIcon" class="icon">✅</div>
+            <h1 id="resultTitle" class="title">Email Verified!</h1>
+            <p id="resultMessage" class="message">Your email has been successfully verified. You can now log in to your account.</p>
+            
+            <div id="actionButtons">
+                <a href="login.html" class="btn">Go to Login</a>
+                <a href="index.html" class="btn btn-outline">Back to Home</a>
+            </div>
+        </div>
+        
+        <div id="resendSection" class="resend-section">
+            <p class="resend-text">Didn't receive the verification email?</p>
+            <input type="email" id="resendEmail" class="email-input" placeholder="Enter your email address" required>
+            <button onclick="resendVerification()" class="btn" id="resendBtn">Resend Verification Email</button>
+            <div id="resendLoading" class="loading">
+                <div class="spinner"></div>
+                <span>Sending email...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            // Verify the token
+            verifyEmail(token);
+        } else {
+            // No token provided, show resend section
+            showResendSection();
+        }
+        
+        async function verifyEmail(token) {
+            try {
+                const response = await fetch(`LAMPAPI/VerifyEmail.php?token=${encodeURIComponent(token)}`);
+                const result = await response.json();
+                
+                document.getElementById('verifyingSection').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'block';
+                
+                if (result.message) {
+                    // Success
+                    showResult('success', '✅', 'Email Verified!', result.message);
+                } else if (result.error) {
+                    // Error
+                    showResult('error', '❌', 'Verification Failed', result.error);
+                    document.getElementById('resendSection').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                showResult('error', '❌', 'Verification Failed', 'An error occurred while verifying your email. Please try again.');
+                document.getElementById('resendSection').style.display = 'block';
+            }
+        }
+        
+        function showResult(type, icon, title, message) {
+            document.getElementById('resultIcon').textContent = icon;
+            document.getElementById('resultIcon').className = `icon ${type}`;
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('resultMessage').textContent = message;
+            
+            if (type === 'error') {
+                document.getElementById('actionButtons').innerHTML = `
+                    <a href="register.html" class="btn">Try Registration Again</a>
+                    <a href="index.html" class="btn btn-outline">Back to Home</a>
+                `;
+            }
+        }
+        
+        function showResendSection() {
+            document.getElementById('verifyingSection').style.display = 'none';
+            document.getElementById('resultSection').style.display = 'block';
+            document.getElementById('resendSection').style.display = 'block';
+            
+            showResult('warning', '📧', 'Email Verification Required', 'Please check your email for a verification link, or enter your email below to resend it.');
+            
+            document.getElementById('actionButtons').innerHTML = `
+                <a href="login.html" class="btn btn-outline">Already Verified? Login</a>
+            `;
+        }
+        
+        async function resendVerification() {
+            const email = document.getElementById('resendEmail').value;
+            const resendBtn = document.getElementById('resendBtn');
+            const resendLoading = document.getElementById('resendLoading');
+            
+            if (!email) {
+                alert('Please enter your email address');
+                return;
+            }
+            
+            resendBtn.style.display = 'none';
+            resendLoading.style.display = 'flex';
+            
+            try {
+                const response = await fetch('LAMPAPI/VerifyEmail.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const result = await response.json();
+                
+                if (result.message) {
+                    alert('Verification email sent! Please check your inbox.');
+                } else if (result.error) {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Resend error:', error);
+                alert('An error occurred while sending the email. Please try again.');
+            } finally {
+                resendBtn.style.display = 'inline-block';
+                resendLoading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
