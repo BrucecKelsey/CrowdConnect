@@ -231,7 +231,7 @@ try {
         ]
     ]);
     
-) catch (Exception $e) {
+} catch (Exception $e) {
     if (isset($conn)) {
         $conn->close();
     }
