@@ -97,9 +97,10 @@ try {
         throw new Exception("Database connection failed: " . $conn->connect_error);
     }
     
-    // Handle request creation or retrieval
+    // For payment-first flow (requestId = 0), we'll store the request info in Stripe metadata
+    // The actual request record will be created by ConfirmPayment.php after successful payment
     if ($requestId == 0) {
-        // Create new request record (payment-first flow)
+        // Get DJ ID from party for payment intent
         $partyId = (int)$input['partyId'];
         $songName = $input['songName'];
         $requestedBy = $input['requestedBy'];
@@ -116,24 +117,14 @@ try {
         }
         
         $djId = $party['DJId'];
-        
-        // Create the request record
-        $insertStmt = $conn->prepare("INSERT INTO Requests (PartyId, DJUserID, SongName, RequestedBy, PaymentStatus) VALUES (?, ?, ?, ?, 'pending')");
-        $insertStmt->bind_param("iiss", $partyId, $djId, $songName, $requestedBy);
-        
-        if (!$insertStmt->execute()) {
-            throw new Exception("Failed to create request record: " . $insertStmt->error);
-        }
-        
-        $requestId = $conn->insert_id;
-        $insertStmt->close();
         $partyStmt->close();
         
-        $request = [
-            'RequestId' => $requestId,
-            'DJUserID' => $djId,
-            'SongName' => $songName,
-            'RequestedBy' => $requestedBy
+        // We'll use this info for Stripe metadata but not create request record yet
+        $requestInfo = [
+            'partyId' => $partyId,
+            'djId' => $djId,
+            'songName' => $songName,
+            'requestedBy' => $requestedBy
         ];
     } else {
         // Get existing request info and validate
@@ -155,13 +146,27 @@ try {
     $stripe = StripeConfig::getStripeClient();
     $amountInCents = (int)round($totalCharged * 100);
     
-    $metadata = [
-        'request_id' => $requestId,
-        'dj_id' => $djId,
-        'request_fee' => $requestFee,
-        'tip_amount' => $tipAmount,
-        'song_name' => $request['SongName']
-    ];
+    if ($requestId == 0) {
+        // Payment-first flow: store request details in metadata
+        $metadata = [
+            'request_id' => 0,
+            'party_id' => $requestInfo['partyId'],
+            'dj_id' => $requestInfo['djId'],
+            'song_name' => $requestInfo['songName'],
+            'requested_by' => $requestInfo['requestedBy'],
+            'request_fee' => $requestFee,
+            'tip_amount' => $tipAmount
+        ];
+    } else {
+        // Existing request flow
+        $metadata = [
+            'request_id' => $requestId,
+            'dj_id' => $djId,
+            'request_fee' => $requestFee,
+            'tip_amount' => $tipAmount,
+            'song_name' => $request['SongName']
+        ];
+    }
     
     if ($customerId) {
         $metadata['customer_id'] = $customerId;
@@ -169,48 +174,38 @@ try {
     
     $paymentIntent = $stripe->createPaymentIntent($amountInCents, 'usd', $metadata);
     
-    // Update the Requests table with payment information
-    $updateStmt = $conn->prepare("
-        UPDATE Requests 
-        SET 
-            PriceOfRequest = ?,
-            TipAmount = ?,
-            TotalCharged = ?,
-            ProcessingFee = ?,
-            TotalCollected = ?,
-            PlatformRevenue = ?,
-            PaymentStatus = 'pending',
-            StripePaymentIntentId = ?
-        WHERE RequestId = ?
-    ");
-    
-    // Debug the values being bound
-    error_log("CreateConsolidatedPayment - Binding values:");
-    error_log("RequestFee: $requestFee (" . gettype($requestFee) . ")");
-    error_log("TipAmount: $tipAmount (" . gettype($tipAmount) . ")");
-    error_log("TotalCharged: $totalCharged (" . gettype($totalCharged) . ")");
-    error_log("TotalProcessingFee: $totalProcessingFee (" . gettype($totalProcessingFee) . ")");
-    error_log("DjNetEarnings: $djNetEarnings (" . gettype($djNetEarnings) . ")");
-    error_log("PlatformRevenue: $platformRevenue (" . gettype($platformRevenue) . ")");
-    error_log("PaymentIntentId: " . $paymentIntent['id'] . " (" . gettype($paymentIntent['id']) . ")");
-    error_log("RequestId: $requestId (" . gettype($requestId) . ")");
-    
-    $updateStmt->bind_param("ddddddsi", 
-        $requestFee, 
-        $tipAmount, 
-        $totalCharged, 
-        $totalProcessingFee, 
-        $djNetEarnings, 
-        $platformRevenue, 
-        $paymentIntent['id'], 
-        $requestId
-    );
-    
-    if (!$updateStmt->execute()) {
-        error_log("CreateConsolidatedPayment - UPDATE failed: " . $updateStmt->error);
-        throw new Exception("Failed to update request with payment info: " . $updateStmt->error);
-    } else {
-        error_log("CreateConsolidatedPayment - UPDATE successful for RequestId: $requestId");
+    // Only update existing request records (when requestId > 0)
+    if ($requestId > 0) {
+        $updateStmt = $conn->prepare("
+            UPDATE Requests 
+            SET 
+                PriceOfRequest = ?,
+                TipAmount = ?,
+                TotalCharged = ?,
+                ProcessingFee = ?,
+                TotalCollected = ?,
+                PlatformRevenue = ?,
+                PaymentStatus = 'pending',
+                StripePaymentIntentId = ?
+            WHERE RequestId = ?
+        ");
+        
+        $updateStmt->bind_param("ddddddsi", 
+            $requestFee, 
+            $tipAmount, 
+            $totalCharged, 
+            $totalProcessingFee, 
+            $djNetEarnings, 
+            $platformRevenue, 
+            $paymentIntent['id'], 
+            $requestId
+        );
+        
+        if (!$updateStmt->execute()) {
+            throw new Exception("Failed to update request with payment info: " . $updateStmt->error);
+        }
+        
+        $updateStmt->close();
     }
     
     $conn->close();

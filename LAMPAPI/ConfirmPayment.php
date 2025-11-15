@@ -42,7 +42,7 @@ try {
     
     $status = $paymentIntent['status'] === 'succeeded' ? 'completed' : 'failed';
     
-    // Check if this payment is in the Requests table (consolidated system) or Tips table (legacy)
+    // Check if this payment is in the Requests table (consolidated system) or needs to be created (payment-first flow)
     $requestStmt = $conn->prepare("SELECT RequestId, DJUserID, PriceOfRequest, TipAmount, TotalCharged, ProcessingFee, TotalCollected, PlatformRevenue FROM Requests WHERE StripePaymentIntentId = ?");
     $requestStmt->bind_param("s", $paymentIntentId);
     $requestStmt->execute();
@@ -112,67 +112,79 @@ try {
         $updateStmt->close();
         
     } else {
-        // Handle legacy Tips table
-        $tipStmt = $conn->prepare("UPDATE Tips SET Status = ?, Timestamp = NOW() WHERE StripePaymentIntentId = ?");
-        $tipStmt->bind_param("ss", $status, $paymentIntentId);
-        $tipStmt->execute();
-        
-        $rowsAffected = $tipStmt->affected_rows;
-        error_log("ConfirmPayment (Tips): Updated " . $rowsAffected . " tip records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
-        
-        // If payment succeeded, update Users.TotalEarnings and create earnings history record
-        if ($status === 'completed' && $rowsAffected > 0) {
-            // Get the tip details for earnings history
-            $tipDetailsStmt = $conn->prepare("SELECT TipId, DJUserID, TipAmount FROM Tips WHERE StripePaymentIntentId = ?");
-            $tipDetailsStmt->bind_param("s", $paymentIntentId);
-            $tipDetailsStmt->execute();
-            $tipDetailsResult = $tipDetailsStmt->get_result();
+        // Handle payment-first flow: create request record from Stripe metadata
+        if ($status === 'completed' && isset($paymentIntent['metadata']['party_id'])) {
+            error_log("ConfirmPayment: Creating request record from payment metadata");
             
-            if ($tip = $tipDetailsResult->fetch_assoc()) {
-                $grossAmount = $tip['TipAmount'];
+            // Extract data from Stripe metadata
+            $partyId = (int)$paymentIntent['metadata']['party_id'];
+            $djId = (int)$paymentIntent['metadata']['dj_id'];
+            $songName = $paymentIntent['metadata']['song_name'];
+            $requestedBy = $paymentIntent['metadata']['requested_by'];
+            $requestFee = (float)$paymentIntent['metadata']['request_fee'];
+            $tipAmount = (float)$paymentIntent['metadata']['tip_amount'];
+            
+            // Calculate fee structure
+            $totalCharged = $requestFee + $tipAmount;
+            $platformFee = round($totalCharged * 0.05, 2);
+            $stripeFee = round(($totalCharged * 0.029) + 0.30, 2);
+            $totalProcessingFee = $stripeFee + $platformFee;
+            $djNetEarnings = $totalCharged - $totalProcessingFee;
+            $platformRevenue = $platformFee;
+            
+            // Create the request record
+            $insertStmt = $conn->prepare("
+                INSERT INTO Requests (PartyId, DJUserID, SongName, RequestedBy, PriceOfRequest, TipAmount, TotalCharged, ProcessingFee, TotalCollected, PlatformRevenue, PaymentStatus, StripePaymentIntentId, ProcessedAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed', ?, NOW())
+            ");
+            
+            $insertStmt->bind_param("iissdddddds", $partyId, $djId, $songName, $requestedBy, $requestFee, $tipAmount, $totalCharged, $totalProcessingFee, $djNetEarnings, $platformRevenue, $paymentIntentId);
+            
+            if ($insertStmt->execute()) {
+                $requestId = $conn->insert_id;
+                error_log("ConfirmPayment: Created request record with ID: $requestId");
                 
-                // OFFICIAL CROWDCONNECT FEE STRUCTURE
-                // Platform Revenue: 5% of total transaction
-                $platformRevenue = round($grossAmount * 0.05, 2);
-                
-                // Stripe Processing Fee: 2.9% + $0.30
-                $stripeFee = round(($grossAmount * 0.029) + 0.30, 2);
-                
-                // DJ Earnings: Total - Platform(5%) - Stripe(2.9% + $0.30)
-                $djAmount = $grossAmount - $platformRevenue - $stripeFee;
-                
-                // Get the charge ID from Stripe payment intent
+                // Create earnings history record
                 $chargeId = isset($paymentIntent['charges']['data'][0]['id']) ? $paymentIntent['charges']['data'][0]['id'] : $paymentIntentId;
-                
-                // Insert into EarningsHistory with official fee structure
                 $earningsStmt = $conn->prepare("
-                    INSERT INTO EarningsHistory (UserId, TipId, GrossAmount, StripeFeeAmount, DJAmount, NetAmount, StripeChargeId, Status) 
+                    INSERT INTO EarningsHistory (UserId, RequestId, GrossAmount, StripeFeeAmount, DJAmount, NetAmount, StripeChargeId, Status) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, 'completed')
                 ");
-                $earningsStmt->bind_param("iidddds", $tip['DJUserID'], $tip['TipId'], $grossAmount, $stripeFee, $djAmount, $platformRevenue, $chargeId);
+                
+                $earningsStmt->bind_param("iidddds", $djId, $requestId, $totalCharged, $stripeFee, $djNetEarnings, $platformRevenue, $chargeId);
                 
                 if ($earningsStmt->execute()) {
-                    error_log("ConfirmPayment (Tips): Created earnings history record for TipId: " . $tip['TipId']);
+                    error_log("ConfirmPayment: Created earnings history record");
                 } else {
-                    error_log("ConfirmPayment (Tips): Failed to create earnings history: " . $earningsStmt->error);
+                    error_log("ConfirmPayment: Failed to create earnings history: " . $earningsStmt->error);
                 }
                 $earningsStmt->close();
                 
-                // Update Users.TotalEarnings (gross tip amount) and AvailableFunds (net amount after fees)
+                // Update DJ's total earnings
                 $userUpdateStmt = $conn->prepare("UPDATE Users SET TotalEarnings = TotalEarnings + ?, AvailableFunds = AvailableFunds + ? WHERE ID = ?");
-                $userUpdateStmt->bind_param("ddi", $grossAmount, $netAmount, $tip['DJUserID']);
+                $userUpdateStmt->bind_param("ddi", $djNetEarnings, $djNetEarnings, $djId);
                 
                 if ($userUpdateStmt->execute()) {
-                    error_log("ConfirmPayment (Tips): Updated TotalEarnings (+$" . $grossAmount . " gross) and AvailableFunds (+$" . $netAmount . " net) for User ID: " . $tip['DJUserID'] . " - Processing fee: $" . $processingFeeAmount . "");
+                    error_log("ConfirmPayment: Updated DJ earnings (+$" . $djNetEarnings . ") for User ID: " . $djId);
                 } else {
-                    error_log("ConfirmPayment (Tips): Failed to update user earnings: " . $userUpdateStmt->error);
+                    error_log("ConfirmPayment: Failed to update user earnings: " . $userUpdateStmt->error);
                 }
                 $userUpdateStmt->close();
+                
+            } else {
+                error_log("ConfirmPayment: Failed to create request record: " . $insertStmt->error);
             }
-            $tipDetailsStmt->close();
+            $insertStmt->close();
+            
+        } else {
+            // Try legacy Tips table as fallback
+            $tipStmt = $conn->prepare("UPDATE Tips SET Status = ?, Timestamp = NOW() WHERE StripePaymentIntentId = ?");
+            $tipStmt->bind_param("ss", $status, $paymentIntentId);
+            $tipStmt->execute();
+            
+            $rowsAffected = $tipStmt->affected_rows;
+            error_log("ConfirmPayment (Tips): Updated " . $rowsAffected . " tip records to status '" . $status . "' for PaymentIntent: " . $paymentIntentId);
         }
-        
-        $tipStmt->close();
     }
     
     $requestStmt->close();
