@@ -50,15 +50,15 @@
                     </div>
                     
                     <div class="cost-table">
-                        <div class="cost-row">
+                        <div class="cost-row" id="requestFeeRow">
                             <span class="cost-label">Song Request Fee:</span>
                             <span class="cost-value" id="displayRequestFee">$0.00</span>
                         </div>
-                        <div class="cost-row">
+                        <div class="cost-row" id="tipAmountRow">
                             <span class="cost-label">Tip Amount:</span>
                             <span class="cost-value" id="displayTipAmount">$0.00</span>
                         </div>
-                        <div class="cost-row total-row">
+                        <div class="cost-row total-row" id="totalRow">
                             <span class="cost-label"><strong>Total:</strong></span>
                             <span class="cost-value" id="displayTotal"><strong>$0.00</strong></span>
                         </div>
@@ -343,9 +343,32 @@
                 // Show cost breakdown if there are any fees or the user is allowed to tip
                 if (requestFee > 0 || window.tipsEnabled) {
                     document.getElementById('costBreakdown').style.display = 'block';
-                    document.getElementById('displayRequestFee').textContent = `$${requestFee.toFixed(2)}`;
-                    document.getElementById('displayTipAmount').textContent = `$${tipAmount.toFixed(2)}`;
+                    
+                    // Show/hide request fee row based on if request fees are enabled
+                    if (requestFee > 0) {
+                        document.getElementById('requestFeeRow').style.display = 'flex';
+                        document.getElementById('displayRequestFee').textContent = `$${requestFee.toFixed(2)}`;
+                    } else {
+                        document.getElementById('requestFeeRow').style.display = 'none';
+                    }
+                    
+                    // Show/hide tip row based on if tips are enabled
+                    if (window.tipsEnabled) {
+                        document.getElementById('tipAmountRow').style.display = 'flex';
+                        document.getElementById('displayTipAmount').textContent = `$${tipAmount.toFixed(2)}`;
+                        // Show tip selection area
+                        document.getElementById('tipSelection').style.display = 'block';
+                    } else {
+                        document.getElementById('tipAmountRow').style.display = 'none';
+                        // Hide tip selection area
+                        document.getElementById('tipSelection').style.display = 'none';
+                    }
+                    
+                    // Always show total
                     document.getElementById('displayTotal').textContent = `$${total.toFixed(2)}`;
+                } else {
+                    // Hide entire cost breakdown if no fees and no tips enabled
+                    document.getElementById('costBreakdown').style.display = 'none';
                 }
                 
                 updateSubmitButtonText();
